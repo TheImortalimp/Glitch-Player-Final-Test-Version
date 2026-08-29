@@ -1,0 +1,54 @@
+name: Release Standalone Revision-R Final
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (example: v1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build package
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          powershell -NoProfile -ExecutionPolicy Bypass -File extras\glitch-canvas-player\scripts\build-standalone-r-final.ps1 -TargetMaxMb 75 -HardFailMb 100
+
+      - name: Verify artifacts
+        shell: pwsh
+        run: |
+          $zipPath = "extras\glitch-canvas-player\dist\standalone-revision-R-final-1.0-package.zip"
+          $exePath = "extras\glitch-canvas-player\dist\standalone-revision-R-final-1.0-installer.exe"
+          if (-not (Test-Path $zipPath)) {
+            throw "ZIP artifact not found: $zipPath"
+          }
+          if (-not (Test-Path $exePath)) {
+            throw "EXE artifact not found: $exePath"
+          }
+          $zipSizeMb = [math]::Round((Get-Item $zipPath).Length / 1MB, 2)
+          $exeSizeMb = [math]::Round((Get-Item $exePath).Length / 1MB, 2)
+          Write-Host "ZIP artifact size: $zipSizeMb MB"
+          Write-Host "EXE artifact size: $exeSizeMb MB"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: standalone revision-R final 1.0 - ${{ inputs.tag }}
+          files: |
+            extras/glitch-canvas-player/dist/standalone-revision-R-final-1.0-package.zip
+            extras/glitch-canvas-player/dist/standalone-revision-R-final-1.0-installer.exe
+          draft: false
+          prerelease: false

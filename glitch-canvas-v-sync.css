@@ -1,0 +1,1411 @@
+/* Move 'Open Local Video' button to top right */
+/* #openFileBtn look is owned by #openFileWrap #openFileBtn at end of this file */
+/* Visually hidden (accessible) label for file input */
+.visually-hidden {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+/* Hide video and file input by default, shown by JS as needed */
+#video {
+  display: none;
+}
+#fileInput {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  display: block !important;
+  pointer-events: none;
+}
+#suggestedVideo, #suggestedPlaylist, #suggestedVideo2, #suggestedVideo3, #testCanvas, #suggestedYoutube, #suggestedFractals,
+#ytInput, #startBtn, #openFileBtn, #randomizeBtn, #autoGlitchBtn, #continualRandomizeBtn,
+#aiWarpBtn, #ghostProtocolBtn, #vsyncScanBtn, #sliderContainer, #preset-toggle-btn, #preset-dropdown-container,
+#wired-btn {
+  transition: opacity 0.2s ease-in-out;
+}
+
+#suggestedVideo,
+#suggestedPlaylist,
+#suggestedVideo2,
+#suggestedVideo3,
+#suggestedYoutube,
+#suggestedFractals {
+  opacity: 0.2;
+}
+
+#suggestedVideo:hover,
+#suggestedPlaylist:hover,
+#suggestedVideo2:hover,
+#suggestedVideo3:hover,
+#suggestedYoutube:hover,
+#suggestedFractals:hover,
+#suggestedVideo:focus,
+#suggestedPlaylist:focus,
+#suggestedVideo2:focus,
+#suggestedVideo3:focus,
+#suggestedYoutube:focus,
+#suggestedFractals:focus {
+  opacity: 1 !important;
+}
+
+body:not(.ui-controls-hover) #suggestedFractals,
+body:not(.ui-controls-hover) #testCanvas,
+body:not(.ui-controls-hover) #ytInput,
+body:not(.ui-controls-hover) #startBtn,
+body:not(.ui-controls-hover) #randomizeBtn,
+body:not(.ui-controls-hover) #autoGlitchBtn,
+body:not(.ui-controls-hover) #continualRandomizeBtn,
+body:not(.ui-controls-hover) #aiWarpBtn,
+body:not(.ui-controls-hover) #ghostProtocolBtn,
+body:not(.ui-controls-hover) #vsyncScanBtn,
+body:not(.ui-controls-hover) #sliderContainer,
+body:not(.ui-controls-hover) #preset-toggle-btn,
+body:not(.ui-controls-hover) #preset-dropdown-container,
+body:not(.ui-controls-hover) #wired-btn {
+  opacity: 0.2 !important;
+}
+
+body.ui-controls-hover #suggestedFractals,
+body.ui-controls-hover #testCanvas,
+body.ui-controls-hover #ytInput,
+body.ui-controls-hover #startBtn,
+body.ui-controls-hover #openFileBtn,
+body.ui-controls-hover #randomizeBtn,
+body.ui-controls-hover #autoGlitchBtn,
+body.ui-controls-hover #continualRandomizeBtn,
+body.ui-controls-hover #aiWarpBtn,
+body.ui-controls-hover #ghostProtocolBtn,
+body.ui-controls-hover #vsyncScanBtn,
+body.ui-controls-hover #sliderContainer,
+body.ui-controls-hover #preset-toggle-btn,
+body.ui-controls-hover #preset-dropdown-container,
+body.ui-controls-hover #wired-btn {
+  opacity: 1 !important;
+}
+
+    html, body {
+      margin: 0; padding: 0; overflow: hidden;
+      background: black;
+      transition: transform 0.1s ease-in-out;
+      height: 100%; width: 100%;
+      cursor: crosshair;
+    }
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #glitchCanvas {
+      z-index: 3;
+      pointer-events: none;
+      width: 100%;
+      height: 100%;
+    }
+    #effects-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      transform-origin: 50% 0%;
+      transition: transform 0.12s ease;
+      will-change: transform;
+    }
+    #ytWarpShell {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      transform-origin: 50% 50%;
+      will-change: transform, filter;
+      backface-visibility: hidden;
+    }
+    #ytFrame {
+      filter: brightness(0.9) contrast(1.1); /* Slightly crush blacks and pop whites for a more analog feel */
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      border: none;
+      pointer-events: none;
+      overflow: hidden;
+      transform-origin: 50% 50%;
+      will-change: transform, filter;
+      backface-visibility: hidden;
+    }
+    #ytPlayerMount {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #ytPlayerMount iframe,
+    #ytFrame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      transform-origin: 50% 50%;
+      will-change: transform, filter;
+      backface-visibility: hidden;
+    }
+    input, button {
+      position: absolute;
+      font-family: monospace;
+      font-size: 10px;
+      padding: 4px 8px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid white;
+      z-index: 3000;
+      pointer-events: auto;
+      transition: all 0.2s ease-in-out;
+    }
+    #preset-dropdown-container, #preset-toggle-btn, #ui-toggle-tab {
+      z-index: 3000;
+      pointer-events: auto;
+    }
+    #color-shift-overlay {
+      pointer-events: none;
+    }
+    #video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 2;
+        object-fit: cover;
+        pointer-events: none;
+    }
+  #suggestedVideo, #suggestedPlaylist, #suggestedVideo2, #suggestedVideo3, #testCanvas, #suggestedYoutube, #suggestedFractals {
+    font-family: Impact, 'Arial Black', 'Franklin Gothic Heavy', sans-serif;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+    z-index: 2000;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10+ and Edge */
+    user-select: none; /* Standard syntax */
+   }
+
+    /*
+    /=============================================
+    |                                             |
+    |   HERE ARE THE LAYOUT PERCENTAGES FOR THE   |
+    |           SUGGESTED VIDEO LINKS             |
+    |                                             |
+    \=============================================/ 
+    */
+    #suggestedVideo {
+      top: 0%;
+    }
+
+    #suggestedVideo3 {
+      top: 5%;
+    }
+
+    #suggestedVideo2 {
+      top: 10%;
+    }
+
+    #suggestedYoutube {
+      top: 15%;
+    }
+
+    #suggestedPlaylist {
+      top: 20%;
+    }
+    
+    #suggestedFractals {
+      top: 56%;
+    }
+    #testCanvas {
+      top: 64%;
+      bottom: auto;
+    }
+    
+    #Defcon1Video {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 74%;
+      bottom: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 3.2em;
+      color: #fff;
+      cursor: pointer;
+      z-index: 2000;
+      width: 100%;
+      text-align: center;
+      -webkit-user-select: none; /* Safari */
+      user-select: none;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      text-shadow: 0 0 8px #00ffff, 0 0 16px #00ffff;
+      transition: opacity 0.2s, color 0.2s, text-shadow 0.2s;
+    }
+    #Defcon1Video:hover {
+      color: #00ffff;
+      opacity: 1;
+      text-shadow: 0 0 16px #fff, 0 0 32px #00ffff;
+    }
+    
+    input, button {
+      position: absolute;
+      font-family: monospace;
+      font-size: 10px;
+      padding: 4px 8px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid white;
+      z-index: 2000;
+      transition: all 0.2s ease-in-out;
+    }
+    button:active {
+      transform: scale(0.95) rotate(-1deg);
+      background: rgba(255, 0, 255, 0.3);
+      box-shadow: 0 0 8px white;
+    }
+    #ytInput {
+      top: 40%; left: 50%; transform: translate(-50%, -50%);
+      width: 320px;
+    }
+    #startBtn {
+      top: 46%; left: 50%; transform: translate(-50%, -50%);
+    }
+    #randomizeBtn { top: 60px; right: 20px; display: none; z-index: 2000; }
+    #autoGlitchBtn { top: 20px; right: 20px; display: none; z-index: 2000; }
+    #continualRandomizeBtn { top: 100px; right: 20px; display: none; z-index: 2000; width: 230px; }
+    #aiWarpBtn { top: 156px; right: 20px; display: none; z-index: 2000; width: 230px; }
+    
+    #ghostProtocolBtn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: auto;
+      display: block;
+      z-index: 3100;
+      width: auto;
+      min-width: 120px;
+      max-width: calc(100vw - 40px);
+      padding: 6px 8px;
+      font-size: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(102,252,241,0.9);
+      background: rgba(0,0,0,0.75);
+      color: #66fcf1;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: 0 0 18px rgba(102,252,241,0.18);
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    #ghostProtocolBtn:hover {
+      transform: translateY(-1px);
+      background: rgba(0,255,255,0.14);
+    }
+    #ghostProtocolBtn.active {
+      background: rgba(0,255,255,0.18);
+      box-shadow: 0 0 22px rgba(102,252,241,0.35);
+    }
+    /* --- Ghost Protocol + V-Sync Scan share one bottom-left rack --- */
+    #ghostBtnRack {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: auto;
+      z-index: 3100;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 12px;
+      max-width: calc(100vw - 40px);
+    }
+    #ghostBtnRack .wired-button {
+      position: static !important;
+      margin: 0;
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+    #vsyncScanBtn {
+      display: block;
+      width: auto;
+      min-width: 120px;
+      max-width: calc(100vw - 40px);
+      padding: 6px 8px;
+      font-size: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(102,252,241,0.9);
+      background: rgba(0,0,0,0.75);
+      color: #66fcf1;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: 0 0 18px rgba(102,252,241,0.18);
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    #vsyncScanBtn:hover {
+      transform: translateY(-1px);
+      background: rgba(0,255,255,0.14);
+    }
+    #vsyncScanBtn.active {
+      background: rgba(0,255,255,0.18);
+      box-shadow: 0 0 22px rgba(102,252,241,0.35);
+    }
+    /* Ghost-synced state: V-Sync Scan borrows the Ghost Protocol palette. */
+    #vsyncScanBtn.ghost-synced {
+      border-color: rgba(186,140,255,0.9);
+      color: #d9b3ff;
+      box-shadow: 0 0 18px rgba(186,140,255,0.3), inset 0 0 12px rgba(186,140,255,0.15);
+      text-shadow: 0 0 4px #b06cff, 0 0 8px #b06cff;
+    }
+    #vsyncScanBtn.active.ghost-synced {
+      background: rgba(120,80,220,0.22);
+      animation: crt-flicker 0.2s infinite, vsync-sync-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes vsync-sync-pulse {
+      0%, 100% { box-shadow: 0 0 14px rgba(160,120,255,0.4), inset 0 0 10px rgba(160,120,255,0.2); }
+      50%      { box-shadow: 0 0 26px rgba(120,200,255,0.6), inset 0 0 16px rgba(120,200,255,0.3); }
+    }
+    /* Hard-off latch: switched off and locked — no automatic effect can
+       bring the V-Sync Scan back until the user toggles it on again. */
+    #vsyncScanBtn.hard-off {
+      border-color: rgba(255,96,96,0.85);
+      color: #ff8f8f;
+      box-shadow: 0 0 12px rgba(255,96,96,0.25), inset 0 0 8px rgba(120,0,0,0.3);
+      text-shadow: 0 0 4px rgba(255,110,110,0.7);
+      opacity: 0.92;
+    }
+    #vsyncScanBtn.hard-off:hover {
+      background: rgba(120,0,0,0.25);
+      box-shadow: 0 0 16px rgba(255,96,96,0.4), inset 0 0 10px rgba(120,0,0,0.35);
+    }
+    /* Colour-ghost badge: hard-off is still latched (geometry stays dead)
+       but the FREE slider is running the ghost-protocol colour ghosting. */
+    #vsyncScanBtn.hard-off.ghost-color {
+      border-color: rgba(216,160,255,0.92);
+      color: #f0ccff;
+      box-shadow: 0 0 18px rgba(190,120,255,0.45), inset 0 0 12px rgba(120,40,180,0.35);
+      text-shadow: 0 0 6px rgba(216,160,255,0.9);
+      animation: vsyncGhostColorPulse 2.2s ease-in-out infinite;
+      opacity: 1;
+    }
+    @keyframes vsyncGhostColorPulse {
+      0%, 100% { box-shadow: 0 0 12px rgba(190,120,255,0.32), inset 0 0 8px rgba(120,40,180,0.26); }
+      50%      { box-shadow: 0 0 24px rgba(205,155,255,0.6),  inset 0 0 14px rgba(150,80,220,0.38); }
+    }
+    #vsyncScanSlider {
+      accent-color: #4de1ff;
+    }
+    #sliderContainer {
+      position: absolute;
+      top: 82px;
+      left: 16px;
+      z-index: 2000;
+      background: rgba(0,0,0,0.85);
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 10px;
+      display: none;
+      width: 30vw;
+      min-width: 260px;
+      max-width: 420px;
+      box-shadow: 0 0 14px rgba(0,255,255,0.18);
+      opacity: 0.95;
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+      font-size: 0.82em;
+    }
+
+    .slider-group {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 5fr) minmax(0, 52px) minmax(0, 52px);
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 5px;
+      min-width: 0;
+    }
+    .slider-group label {
+      font-family: monospace;
+      font-size: 8px;
+      color: white;
+      margin: 0;
+      white-space: nowrap;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .slider-group input[type="range"] {
+      width: 100%;
+      min-width: 0;
+      margin: 0;
+      height: 18px;
+    }
+    .slider-group button {
+      position: static !important;
+      margin: 0;
+      white-space: nowrap;
+      min-width: 50px;
+      max-width: 70px;
+      font-size: 8px;
+      padding: 2px 4px;
+    }
+    .lock-button {
+      font-family: monospace;
+      font-size: 10px;
+      color: white;
+      background: black;
+      border: 1px solid white;
+      cursor: pointer;
+      padding: 3px 6px;
+    }
+    .lock-button.locked {
+      color: black;
+      background: white;
+    }
+    .trigger-button {
+      font-family: monospace;
+      font-size: 10px;
+      color: white;
+      background: black;
+      border: 1px solid white;
+      cursor: pointer;
+      padding: 3px 6px;
+    }
+
+    .trigger-button.locked {
+      color: black;
+      background: white;
+    }
+    /* Notification style */
+    .notification {
+      position: fixed;
+      position: absolute;
+      top: 85px;
+      left: 20px;
+      z-index: 2000;
+      background: rgba(0,0,0,0.85);
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 12px;
+      display: none; /* Hidden until start */
+      width: 300px;
+      max-width: calc(100vw - 40px);
+      box-shadow: 0 0 20px rgba(0,255,255,0.25);
+      opacity: 0.95;
+      backdrop-filter: blur(10px);
+      box-sizing: border-box;
+    }
+    #sliderContainer button,
+    #sliderContainer input {
+      position: static !important;
+    }
+    /* Notification style */
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 255, 13, 0.8);
+      color: black;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 100;
+      font-family: monospace;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      pointer-events: none;
+    }
+
+    /* --- Wired Button CRT Styles --- */
+    .wired-button {
+      font-family: 'Courier New', Courier, monospace;
+      text-decoration: none;
+      color: #00ffff;
+      background: rgba(0, 20, 20, 0.5); /* More faded background */
+      border: 2px solid #00ffff;
+      border-radius: 8px;
+      cursor: pointer;
+      overflow: hidden; /* Keep scanlines inside */
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5),
+                  0 0 20px rgba(0, 255, 255, 0.3),
+                  inset 0 0 15px rgba(0, 255, 255, 0.2);
+      text-shadow: 0 0 4px #00ffff, 0 0 8px #00ffff;
+      animation: crt-flicker 0.2s infinite;
+      transition: all 0.2s ease;
+    }
+
+    .wired-button:hover {
+        background: rgba(0, 40, 40, 0.7);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.8),
+                    0 0 30px rgba(0, 255, 255, 0.5),
+                    inset 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+
+    .wired-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.3) 50%);
+      background-size: 100% var(--scanline-thickness, 4px);
+      opacity: 0.6;
+      animation: scanline-move var(--scanline-speed, 4s) linear infinite;
+      pointer-events: none;
+    }
+
+    #wired-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 15px 30px;
+      font-size: 1.5em;
+      z-index: 3000; /* Ensure it's on top */
+    }
+
+    @keyframes crt-flicker {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes scanline-move {
+      from { background-position: 0 0; }
+      to { background-position: 0 -8px; } /* Faster movement */
+    }
+
+    /* --- UI Toggle Tab Styles (CRT Themed) --- */
+    #ui-toggle-tab {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 4000;
+      transition: right 0.3s ease-in-out, opacity 0.2s ease-in-out;
+      cursor: pointer;
+
+      opacity: 0.95; /* Keep the tab visible while controls are dimmed */
+    }
+
+    #ui-toggle-tab.is-collapsed {
+      right: var(--ui-tab-collapsed-right, -110px);
+    }
+
+    #ui-toggle-tab:hover {
+      right: 0;
+      opacity: 1;
+    }
+
+    #toggle-ui-btn {
+      /* Inherit wired-button styles */
+      font-family: 'Courier New', Courier, monospace;
+      text-decoration: none;
+      color: #00ffff;
+      background: rgba(0, 20, 20, 0.7);
+      border: 2px solid #00ffff;
+      border-right: none; /* Hide the border that's off-screen */
+      border-radius: 8px 0 0 8px; /* Round corners on the visible side */
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.5),
+                  0 0 16px rgba(0, 255, 255, 0.3),
+                  inset 0 0 10px rgba(0, 255, 255, 0.2);
+      text-shadow: 0 0 4px #00ffff, 0 0 8px #00ffff;
+      animation: crt-flicker 0.2s infinite;
+      padding: 6px 10px;
+      font-size: 11px;
+      white-space: nowrap; /* Prevent text wrapping */
+      position: relative; /* For scanline pseudo-element */
+      overflow: hidden;
+    }
+
+
+/* --- Preset Dropdown Menu Styles --- */
+/* --- Preset Dropdown Menu Styles (inspired by double-oh-six.html) --- */
+#preset-toggle-btn {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10010; /* Above the dropdown container */
+  font-family: 'Share Tech Mono', 'Consolas', monospace;
+  font-size: 0.8rem; /* Smaller */
+  padding: 4px 10px; /* Smaller */
+  border-radius: 0 0 8px 8px; /* from preset-toggle-btn */
+  font-weight: normal; /* Slimmer */
+  cursor: pointer;
+  display: none; /* Hidden until playback starts */
+  opacity: 0.5;
+  overflow: hidden; /* Keep scanlines inside */
+  position: relative; /* For scanline pseudo-element */
+  color: #00ffff;
+  background: rgba(0, 20, 20, 0.5);
+  border: 2px solid #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.2);
+  text-shadow: 0 0 4px #00ffff, 0 0 8px #00ffff;
+  animation: crt-flicker 0.2s infinite;
+  transition: all 0.2s ease;
+}
+
+#preset-toggle-btn:hover {
+  background: #39ffff;
+  box-shadow: 0 2px 15px rgba(0, 255, 247, 0.8);
+}
+
+#preset-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.3) 50%);
+  background-size: 100% var(--scanline-thickness, 4px);
+  opacity: 0.6;
+  animation: scanline-move var(--scanline-speed, 4s) linear infinite;
+  pointer-events: none;
+}
+
+#preset-dropdown-container { /* This is the actual dropdown panel */
+  position: fixed;
+  top: 0;
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center horizontally */
+  width: 90%; /* Constrain width */
+  max-width: 600px; /* Max width to prevent it from being too wide */
+  height: 0; /* Initially closed */
+  overflow: hidden; /* Keep scanlines inside */
+  background-color: rgba(10, 26, 35, 0.5); /* Dark, 50% transparent background */
+  border-bottom: 2px solid #00fff7;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 15px rgba(0, 255, 255, 0.2);
+  z-index: 10000; /* Above all video/canvas/UI */
+  transition: height 0.4s ease-in-out, opacity 0.4s ease-in-out;
+  display: none; /* Hidden initially, will be shown by JS */
+  flex-direction: column; /* To stack preset-bar and current-preset-display */
+  justify-content: center;
+  align-items: center;
+  padding-top: 30px; /* Adjust for slimmer toggle button */
+  box-sizing: border-box;
+  opacity: 0; /* Initially hidden for transition */
+}
+
+#preset-dropdown-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.3) 50%);
+  background-size: 100% var(--scanline-thickness, 4px);
+  opacity: 0.6;
+  animation: scanline-move var(--scanline-speed, 4s) linear infinite; /* Scanline effect */
+  pointer-events: none;
+}
+
+.preset-bar { 
+  display: flex; 
+  position: relative; /* Establish a positioning context for absolute children */
+  width: 100%;
+  height: 100%;
+} 
+.preset-dropdown, .preset-name-input, .preset-save-btn, .preset-delete-btn, .preset-delete-all-btn, .preset-nav-btn { 
+  font-family: 'Share Tech Mono', 'Consolas', monospace; 
+  font-size: 0.9rem; /* Slimmer */
+  border: 2px solid #00fff7; 
+  border-radius: 4px;
+  margin: 2px; /* Slimmer */
+  padding: 4px 8px; /* Slimmer */
+  outline: none; 
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s, color 0.2s; 
+  box-shadow: 0 0 8px rgba(0, 255, 247, 0.6); 
+  opacity: 1; /* Controls are now fully opaque, but their background is transparent */
+  position: absolute; /* Use absolute positioning for precise control */
+  color: #00fff7;
+  background: rgba(16, 28, 34, 0.5);
+  cursor: pointer;
+}
+
+ 
+.preset-dropdown:focus, .preset-name-input:focus, .preset-save-btn:focus, .preset-delete-btn:focus, .preset-delete-all-btn:focus, .preset-nav-btn:focus { 
+  border-color: #fff; 
+  box-shadow: 0 0 12px #00fff7cc; 
+  opacity: 1; 
+} 
+ 
+.preset-save-btn { 
+  cursor: pointer; 
+  font-weight: bold;
+  right: 0; /* Aligned to the far right */
+  top: 0px;
+  transform: translateX(0%); /* Adjust position with transform */
+}
+
+.preset-delete-btn {
+  cursor: pointer; 
+  font-weight: bold;
+  right: 5%; /* Aligned to the right */
+  top: 32px;
+  transform: translateX(5%); /* Adjust position with transform */
+  background: rgba(34, 16, 16, 0.5);
+  color: #ff2a2a;
+  border-color: #ff2a2a;
+}
+
+.preset-delete-all-btn {
+  cursor: pointer;
+  font-weight: bold;
+  right: 0; /* Aligned to the far right */
+  top: 32px;
+  transform: translateX(0%);
+  background: rgba(255, 0, 255, 0.5); /* Magenta */
+  color: #ffffff;
+  border-color: #ff00ff;
+}
+ 
+.preset-nav-btn { 
+  width: 28px; /* Slimmer */
+  height: 28px; /* Slimmer */
+  background: #101c22; 
+  color: #00fff7; 
+  border: 2px solid #00fff7; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1rem; /* Slimmer */
+  cursor: pointer;
+  box-shadow: 0 0 8px #00fff799;
+}
+
+.preset-nav-btn.left {
+  top: 30px;
+  left: calc(50% - 150px); /* 150px to the left of center */
+  transform: translateX(-50%);
+}
+
+.preset-nav-btn.right {
+  top: 30px;
+  left: calc(50% + 150px); /* 150px to the right of center */
+  transform: translateX(-50%);
+}
+.preset-dropdown { 
+  top: 0px; left: 66%; transform: translateX(-66%);
+}
+
+.preset-nav-btn:hover {
+  background: #00fff7; 
+  color: #101c22; 
+  border-color: #fff; 
+}
+
+.preset-save-btn:hover, .preset-delete-btn:hover {
+  background: #00fff7;
+  color: #101c22;
+  border-color: #fff;
+}
+
+.preset-delete-btn:hover {
+    background: #ff2a2a;
+    color: white;
+}
+
+.preset-delete-all-btn:hover {
+    background: #ff00ff;
+    color: black;
+}
+
+.current-preset-display {
+  position: absolute; /* Position relative to the container */
+  top: 35px; /* Position from the top of the container */
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Courier New', Times, serif;
+  color: crimson;
+  text-shadow: 0 0 5px rgb(127, 255, 246);
+  pointer-events: none;
+  font-size: 1.15rem;
+  text-align: center;
+  /* display: none; */ /* Hidden by default - REMOVED FOR DEBUGGING */
+  z-index: 1; /* On top of other elements in the container */
+  opacity: 1;
+}
+
+
+    /* --- Mobile Responsiveness --- */
+    @media (max-width: 768px) {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: black;
+        }
+
+        canvas {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #ytInput {
+            width: 80vw;
+            max-width: 320px; /* Keep max size */
+            font-size: 12px;
+            transform: scale(1) translate(-150%, -150%);
+        }
+        #startBtn {
+            font-size: 12px;
+            padding: 8px 12px;
+            transform: scale(0.33) translate(-150%, -150%);
+        }
+        #randomizeBtn, #autoGlitchBtn, #continualRandomizeBtn, #aiWarpBtn {
+            width: auto; /* Fit content */
+            max-width: 40vw; /* Prevent from being too wide */
+            font-size: 10px;
+            padding: 6px 8px;
+            right: 5px;
+            white-space: nowrap; /* Prevent line breaks */
+            transform: scale(1);
+            transform-origin: top right;
+        }
+        #continualRandomizeBtn, #aiWarpBtn {
+            white-space: normal; /* Allow longer buttons to wrap */
+            text-align: center;
+        }
+        #wired-btn {
+            left: 5px;
+            top: 5px;
+            padding: 8px 10px;
+            font-size: 0.8em;
+            transform: scale(1);
+            transform-origin: top left;
+        }
+        #sliderContainer {
+            left: 5px;
+            top: 60px; /* Adjust to be below wired-btn */
+            width: calc(100vw - 10px);
+            max-width: 320px;
+            box-sizing: border-box;
+            opacity: 1;
+            transform: none;
+        }
+         #sliderContainer:hover {
+            opacity: 1;
+        }
+        .slider-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .slider-group label {
+            width: 100%;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin-left: 0;
+        }
+        .lock-button {
+            position: relative;
+            right: 5px;
+            top: 5px;
+            margin-left: 315px;
+            margin-top: 0;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+        h2[id^="suggested"] {
+            font-size: 0.7em;
+            line-height: 1.4;
+            transform: scale(0.33);
+        }
+        #testCanvas {
+             font-size: 0.7em;
+             transform: scale(0.33);
+        }
+
+        #ui-toggle-tab {
+          top: 50%;
+          right: 0;
+          bottom: auto;
+          transform: translateY(-50%) scale(1);
+          transform-origin: center right;
+        }
+        #toggle-ui-btn {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        
+        #preset-dropdown-container {
+            width: 98%; /* Take up more screen width */
+            padding-top: 35px;
+            box-sizing: border-box;
+            transform: scale(0.33);
+            transform-origin: top center;
+        }
+        .preset-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 5px;
+            width: 100%;
+            padding: 0 5px;
+            box-sizing: border-box;
+        }
+        .preset-dropdown, .preset-name-input, .preset-save-btn, .preset-delete-btn, .preset-delete-all-btn, .preset-nav-btn {
+            font-size: 0.8rem;
+            padding: 4px;
+            margin: 0;
+            position: static;
+            transform: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .current-preset-display {
+             position: static;
+             transform: none;
+             order: -2; /* Move to the top */
+             grid-column: 1 / -1; /* Span full width */
+             text-align: center;
+             margin-bottom: 5px;
+             font-size: 1rem;
+        }
+        .preset-name-input {
+            grid-column: 1 / -1; /* Span full width */
+            order: -1;
+        }
+    }
+  
+  /* Class to hide UI elements */
+  body.ui-hidden #suggestedVideo,
+  body.ui-hidden #suggestedPlaylist,
+  body.ui-hidden #suggestedVideo2,
+  body.ui-hidden #suggestedVideo3,
+  body.ui-hidden #testCanvas,
+  body.ui-hidden #suggestedYoutube,
+  body.ui-hidden #suggestedFractals,
+  body.ui-hidden #ytInput,
+  body.ui-hidden #startBtn,
+  body.ui-hidden #openFileBtn,
+  body.ui-hidden #randomizeBtn,
+  body.ui-hidden #autoGlitchBtn,
+  body.ui-hidden #continualRandomizeBtn,
+  body.ui-hidden #aiWarpBtn,
+  body.ui-hidden #ghostProtocolBtn,
+  body.ui-hidden #vsyncScanBtn,
+  body.ui-hidden #sliderContainer,
+  body.ui-hidden #preset-toggle-btn,
+  body.ui-hidden #preset-dropdown-container,
+  body.ui-hidden #wired-btn {
+    display: none !important; /* Use !important to override existing display properties */
+  }
+  .background-svg {
+    position: absolute;
+    z-index: -1;
+  }
+
+  /* Final Test UI overrides: smaller buttons + wider slider bars */
+  #sliderContainer,
+  #ghostProtocolBtn,
+  #vsyncScanBtn,
+  #preset-toggle-btn,
+  #toggle-ui-btn,
+  #randomizeBtn,
+  #autoGlitchBtn,
+  #continualRandomizeBtn,
+  #aiWarpBtn,
+  #openFileBtn {
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  #sliderContainer {
+    width: 32vw !important;
+    min-width: 280px !important;
+    max-width: 520px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+  }
+
+  .slider-group {
+    grid-template-columns: 72px minmax(0, 4.6fr) minmax(0, 64px) minmax(0, 64px) !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .slider-group label {
+    font-size: 9px !important;
+  }
+
+  .slider-group input[type="range"] {
+    height: 22px !important;
+  }
+
+  .slider-group button,
+  .lock-button,
+  .trigger-button {
+    min-width: 56px !important;
+    max-width: 74px !important;
+    font-size: 9px !important;
+    padding: 3px 6px !important;
+  }
+
+  #continualRandomizeBtn,
+  #aiWarpBtn {
+    width: auto !important;
+    max-width: 240px !important;
+  }
+
+
+
+
+/* Init-screen local media picker — sits under Start and Play */
+#openFileWrap {
+  position: absolute !important;
+  top: auto !important;
+  bottom: 20px !important;
+  left: auto !important;
+  right: 20px !important;
+  transform: none !important;
+  z-index: 99999 !important;
+  width: 280px !important;
+  height: 44px !important;
+  display: block !important;
+  pointer-events: auto !important;
+  box-sizing: border-box !important;
+}
+#openFileWrap #openFileBtn {
+  position: absolute !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  font-family: monospace !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  color: #00ffff !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 2px solid #00ffff !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+}
+#openFileWrap #fileInput {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer !important;
+  z-index: 2 !important;
+  display: block !important;
+  pointer-events: auto !important;
+  font-size: 18px !important;
+  clip: auto !important;
+  overflow: hidden !important;
+}
+body.playback-on #openFileWrap,
+body.playback-on #openFileBtn,
+body.playback-on #fileInput {
+  display: none !important;
+}
+
+body:not(.playback-on) #openFileWrap {
+  display: block !important;
+  visibility: visible !important;
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  z-index: 99999 !important;
+}
+
+
+#localArt {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #000;
+  z-index: 1;
+  pointer-events: none;
+}
+#localAudio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+body.local-audio #localArt {
+  display: block;
+  z-index: 1;
+}
+body.local-audio #glitchCanvas {
+  z-index: 3 !important;
+}
+body.local-audio #video {
+  position: absolute;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* Post-init UI: fit phones + short widescreens, keep corner positions, never ellipsize slider names */
+body.playback-on #sliderContainer {
+  position: absolute !important;
+  top: 72px !important;
+  left: 12px !important;
+  width: min(42vw, 520px) !important;
+  min-width: min(320px, calc(100vw - 24px)) !important;
+  max-width: min(520px, calc(100vw - 24px)) !important;
+  max-height: calc(100vh - 136px) !important;
+  max-height: calc(100dvh - 136px) !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  padding: 6px 8px !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.playback-on .slider-group {
+  display: grid !important;
+  grid-template-columns: max-content minmax(36px, 1fr) auto auto !important;
+  align-items: center !important;
+  gap: 3px 6px !important;
+  margin-bottom: 2px !important;
+  min-width: 0 !important;
+}
+
+body.playback-on .slider-group label {
+  font-size: clamp(8px, 1.05vw, 11px) !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  width: auto !important;
+}
+
+body.playback-on .slider-group input[type="range"] {
+  width: 100% !important;
+  min-width: 36px !important;
+  height: clamp(14px, 2.1vh, 20px) !important;
+  margin: 0 !important;
+}
+
+body.playback-on .slider-group button,
+body.playback-on .lock-button,
+body.playback-on .trigger-button {
+  position: static !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  font-size: clamp(7px, 0.95vw, 9px) !important;
+  padding: 2px 4px !important;
+  white-space: nowrap !important;
+}
+
+body.playback-on #wired-btn {
+  top: 12px !important;
+  left: 12px !important;
+  padding: 8px 12px !important;
+  font-size: clamp(11px, 1.4vw, 18px) !important;
+}
+
+body.playback-on #ghostBtnRack {
+  bottom: 12px !important;
+  left: 12px !important;
+  max-width: calc(100vw - 24px) !important;
+  gap: 10px !important;
+}
+
+body.playback-on #ghostProtocolBtn,
+body.playback-on #vsyncScanBtn {
+  max-width: calc(100vw - 24px) !important;
+  font-size: clamp(8px, 1vw, 10px) !important;
+  padding: 4px 8px !important;
+}
+
+body.playback-on #autoGlitchBtn,
+body.playback-on #randomizeBtn,
+body.playback-on #continualRandomizeBtn,
+body.playback-on #aiWarpBtn {
+  right: 12px !important;
+  max-width: min(240px, 42vw) !important;
+  width: auto !important;
+  white-space: normal !important;
+  font-size: clamp(8px, 1vw, 10px) !important;
+  padding: 4px 8px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-height: 760px) {
+  body.playback-on #sliderContainer {
+    top: 58px !important;
+    max-height: calc(100vh - 110px) !important;
+    max-height: calc(100dvh - 110px) !important;
+    padding: 4px 6px !important;
+  }
+  body.playback-on .slider-group {
+    margin-bottom: 1px !important;
+    gap: 2px 4px !important;
+  }
+  body.playback-on .slider-group input[type="range"] {
+    height: 14px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.playback-on #sliderContainer {
+    left: 8px !important;
+    top: 52px !important;
+    width: calc(100vw - 118px) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 118px) !important;
+    max-height: calc(100vh - 108px) !important;
+    max-height: calc(100dvh - 108px) !important;
+  }
+  body.playback-on .slider-group {
+    grid-template-columns: max-content minmax(28px, 1fr) auto auto !important;
+  }
+  body.playback-on .slider-group label {
+    font-size: clamp(7px, 2.6vw, 10px) !important;
+  }
+  body.playback-on .lock-button,
+  body.playback-on .trigger-button {
+    margin-left: 0 !important;
+    right: auto !important;
+    top: auto !important;
+  }
+  body.playback-on #autoGlitchBtn,
+  body.playback-on #randomizeBtn,
+  body.playback-on #continualRandomizeBtn,
+  body.playback-on #aiWarpBtn {
+    right: 6px !important;
+    max-width: 108px !important;
+    font-size: 8px !important;
+    padding: 3px 5px !important;
+  }
+  body.playback-on #wired-btn {
+    left: 8px !important;
+    top: 8px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) and (orientation: portrait) {
+  body.playback-on #sliderContainer {
+    width: calc(100vw - 96px) !important;
+    max-width: calc(100vw - 96px) !important;
+  }
+  body.playback-on #autoGlitchBtn,
+  body.playback-on #randomizeBtn,
+  body.playback-on #continualRandomizeBtn,
+  body.playback-on #aiWarpBtn {
+    max-width: 88px !important;
+  }
+}
+
+
+/* Init-screen URL field must accept typing + clipboard paste */
+#ytInput {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+body.ui-hidden #ghostBtnRack { display: none !important; }
+body:not(.welcome-dismissed):not(.playback-on) #openFileWrap { display: none !important; }
+
+#welcomeScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  place-items: center;
+  color: #e9f4ff;
+  background: radial-gradient(ellipse at 50% 30%, rgba(102, 247, 255, 0.1), transparent 60%), linear-gradient(160deg, #06090f, #0d1526);
+}
+
+#welcomeScreen[hidden] { display: none !important; }
+
+.welcomePanel {
+  display: flex;
+  width: min(420px, calc(100vw - 40px));
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  border: 1px solid rgba(102, 247, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(8, 14, 28, 0.9);
+  box-shadow: 0 0 80px rgba(102, 247, 255, 0.08), 0 24px 48px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.welcomeMark { color: #66f7ff; font-size: 3.6rem; font-weight: 900; line-height: 1; text-shadow: 0 0 24px rgba(102, 247, 255, 0.5); }
+.welcomeMark span { color: #f3aa53; }
+.welcomePanel h1 { color: #66f7ff; font-family: "Segoe UI", Tahoma, Verdana, sans-serif; font-size: 1.05rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.welcomePanel p { color: #7fa8c8; font-family: "Segoe UI", Tahoma, Verdana, sans-serif; font-size: 0.8rem; letter-spacing: 0.06em; }
+
+#welcomeEnterBtn {
+  position: static;
+  margin-top: 8px;
+  padding: 12px 36px;
+  border: 0;
+  border-radius: 8px;
+  color: #080b12;
+  background: linear-gradient(90deg, #66f7ff, #f3aa53);
+  font-family: "Segoe UI", Tahoma, Verdana, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

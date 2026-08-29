@@ -1,0 +1,42 @@
+name: Build Standalone Revision-R Final
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build package with 75MB cap
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = "Stop"
+          powershell -NoProfile -ExecutionPolicy Bypass -File extras\glitch-canvas-player\scripts\build-standalone-r-final.ps1 -TargetMaxMb 75 -HardFailMb 100
+
+      - name: Locate artifact
+        id: artifact
+        shell: pwsh
+        run: |
+          $artifactPath = "extras\glitch-canvas-player\dist\standalone-revision-R-final-1.0-package.zip"
+          if (-not (Test-Path $artifactPath)) {
+            throw "Artifact not found: $artifactPath"
+          }
+          $sizeMb = [math]::Round((Get-Item $artifactPath).Length / 1MB, 2)
+          Write-Host "Artifact size: $sizeMb MB"
+          "artifact_path=$artifactPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: standalone-revision-R-final-1.0-package
+          path: ${{ steps.artifact.outputs.artifact_path }}
+          if-no-files-found: error

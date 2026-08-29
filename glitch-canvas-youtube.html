@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>standalone revision-R final 1.0</title>
+  <link rel="stylesheet" href="glitch-canvas-youtube.css" />
+</head>
+<body>
+
+  <!-- ── Init / splash screen ── -->
+  <div id="splash" role="dialog" aria-label="V-Sync initialization screen" data-startup-asset="glitch-canvas-v-sync">
+    <div id="splashInner">
+      <div id="splashLogo" aria-hidden="true">
+        <span class="logo-bracket">[</span>
+        <span class="logo-r">R</span>
+        <span class="logo-bracket">]</span>
+      </div>
+      <h1 id="splashTitle">V-Sync Initialization</h1>
+      <p id="splashSub">glitch-canvas-v-sync · VLC-shell · media player</p>
+      <button id="splashEnterBtn" type="button" autofocus>Enter Player</button>
+    </div>
+  </div>
+
+  <!-- ── Player stage ── -->
+  <main id="stage" aria-label="revision-r-final-player" hidden>
+
+    <!-- media layers -->
+    <video id="mediaLayer" playsinline></video>
+    <div id="ytFrame"></div>
+    <canvas id="fxCanvas"></canvas>
+
+    <!-- open-media overlay (shown when nothing is playing) -->
+    <div id="openOverlay">
+      <div id="openCard">
+        <p class="openLabel">Open source</p>
+
+        <div class="openRow">
+          <label for="ytInput" class="openFieldLabel">YouTube URL</label>
+          <div class="openInputRow">
+            <input id="ytInput" type="text" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" />
+            <button id="ytLoadBtn" type="button">Load</button>
+          </div>
+        </div>
+
+        <div class="openRow">
+          <label for="fileInput" class="openFieldLabel">Local MP3 / MP4</label>
+          <div class="openInputRow">
+            <label id="fileChooser" tabindex="0">
+              <span id="fileChooserText">Choose file…</span>
+              <input id="fileInput" type="file" accept="video/*,audio/*" tabindex="-1" />
+            </label>
+            <button id="localLoadBtn" type="button">Play</button>
+          </div>
+        </div>
+
+        <div id="statusLine" role="status" aria-live="polite">Ready.</div>
+      </div>
+    </div>
+
+    <aside id="fxPanel" class="hidden" aria-label="glitch effects">
+      <div class="fxPanelHead">
+        <span>Glitch layers</span>
+        <label class="fxSwitch" title="Enable glitch effects">
+          <input id="fxEnabled" type="checkbox" checked />
+          <span>On</span>
+        </label>
+      </div>
+      <label class="fxControl" for="fxIntensity">Intensity <output id="fxIntensityValue">65%</output></label>
+      <input id="fxIntensity" type="range" min="0" max="100" value="65" />
+      <label class="fxControl" for="fxJitter">Chroma jitter <output id="fxJitterValue">100%</output></label>
+      <input id="fxJitter" type="range" min="0" max="200" value="100" />
+      <label class="fxControl" for="fxScan">V-Sync scan <output id="fxScanValue">100%</output></label>
+      <input id="fxScan" type="range" min="0" max="200" value="100" />
+      <label class="fxControl" for="fxBloom">Bloom <output id="fxBloomValue">100%</output></label>
+      <input id="fxBloom" type="range" min="0" max="200" value="100" />
+    </aside>
+
+    <!-- ── VLC-style transport bar ── -->
+    <div id="transport" aria-label="transport controls" hidden>
+      <div id="seekRow">
+        <span id="timeElapsed">0:00</span>
+        <input id="seekBar" type="range" min="0" max="1000" value="0" step="1" aria-label="seek" />
+        <span id="timeDuration">0:00</span>
+      </div>
+      <div id="btnRow">
+        <div id="leftBtns">
+          <button id="stopBtn"     type="button" title="Stop"        aria-label="Stop">&#9646;&#9646;</button>
+          <button id="playPauseBtn" type="button" title="Play / Pause" aria-label="Play">&#9654;</button>
+        </div>
+
+        <div id="centerBtns">
+          <button id="openMediaBtn" type="button" title="Open media" aria-label="Open media">&#128194;</button>
+          <button id="fxToggleBtn" type="button" title="Glitch layers" aria-label="Show glitch layers" aria-expanded="false">&#9881;</button>
+        </div>
+
+        <div id="rightBtns">
+          <span id="volIcon" title="Mute / Unmute" aria-label="volume icon">&#128264;</span>
+          <input id="volBar" type="range" min="0" max="1" value="1" step="0.02" aria-label="volume" />
+          <button id="fullscreenBtn" type="button" title="Fullscreen" aria-label="Fullscreen">&#9974;</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- YouTube IFrame API loader (injected by engine when needed) -->
+  <script src="revision-r-final-engine.js"></script>
+</body>
+</html>
