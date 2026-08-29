@@ -1,0 +1,8 @@
+extras/glitch-canvas-player/dist/
+*.zip
+*.exe
+*.tmp
+installer/bin/
+installer/obj/
+shell/bin/
+shell/obj/

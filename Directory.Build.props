@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Company>River Lyle Reuveni</Company>
+    <Authors>River Lyle Reuveni (GitHub: TheImortalimp)</Authors>
+    <Product>Standalone Revision-R Final</Product>
+    <Description>V-Sync glitch canvas media player shell.</Description>
+    <RepositoryUrl>https://github.com/TheImortalimp/standalone-revision-r-final-1-0</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>
