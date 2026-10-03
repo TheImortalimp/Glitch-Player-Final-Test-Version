@@ -1,8 +1,11 @@
-# Standalone Revision R Final 2.0 Artifacts
+# Glitch Player Standalone Releases
 
-This folder contains the playtest outputs for the standalone Revision R Final 2.0 app.
+## Revision R Final 3.0
 
-- `standalone-revision-R-final-2.0-standalone.zip` is the complete portable package. Extract it and run `Launch-Standalone-Revision-R-Final-2.0.cmd`.
-- `StandaloneRevisionRFinal.exe` is the WebView2 shell executable copied from the package runtime. It is not a standalone EXE by itself; use the ZIP for a complete runnable folder with its `app` dependencies and `webui` files.
+Revision 3.0 uses the Revision 3 HARD-LIGHT / MOONLIGHT player template with a standalone initialization screen, local MP3/MP4 playback, effect controls, and presets. YouTube playback requires an internet connection.
 
-The default launcher opens the shell at 1280x720. Use Alt+Enter for fullscreen/windowed mode.
+- [Download the complete portable app](standalone-revision-R-final-3.0-standalone.zip). Extract the ZIP and run `Launch-Standalone-Revision-R-Final-3.0.cmd`.
+- [Download the Windows installer](standalone-revision-R-final-3.0-installer.exe).
+- [Browse the 3.0 source and packaged files](standalone-revision-R-final-3.0/README.md).
+
+The existing Revision R Final 2.0 package remains available as `standalone-revision-R-final-2.0-standalone.zip`. Its default launcher opens at 1280x720; use Alt+Enter to switch fullscreen/windowed mode.
