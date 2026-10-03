@@ -32,11 +32,11 @@ embedded shell origin; no standard browser or Python server is used.
 
 ## Build status
 
-The existing WebView2 application host is unchanged. The launcher opens the
-bundled `webui/glitch-canvas.html`; its Revision 3 engine and initialization
-styles are local files alongside the page. YouTube playback needs an internet
-connection. Local MP3/MP4 playback and saved presets remain available from the
-standalone window.
+The existing WebView2 application host is unchanged. The launcher opens
+`webui/glitch-canvas-v-sync.html`; its Revision 3 engine and initialization
+styles are bundled locally alongside the page. YouTube playback needs an
+internet connection. Local MP3/MP4 playback and saved presets remain available
+from the standalone window.
 
 The default launcher opens the shell window at 1280x720 so controls remain
 inside the physical display area. Press Alt+Enter to switch between windowed
