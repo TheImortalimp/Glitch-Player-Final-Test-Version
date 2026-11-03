@@ -1,0 +1,48 @@
+GLITCH PLAYER - STANDALONE REVISION R FINAL 4.0
+Third-party notices and credits
+
+GLITCH PLAYER R4
+  Copyright status: dedicated to the public domain under CC0 1.0 Universal
+  by River Lyle Reuveni (Imortalimp) - https://www.imortalimp.nl
+  The full CC0 1.0 text is in LICENSE.txt.
+
+MERGED SOURCES (same author, public domain)
+  - Glitch Player standalone-revision-R-final 1.0-3.0 (Revision 3 effects,
+    HARD-LIGHT / MOONLIGHT stylesheet, Deepseek MACHINE bank, GHOST / OF ME)
+    CC0 1.0.
+  - Glitch Canvas Projector (projector effect voices, printable ASCII and
+    Unicode glyph banks with their original AI Warp / Revision 3 bank
+    credits, the 250 LAB snapshots) - CC0 1.0.
+  - AI WARP ENGINE (Rolling Scan, Tape Grain and Tracking Tear voices, the
+    DROP THE MILK?, B&W and HUE master twins, native-first local media
+    playback) - CC0 1.0 / The Unlicense.
+  - K-Meleon-R (WebView2 host hardening patterns and the cursor guard)
+    by River Lyle Reuveni (TheImortalimp).
+  AI WARP ENGINE credits Arena.ai and GitHub Copilot as creative tools.
+
+BUNDLED COMPONENTS
+  The installer redistributes the following components. Their license texts
+  are installed in the "licenses" folder next to GlitchPlayerR4.exe.
+
+  - .NET runtime and Windows Desktop runtime (self-contained)
+    Copyright (c) .NET Foundation and Contributors. MIT License.
+    licenses\Microsoft.NETCore.App.Runtime.win-x64-LICENSE.txt
+    licenses\Microsoft.NETCore.App.Runtime.win-x64-THIRD-PARTY-NOTICES.txt
+    licenses\Microsoft.WindowsDesktop.App.Runtime.win-x64-LICENSE.txt
+
+  - System.Management (part of the .NET libraries), MIT License; covered by
+    the .NET runtime license and notices above.
+
+  - Microsoft Edge WebView2 SDK (Microsoft.Web.WebView2 1.0.4314.35)
+    Copyright (C) Microsoft Corporation. BSD-style license; its notice is
+    reproduced in:
+    licenses\Microsoft.Web.WebView2-LICENSE.txt
+    licenses\Microsoft.Web.WebView2-NOTICE.txt
+
+NOT BUNDLED
+  - Microsoft Edge WebView2 Runtime: installed separately by Windows or
+    Microsoft and governed by Microsoft's own terms.
+  - YouTube: playback of YouTube links you enter uses the YouTube embedded
+    player (youtube-nocookie.com) and is subject to YouTube's terms.
+  - Windows media codecs used for local media conversion belong to Windows.
+  - No FFmpeg, Three.js or other third-party media libraries are included.

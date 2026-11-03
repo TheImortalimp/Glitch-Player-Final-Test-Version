@@ -1,0 +1,144 @@
+.svg-defs {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.photosensitivityWarning {
+    max-width: 42rem;
+    margin: 0.8rem auto;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid rgba(255, 190, 80, 0.75);
+    border-radius: 0.3rem;
+    background: rgba(68, 38, 0, 0.68);
+    color: #ffe4ad;
+    font: 0.82rem/1.45 "Courier New", monospace;
+    text-align: left;
+}
+
+#glyph-bank {
+    max-width: 190px;
+}
+
+#glyph-info {
+    max-width: 190px;
+    overflow: hidden;
+    color: #a9dce8;
+    font: 0.65rem/1.3 "Courier New", monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preset-bar > label[for="glyph-bank"] {
+    color: hsl(var(--pp-hue, 174), 100%, 70%);
+    font: 0.66rem "Courier New", monospace;
+}
+
+#presetImportInput {
+    display: none;
+}
+
+#ytPlayerMount iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Master dock section headers + readouts (CSP blocks inline style attributes). */
+.dock-section-label {
+    grid-column: 1 / -1;
+    opacity: 0.85;
+    letter-spacing: 0.04em;
+}
+
+.master-readout {
+    min-width: 2.4em;
+    color: #8ff;
+    font: 9px monospace;
+}
+
+/* AI WARP MASTERS: DROP THE MILK?, B&W Strength, Hue Offset. */
+.aiw-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 0 4px;
+}
+
+.aiw-button {
+    margin: 0;
+    padding: 2px 6px;
+    border: 1px solid #fff;
+    background: #000;
+    color: #fff;
+    font: clamp(7px, 0.95vw, 9px) "Courier New", monospace;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.aiw-button.active {
+    border-color: #f0f;
+    background: linear-gradient(90deg, #2a0038, #003a44);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(255, 0, 255, 0.45);
+}
+
+.aiw-button:focus-visible,
+.lock-button:focus-visible {
+    outline: 1px solid #4de1ff;
+    outline-offset: 1px;
+}
+
+.slider-group.aiw-row {
+    grid-template-columns: max-content minmax(36px, 1fr) auto auto auto;
+}
+
+.aiw-preview {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    vertical-align: middle;
+}
+
+.aiw-preview-bw {
+    background: linear-gradient(90deg, #000 0 50%, #fff 50% 100%);
+}
+
+.aiw-preview-hue {
+    --hue-position: 0%;
+    width: 22px;
+    background:
+        linear-gradient(#fff, #fff) var(--hue-position) 0 / 2px 100% no-repeat,
+        linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+/* Scroll room so the last dock rows (AI WARP MASTERS) can clear the EAR HUD. */
+body.playback-on #sliderContainer::after {
+    content: "";
+    display: block;
+    height: 120px;
+}
+
+/* LAB 250 list skin (USER = purple-violet, MACHINE = orange-yellow). */
+#presetListToggleBtn.list-lab {
+    border-color: rgba(60, 230, 255, 0.95) !important;
+    background: linear-gradient(180deg, rgba(0, 150, 190, 0.6), rgba(40, 220, 255, 0.5)) !important;
+    color: #dcfbff !important;
+    text-shadow: 0 0 6px rgba(80, 230, 255, 0.85) !important;
+    box-shadow: 0 0 8px rgba(40, 210, 255, 0.5), inset 0 0 8px rgba(60, 220, 255, 0.28) !important;
+}
+
+#presetListToggleBtn.list-lab:hover {
+    background: linear-gradient(180deg, rgba(20, 180, 220, 0.92), rgba(90, 235, 255, 0.88)) !important;
+    color: #001b22 !important;
+    text-shadow: none !important;
+}
+
+#presetSelect.list-lab {
+    border-color: rgba(90, 225, 255, 0.9) !important;
+    background: rgba(0, 170, 210, 0.4) !important;
+    color: #e6fdff !important;
+}

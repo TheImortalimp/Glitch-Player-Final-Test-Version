@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://i.ytimg.com; media-src 'self' blob: https://media-r4.local; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Standalone Revision R Final 4.0 — Glitch Canvas</title>
+    <link rel="stylesheet" href="css/welcome-screen.css">
+    <link rel="stylesheet" href="css/glitch-player.css">
+    <link rel="stylesheet" href="css/r4.css">
+</head>
+<body>
+    <section id="welcomeScreen" role="dialog" aria-modal="true" aria-label="Glitch Canvas initialization">
+        <div class="welcomePanel">
+            <div class="welcomeMark" aria-hidden="true"><span>[</span>R<span>]</span></div>
+            <p class="welcomeKicker">STANDALONE REVISION R FINAL 4.0</p>
+            <h1>Glitch Canvas Initialization</h1>
+            <p class="welcomeDescription">A visual media shell for YouTube, MP4, and MP3 playback.</p>
+            <p class="photosensitivityWarning" role="note">Photosensitivity warning: this app includes flash and strobe effects, and some MACHINE presets, randomize and auto modes switch them on. Start with low effect levels and stop playback if you feel discomfort.</p>
+            <div class="welcomeRule" aria-hidden="true"></div>
+            <div class="welcomeActions">
+                <button id="welcomeEnterBtn" type="button" autofocus>Enter Player</button>
+                <a class="welcomeSiteLink" href="https://www.imortalimp.nl" target="_blank" rel="noopener noreferrer">imortalimp.nl</a>
+            </div>
+            <p class="welcomeStatus"><span class="statusDot" aria-hidden="true"></span> LOCAL APP HOST READY</p>
+        </div>
+    </section>
+    <div id="moon-veil" aria-hidden="true"></div>
+    <div id="rev3-mark" aria-hidden="true">REVISION 3 &nbsp;//&nbsp; HARD-LIGHT · MOONLIGHT</div>
+    <div id="effects-wrapper">
+        <img id="localArt" alt="Album art">
+        <video id="video" playsinline></video>
+        <audio id="localAudio" playsinline></audio>
+        <div id="ytWarpShell"><div id="ytFrame"><div id="ytPlayerMount"></div></div></div>
+        <canvas id="glitchCanvas"></canvas>
+    </div>
+    <a href="https://www.imortalimp.nl" id="wired-btn" class="wired-button" target="_blank" rel="noopener noreferrer"><strong>OPEN IMORTALIMP.NL</strong></a>
+    <aside id="nowPlayingHud" class="np-hud is-empty" hidden aria-live="polite">
+        <button type="button" id="npHudToggle" class="wired-button" aria-expanded="true" aria-controls="npHudPanel" title="Toggle now-playing info">NOW PLAYING</button>
+        <div id="npHudPanel" role="region" aria-label="Now playing">
+            <div class="np-row">
+                <img id="npThumb" alt="">
+                <div class="np-meta">
+                    <div id="npTitle"></div>
+                    <a id="npAuthor" href="#" target="_blank" rel="noopener noreferrer"></a>
+                    <div id="npProvider"></div>
+                    <div id="npTime"></div>
+                    <div id="npFlags"></div>
+                    <a id="npLink" href="#" target="_blank" rel="noopener noreferrer">WATCH</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+    <aside id="earHud" class="ear-hud" aria-live="polite">
+        <div class="ear-hud-head">
+            <span id="earHudMode">EAR AUTO</span>
+            <span id="earHudPhase">CALM</span>
+        </div>
+        <div class="ear-meters">
+            <div class="ear-meter" data-k="level"><span>LVL</span><div class="ear-track"><i id="earMeterLevel"></i></div></div>
+            <div class="ear-meter" data-k="bass"><span>BAS</span><div class="ear-track"><i id="earMeterBass"></i></div></div>
+            <div class="ear-meter" data-k="mid"><span>MID</span><div class="ear-track"><i id="earMeterMid"></i></div></div>
+            <div class="ear-meter" data-k="treb"><span>TRB</span><div class="ear-track"><i id="earMeterTreb"></i></div></div>
+            <div class="ear-meter" data-k="build"><span>BLD</span><div class="ear-track"><i id="earMeterBuild"></i></div></div>
+        </div>
+        <div id="earHudSrc">src none · mix 0.00</div>
+    </aside>
+    <div id="rightRack">
+        <button id="autoGlitchBtn" class="wired-button">Auto Glitch: OFF</button>
+        <button id="randomizeBtn" class="wired-button">Randomize</button>
+        <button id="continualRandomizeBtn" class="wired-button">Continual Randomization: ON</button>
+        <button id="aiWarpBtn" class="wired-button">AI Video Warp: OFF</button>
+        <button id="automatedMastersBtn" class="wired-button">Automated Masters: OFF</button>
+        <button id="zeroAllBtn" class="wired-button zero-all-btn">⬛ ZERO ALL EFFECTS</button>
+    </div>
+    <div id="ghostBtnRack">
+        <button id="ghostProtocolBtn" class="wired-button">GHOST PROTOCOL: OFF</button>
+        <button id="vsyncScanBtn" class="wired-button" title="TV simulator · vertical scan-phasing">V-SYNC: OFF</button>
+        <button id="softEyeBtn" class="wired-button" title="R2 SOFT-EYE · calm board with occasional crescendos, timed by the audio ear + canvas. Click: toggle. Shift+click: call a crescendo now.">SOFT-EYE: CALM</button>
+        <button id="hardLightBtn" class="wired-button" title="R3 HARD-LIGHT · mashup invert of SOFT-EYE. Gold/magenta dual-rim, moonlight veil goes overlay. Toggle anytime.">HARD-LIGHT: OFF</button>
+        <button id="earBtn" class="wired-button ear-auto" title="R3 EAR · AUTO crossfades local audio into canvas motion. YouTube audio cannot be sampled.">EAR: AUTO</button>
+    </div>
+    <div id="sliderContainer">
+        <div class="slider-group"><label>Ghost Protocol:</label><input type="range" min="0" max="1" step="0.01" value="1" id="ghostProtocolSlider"></div>
+        <div class="slider-group"><label id="vsyncScanLabel">V-Sync: OFF (level held)</label><input type="range" min="0" max="1" step="0.001" value="0.6" id="vsyncScanSlider"><button type="button" id="vsyncLockBtn" class="lock-button">&#60;LOCK!&#62;</button></div>
+        <div class="slider-group"><label>Random Seed:</label><input type="range" min="0" max="1" step="0.001" value="0" id="randomSeedSlider"></div>
+    </div>
+    <input id="ytInput" type="text" placeholder="Paste YouTube URL or 11-character video ID" autocomplete="off" spellcheck="false">
+    <button id="startBtn">Start and Play</button>
+    <h2 id="suggestedVideo" class="suggested">SUGGESTED VIDEO : https://www.youtube.com/watch?v=gopYmb38DgM</h2>
+    <h2 id="suggestedVideo3" class="suggested">SUGGESTED LINK : https://www.youtube.com/watch?v=uvSXL6ypLlw</h2>
+    <h2 id="suggestedVideo2" class="suggested">SUGGESTED *.* : https://www.youtube.com/watch?v=8o6bdTOhIyE</h2>
+    <h2 id="suggestedYoutube" class="suggested">SUGGESTED YOUTUBE : https://www.youtube.com/watch?v=QsUmvGkXhnk</h2>
+    <h2 id="suggestedPlaylist" class="suggested">SUGGESTED PLAYLIST : https://www.youtube.com/watch?v=RgFaK6ZQifE&amp;list=RDEMWUbu7UjvrEYUSE4m8ATOcw&amp;start_radio=1</h2>
+    <h2 id="suggestedMoonlight" class="suggested">MOONLIGHT</h2>
+    <h2 id="suggestedFractals" class="suggested">§§3+ Hours of Trippy Fractals§§</h2>
+    <h2 id="suggestedNightCity" class="suggested">Night City Walk ✧ Cyberpunk Neon Rain Ambience | Dreamy Synthwave Vibes | Sleep ✧ Chill ✧ Relax</h2>
+    <h2 id="testCanvas" class="suggested">Fade "WHITE 2 BLACK 2 WHITE"</h2>
+    <h2 id="suggestedDarksynth" class="suggested" title="Harpazz Mix — Checkmate [extreme slowed] · @HarpazzOfficial">DARKSYNTH RADIO</h2>
+    <h2 id="Defcon1Video">DEFCON 1</h2>
+    <button id="zeroAllInitBtn" class="wired-button zero-all-btn zero-all-init">⬛ ZERO ALL EFFECTS</button>
+    <div id="openFileWrap">
+        <span id="openFileBtn">Open Local Media</span>
+        <input type="file" id="fileInput" accept="audio/*,video/*,.mkv,.avi,.wmv,.asf,.wma,.mov,.flac,.opus,.aac,.amr,.ts,.m2ts,.mts,.mpg,.mpeg,.3gp,.3g2,.aiff,.aif,.ac3,.m4v,.m4a,.mp3,.mp4,.wav,.ogg,.oga,.ogv,.webm" title="Select a local audio or video file">
+    </div>
+    <button id="preset-toggle-btn" aria-expanded="false" aria-controls="preset-dropdown-container">Show Presets</button>
+    <div id="preset-dropdown-container">
+        <div class="preset-fxclip" aria-hidden="true">
+            <div class="preset-ghostbar"></div>
+        </div>
+        <div class="preset-closezone" id="presetCloseZone" title="Close preset browser" role="button" aria-label="Close preset browser"></div>
+        <div class="preset-bar">
+            <label for="glyph-bank">Glyph bank:</label>
+            <select id="glyph-bank" title="Choose the glyph source"></select>
+            <span id="glyph-info" aria-live="polite"></span>
+            <div class="current-preset-display" id="current-preset-display">NO PRESET LOADED</div>
+            <select id="presetSelect" title="Preset list"></select>
+            <button id="presetListToggleBtn" type="button" title="Switch between user presets and the fixed built-in preset banks">USER</button>
+            <button id="presetLabBtn" type="button" title="Switch to the 250 immutable LAB snapshots">LAB 250</button>
+            <button id="presetAutoBtn" type="button" title="Auto-cycle presets"> -ʁ%AUTO%ʁ- </button>
+            <input id="presetNameInput" type="text" placeholder="preset name">
+            <button id="presetSaveBtn" title="Save current board as a USER preset">Save</button>
+            <button id="presetDeleteBtn" title="Delete selected USER preset">Delete</button>
+            <button id="presetDeleteAllBtn" title="Delete every USER preset">Delete All</button>
+            <button id="presetImportBtn" type="button" title="Import user presets from JSON">Import</button>
+            <button id="presetExportBtn" type="button" title="Export user presets to JSON">Export</button>
+            <input id="presetImportInput" type="file" accept=".json,application/json" hidden>
+            <button id="presetPrevBtn" title="Previous preset">&lsaquo;</button>
+            <button id="presetNextBtn" title="Next preset">&rsaquo;</button>
+        </div>
+    </div>
+    <div id="ui-toggle-tab">
+        <button id="toggle-ui-btn">HIDE CONTROL U.I.</button>
+    </div>
+
+    <svg class="svg-defs" width="0" height="0" aria-hidden="true">
+        <filter id="ai-warp-filter" color-interpolation-filters="sRGB">
+            <feTurbulence id="ai-turbulence" type="turbulence" baseFrequency="0.0010" numOctaves="1" seed="7" result="noise"></feTurbulence>
+            <feDisplacementMap id="ai-displacement" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" result="warped"></feDisplacementMap>
+            <feColorMatrix id="ai-color-matrix" in="warped" type="hueRotate" values="0"></feColorMatrix>
+        </filter>
+        <filter id="vsync-hue-ghost-filter" color-interpolation-filters="sRGB">
+            <feColorMatrix id="vsync-ghost-hue" in="SourceGraphic" type="hueRotate" values="0" result="vsync_hue_shifted"></feColorMatrix>
+            <feColorMatrix id="vsync-ghost-saturate" in="vsync_hue_shifted" type="saturate" values="1" result="vsync_saturated"></feColorMatrix>
+            <feConvolveMatrix id="vsync-ghost-sharpen" in="vsync_saturated" order="3" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0" divisor="1" edgeMode="duplicate" preserveAlpha="true"></feConvolveMatrix>
+        </filter>
+    </svg>
+
+    <script src="js/glitch-engine.js"></script>
+    <script src="js/glyph-library.js"></script>
+    <script src="js/r3-factories.js"></script>
+    <script src="js/r3-ghost-vsync.js"></script>
+    <script src="js/r4-policy.js"></script>
+    <script src="js/host-bridge.js"></script>
+    <script src="js/yt-embed.js"></script>
+    <script src="js/glitch-player.js"></script>
+</body>
+</html>

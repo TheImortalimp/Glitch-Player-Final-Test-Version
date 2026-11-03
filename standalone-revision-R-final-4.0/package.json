@@ -1,0 +1,13 @@
+{
+  "name": "glitch-player-r4",
+  "version": "4.0.0",
+  "description": "Web UI policy and merge tests for Glitch Player standalone-revision-R-final-4.0",
+  "private": true,
+  "license": "CC0-1.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"tests/web/*.test.mjs\""
+  }
+}

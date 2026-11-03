@@ -1,0 +1,58 @@
+GLITCH PLAYER - STANDALONE REVISION R FINAL 4.0
+Installer notices - please read before continuing.
+
+1. NOT CODE-SIGNED
+   This installer and the app are not code-signed. Microsoft Defender
+   SmartScreen may warn about them. Only run a copy you built yourself or
+   downloaded from the official GitHub release, and compare its SHA-256
+   checksum with the published value.
+
+2. PER-USER INSTALL, NO ADMINISTRATOR RIGHTS
+   The app installs only for the current Windows account, into
+   %LOCALAPPDATA%\Programs\Glitch-Player-R4, and needs no administrator
+   rights. Setup itself runs no scripts and changes no Windows settings.
+
+   While the app is running, its cursor guard (from K-Meleon-R) protects
+   your account against themed-pointer takeovers. It resets any mouse
+   pointer that is not a built-in Windows cursor from %WINDIR%\Cursors to
+   the Windows default and turns off "allow themes to change mouse
+   pointers". If the per-user Personalization policy key already exists, it
+   also sets NoChangingMousePointers and NoChangingSoundScheme there. These
+   per-user changes remain after the app closes and are not undone by
+   uninstalling. The Defender watchdog only reads Windows Security Center
+   status and keeps WebView2 reputation checks on.
+
+3. REQUIREMENTS
+   64-bit Windows 10 version 2004 (build 19041) or later, and the
+   Microsoft Edge WebView2 Runtime (Evergreen). The WebView2 Runtime ships
+   with Windows 11 and current Windows 10. Setup checks for it but does not
+   download anything.
+
+4. PRIVACY AND NETWORK USE
+   The player, effects, presets and local media conversion work offline.
+   There is no telemetry, analytics or automatic screen capture. The app
+   connects to YouTube (youtube-nocookie.com and i.ytimg.com thumbnails)
+   only when you enter a YouTube link yourself. The imortalimp.nl buttons
+   open your default browser.
+
+5. YOUR DATA
+   Presets, settings, the converted local media cache and size-capped logs
+   are stored in %LOCALAPPDATA%\Glitch-Player-R4. Uninstalling keeps this
+   folder unless you choose to delete it. Export your presets first if you
+   want a backup.
+
+6. PHOTOSENSITIVITY WARNING
+   The app can produce rapid flashing, strobing and high-contrast flicker.
+   Flash and Strobe start at zero. Some built-in MACHINE presets and the
+   hidden GHOST / OF ME preset contain flash and strobe; GHOST / OF ME asks
+   for confirmation first. Do not use these effects if you or anyone
+   watching may be sensitive to flashing light.
+
+7. LICENSES
+   Glitch Player is dedicated to the public domain under CC0 1.0 by
+   River Lyle Reuveni (Imortalimp). It merges effects from Glitch Player
+   Revision 3, the Glitch Canvas Projector and AI WARP ENGINE (CC0 1.0 /
+   The Unlicense) by the same author. Bundled components keep their own
+   licenses: the .NET runtime (MIT) and the Microsoft WebView2 SDK. Their
+   full license texts are installed in the "licenses" folder; see
+   THIRD-PARTY-NOTICES.txt.

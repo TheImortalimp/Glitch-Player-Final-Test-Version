@@ -1,0 +1,1567 @@
+/* Glitch Player R4 ? Revision 3 HARD-LIGHT / MOONLIGHT stylesheet (extracted from standalone-revision-R-final-3.0, CC0). */
+/* ===== FULL INLINE CSS – no external file needed ===== */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #000;
+    cursor: crosshair
+}
+body {
+    font-family: 'Courier New', monospace;
+    color: #fff
+}
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%
+}
+#glitchCanvas {
+    z-index: 5;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%
+}
+#effects-wrapper {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform-origin: 50% 50%
+}
+#ytWarpShell,
+#ytFrame,
+#ytPlayerMount {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transform-origin: 50% 50%;
+    will-change: transform, filter;
+    backface-visibility: hidden
+}
+#ytPlayerMount iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    z-index: 0;
+    transform-origin: 50% 50%;
+    pointer-events: none
+}
+#video {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    pointer-events: none;
+    display: none
+}
+body.local-video #video {
+    display: block
+}
+#localArt {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    background: #000;
+    z-index: 1;
+    pointer-events: none
+}
+body.local-audio #localArt {
+    display: block
+}
+#localAudio {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none
+}
+.wired-button {
+    font-family: 'Courier New', monospace;
+    text-decoration: none;
+    color: #0ff;
+    background: rgba(0, 20, 20, 0.5);
+    border: 2px solid #0ff;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 255, 255, .5), 0 0 20px rgba(0, 255, 255, .3), inset 0 0 15px rgba(0, 255, 255, .2);
+    text-shadow: 0 0 4px #0ff, 0 0 8px #0ff;
+    animation: crt-flicker .2s infinite;
+    transition: color .4s ease, border-color .4s ease, box-shadow .45s ease, background .4s ease, opacity .35s ease;
+    user-select: none;
+    -webkit-user-select: none
+}
+.wired-button:hover {
+    background: rgba(0, 40, 40, 0.7);
+    box-shadow: 0 0 15px rgba(0, 255, 255, .8), 0 0 30px rgba(0, 255, 255, .5), inset 0 0 20px rgba(0, 255, 255, .3)
+}
+.wired-button:active {
+    transform: scale(.95) rotate(-1deg);
+    background: rgba(255, 0, 255, 0.3)
+}
+.wired-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, .15) 50%, rgba(0, 0, 0, .3) 50%);
+    background-size: 100% var(--scanline-thickness, 4px);
+    opacity: .6;
+    animation: scanline-move var(--scanline-speed, 4s) linear infinite;
+    pointer-events: none
+}
+@keyframes crt-flicker {
+    0%,
+    100% {
+        opacity: .9
+    }
+    50% {
+        opacity: 1
+    }
+}
+@keyframes scanline-move {
+    from {
+        background-position: 0 0
+    }
+    to {
+        background-position: 0 -8px
+    }
+}
+#ytInput,
+#startBtn,
+.suggested,
+#openFileWrap {
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #fff;
+    z-index: 2000;
+    pointer-events: auto
+}
+#ytInput {
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    max-width: 86vw;
+    font-size: 11px;
+    padding: 4px 8px;
+    user-select: text;
+    -webkit-user-select: text;
+    cursor: text
+}
+#startBtn {
+    top: 46%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all .2s ease
+}
+#startBtn:hover {
+    background: rgba(0, 180, 180, 0.35)
+}
+.suggested {
+    margin: 0;
+    font-weight: 400;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: .9em;
+    letter-spacing: .05em;
+    background: 0 0;
+    border: none;
+    text-shadow: 0 0 8px rgba(0, 255, 255, .6);
+    opacity: .2;
+    cursor: pointer;
+    padding: 2px 0;
+    transition: opacity .2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+.suggested:hover,
+.suggested:focus {
+    opacity: 1 !important;
+    text-shadow: 0 0 12px #0ff, 0 0 24px #0ff
+}
+#suggestedVideo {
+    top: 0
+}
+#suggestedVideo3 {
+    top: 5%
+}
+#suggestedVideo2 {
+    top: 10%
+}
+#suggestedYoutube {
+    top: 15%
+}
+#suggestedPlaylist {
+    top: 20%
+}
+#suggestedFractals {
+    top: 56%
+}
+#testCanvas {
+    top: 50%
+}
+#suggestedNightCity {
+    top: 65%;
+    font-size: 1.15em;
+    line-height: 1.25;
+    letter-spacing: .02em;
+    color: #f5f6fa;
+    opacity: .7;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    background: linear-gradient(100deg, #9aa0ad 0, #fff 20%, #dfe3ee 34%, #dc143c 50%, #ff5570 58%, #fff 76%, #9aa0ad 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: nightCityShine 4.5s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, .35)) drop-shadow(0 0 10px rgba(220, 20, 60, .35));
+    transition: opacity .2s, filter .25s
+}
+@keyframes nightCityShine {
+    from {
+        background-position: 0 center
+    }
+    to {
+        background-position: 200% center
+    }
+}
+#suggestedNightCity:hover,
+#suggestedNightCity:focus {
+    opacity: 1 !important;
+    animation-duration: 2.2s;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, .7)) drop-shadow(0 0 18px rgba(255, 60, 90, .8))
+}
+@media(prefers-reduced-motion:reduce) {
+    #suggestedNightCity {
+        animation: none;
+        background-position: 50% center
+    }
+}
+#Defcon1Video {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 74%;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(1.4em, 4.4vw, 3.2em);
+    color: #fff;
+    cursor: pointer;
+    z-index: 2000;
+    width: 100%;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+    letter-spacing: .04em;
+    line-height: 1.1;
+    text-shadow: 0 0 8px #0ff, 0 0 16px #0ff;
+    transition: opacity .2s, color .2s, text-shadow .2s
+}
+#Defcon1Video:hover {
+    color: #0ff;
+    text-shadow: 0 0 16px #fff, 0 0 32px #0ff
+}
+#suggestedDarksynth {
+    top: 70%;
+    font-size: clamp(1.05em, 3.2vw, 2em);
+    letter-spacing: .2em;
+    color: #ff5570;
+    opacity: .55;
+    text-shadow: 0 0 8px #dc143c, 0 0 18px #7af7ff;
+    white-space: nowrap
+}
+#suggestedDarksynth:hover,
+#suggestedDarksynth:focus {
+    opacity: 1 !important;
+    color: #fff;
+    text-shadow: 0 0 10px #fff, 0 0 22px #ff5570, 0 0 28px #7af7ff
+}
+#openFileWrap {
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    height: 44px;
+    display: block;
+    z-index: 9999;
+    box-sizing: border-box;
+    background: 0 0;
+    border: none
+}
+#openFileBtn {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #0ff;
+    background: rgba(0, 0, 0, .9);
+    border: 2px solid #0ff;
+    border-radius: 6px;
+    z-index: 1;
+    box-sizing: border-box;
+    pointer-events: none;
+    box-shadow: 0 0 12px rgba(0, 255, 255, .5), inset 0 0 14px rgba(0, 255, 255, .15);
+    text-shadow: 0 0 4px #0ff
+}
+#fileInput {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+    font-size: 18px
+}
+.file-input-hidden {
+    display: none
+}
+.visually-hidden {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden
+}
+#wired-btn {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    font-size: clamp(11px, 1.4vw, 18px);
+    z-index: 3000;
+    display: none
+}
+#rightRack {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3000;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    max-width: min(240px, 42vw)
+}
+#rightRack .wired-button {
+    font-size: clamp(8px, 1vw, 10px);
+    padding: 4px 8px;
+    white-space: normal;
+    margin: 0
+}
+#ghostBtnRack {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 3100;
+    display: none;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+    max-width: calc(100vw - 24px)
+}
+#ghostBtnRack .wired-button {
+    margin: 0;
+    font-size: clamp(8px, 1vw, 10px);
+    padding: 4px 8px;
+    white-space: nowrap;
+    min-width: 120px
+}
+/* R2 SOFT-EYE HUD — the button's underline fills with the crescendo amount */
+#softEyeBtn {
+    --k: 0;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: .04em;
+    transition: color .6s ease, border-color .6s ease, text-shadow .6s ease;
+}
+#softEyeBtn::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0;
+    height: 2px;
+    width: calc(var(--k) * 100%);
+    background: linear-gradient(90deg, hsl(313, 90%, 60%), hsl(145, 80%, 55%), hsl(45, 100%, 60%));
+    transition: width .25s linear;
+    opacity: .9;
+}
+#softEyeBtn.wild {
+    color: hsl(45, 100%, 72%);
+    border-color: hsl(45, 100%, 62%);
+    text-shadow: 0 0 10px hsla(45, 100%, 60%, .8);
+}
+#softEyeBtn.burst {
+    box-shadow: 0 0 14px hsla(313, 90%, 60%, .55), inset 0 0 8px hsla(145, 80%, 55%, .35);
+}
+body.playback-on #wired-btn,
+body.playback-on #rightRack,
+body.playback-on #ghostBtnRack {
+    display: flex
+}
+body.playback-on #wired-btn {
+    display: block
+}
+/* ===== ZERO ALL EFFECTS — inverted-cyan = red/magenta palette ===== */
+.zero-all-btn {
+    color: #ff2d55 !important;
+    background: rgba(40, 0, 10, 0.72) !important;
+    border: 2px solid #ff2d55 !important;
+    box-shadow: 0 0 12px rgba(255, 45, 85, .65), 0 0 28px rgba(255, 45, 85, .35),
+                inset 0 0 16px rgba(255, 45, 85, .18) !important;
+    text-shadow: 0 0 5px #ff2d55, 0 0 12px #ff2d55 !important;
+    font-weight: 700;
+    letter-spacing: .04em
+}
+.zero-all-btn:hover {
+    background: rgba(255, 45, 85, 0.22) !important;
+    box-shadow: 0 0 20px rgba(255, 45, 85, .9), 0 0 40px rgba(255, 45, 85, .55),
+                inset 0 0 22px rgba(255, 45, 85, .28) !important
+}
+.zero-all-btn:active {
+    transform: scale(.95);
+    background: rgba(255, 45, 85, 0.45) !important
+}
+/* Init-screen variant: fixed bottom-left, always on top, visible before and after playback */
+#zeroAllInitBtn {
+    position: fixed;
+    bottom: 72px;
+    right: 20px;
+    z-index: 9998;
+    font-size: clamp(11px, 1.3vw, 15px);
+    padding: 7px 14px;
+    display: block;
+    pointer-events: auto
+}
+/* Hide the init button once the rightRack is showing (playback-on) to avoid duplicate */
+body.playback-on #zeroAllInitBtn {
+    display: none
+}
+#ghostProtocolBtn.active {
+    background: rgba(0, 255, 255, .18);
+    box-shadow: 0 0 22px rgba(102, 252, 241, .35)
+}
+#vsyncScanBtn.ghost-synced {
+    border-color: rgba(186, 140, 255, .9);
+    color: #d9b3ff;
+    box-shadow: 0 0 18px rgba(186, 140, 255, .3), inset 0 0 12px rgba(186, 140, 255, .15);
+    text-shadow: 0 0 4px #b06cff, 0 0 8px #b06cff
+}
+#vsyncScanBtn.active.ghost-synced {
+    background: rgba(120, 80, 220, .22);
+    animation: crt-flicker .2s infinite, vsync-sync-pulse 1.6s ease-in-out infinite
+}
+#vsyncScanBtn.mode-ghost-off {
+    border-color: rgba(255, 120, 120, .8);
+    color: #ff9a9a;
+    background: rgba(60, 0, 0, .4);
+    box-shadow: 0 0 16px rgba(255, 90, 90, .28)
+}
+#vsyncScanBtn.mode-full {
+    border-color: rgba(255, 214, 102, .95);
+    color: #ffe28a;
+    background: rgba(90, 60, 0, .35);
+    box-shadow: 0 0 24px rgba(255, 200, 80, .4);
+    animation: crt-flicker .2s infinite
+}
+#vsyncScanBtn.hard-off {
+    border-color: rgba(255, 96, 96, .85);
+    color: #ff8f8f;
+    box-shadow: 0 0 12px rgba(255, 96, 96, .25), inset 0 0 8px rgba(120, 0, 0, .3);
+    text-shadow: 0 0 4px rgba(255, 110, 110, .7);
+    opacity: .92
+}
+#vsyncScanBtn.hard-off:hover {
+    background: rgba(120, 0, 0, .25);
+    box-shadow: 0 0 16px rgba(255, 96, 96, .4), inset 0 0 10px rgba(120, 0, 0, .35)
+}
+#vsyncScanBtn.hard-off.ghost-color {
+    border-color: rgba(216, 160, 255, .92);
+    color: #f0ccff;
+    box-shadow: 0 0 18px rgba(190, 120, 255, .45), inset 0 0 12px rgba(120, 40, 180, .35);
+    text-shadow: 0 0 6px rgba(216, 160, 255, .9);
+    animation: vsyncGhostColorPulse 2.2s ease-in-out infinite;
+    opacity: 1
+}
+@keyframes vsync-sync-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 14px rgba(160, 120, 255, .4), inset 0 0 10px rgba(160, 120, 255, .2)
+    }
+    50% {
+        box-shadow: 0 0 26px rgba(120, 200, 255, .6), inset 0 0 16px rgba(120, 200, 255, .3)
+    }
+}
+@keyframes vsyncGhostColorPulse {
+    0%,
+    100% {
+        box-shadow: 0 0 12px rgba(190, 120, 255, .32), inset 0 0 8px rgba(120, 40, 180, .26)
+    }
+    50% {
+        box-shadow: 0 0 24px rgba(205, 155, 255, .6), inset 0 0 14px rgba(150, 80, 220, .38)
+    }
+}
+#sliderContainer {
+    position: absolute;
+    top: 72px;
+    left: 12px;
+    z-index: 2000;
+    display: none;
+    width: min(42vw, 520px);
+    min-width: min(320px, calc(100vw - 24px));
+    max-width: min(520px, calc(100vw - 24px));
+    max-height: calc(100dvh - 136px);
+    overflow-x: auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, .85);
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 10px;
+    box-shadow: 0 0 14px rgba(0, 255, 255, .18);
+    opacity: .95;
+    backdrop-filter: blur(10px);
+    font-size: .82em
+}
+body.playback-on #sliderContainer {
+    display: block
+}
+.slider-group {
+    display: grid;
+    grid-template-columns: max-content minmax(36px, 1fr) auto auto;
+    align-items: center;
+    gap: 3px 6px;
+    margin-bottom: 2px;
+    min-width: 0
+}
+.slider-group label {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(8px, 1.05vw, 11px);
+    line-height: 1.15;
+    color: #fff;
+    white-space: nowrap;
+    min-width: max-content
+}
+.slider-group input[type=range] {
+    width: 100%;
+    min-width: 36px;
+    height: clamp(14px, 2.1vh, 20px);
+    margin: 0;
+    accent-color: #4de1ff
+}
+.slider-group input[type=range]:disabled {
+    opacity: .28;
+    cursor: not-allowed
+}
+.slider-group button,
+.lock-button,
+.trigger-button {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(7px, .95vw, 9px);
+    color: #fff;
+    background: #000;
+    border: 1px solid #fff;
+    cursor: pointer;
+    padding: 2px 4px;
+    white-space: nowrap;
+    margin: 0
+}
+.lock-button.locked,
+.trigger-button.locked {
+    color: #000;
+    background: #fff
+}
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 255, 13, .8);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 100;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity .5s;
+    pointer-events: none;
+    max-width: 90vw;
+    text-align: center
+}
+
+/* ===== NOW PLAYING oEmbed HUD ======================================= */
+#nowPlayingHud {
+    position: absolute;
+    top: 12px;
+    left: 118px;
+    z-index: 3600;
+    pointer-events: auto;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    max-width: min(360px, calc(100vw - 140px));
+    font-family: 'Courier New', monospace;
+    color: #fff
+}
+body.playback-on #nowPlayingHud:not(.is-empty) {
+    display: flex
+}
+body.ui-hidden #nowPlayingHud {
+    left: 12px;
+    top: 12px;
+    max-width: min(360px, calc(100vw - 24px))
+}
+#npHudToggle {
+    align-self: flex-start;
+    font-size: 10px;
+    padding: 4px 10px;
+    letter-spacing: .08em;
+    white-space: nowrap
+}
+#npHudPanel {
+    display: none;
+    background: rgba(0, 12, 16, .88);
+    border: 1px solid #0ff;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0, 255, 255, .35), inset 0 0 18px rgba(0, 255, 255, .08);
+    overflow: hidden;
+    backdrop-filter: blur(8px)
+}
+#nowPlayingHud.is-open #npHudPanel {
+    display: block
+}
+#nowPlayingHud.is-open #npHudToggle {
+    opacity: 1
+}
+.np-row {
+    display: flex;
+    gap: 10px;
+    padding: 8px 10px;
+    min-width: 0
+}
+#npThumb {
+    width: 96px;
+    height: 72px;
+    object-fit: cover;
+    background: #000;
+    border: 1px solid rgba(0, 255, 255, .35);
+    flex: 0 0 auto;
+    display: none
+}
+#npThumb.has-src {
+    display: block
+}
+.np-meta {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px
+}
+#npTitle {
+    font-size: 11px;
+    line-height: 1.25;
+    color: #fff;
+    text-shadow: 0 0 6px #0ff;
+    max-height: 2.5em;
+    overflow: hidden
+}
+#npAuthor {
+    font-size: 10px;
+    color: #0ff;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+#npAuthor:hover {
+    text-decoration: underline
+}
+#npProvider,
+#npTime,
+#npFlags {
+    font-size: 9px;
+    letter-spacing: .04em;
+    color: rgba(255, 255, 255, .72);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+#npFlags .np-loop {
+    color: #0f0;
+    text-shadow: 0 0 6px #0f0
+}
+#npLink {
+    margin-top: 3px;
+    font-size: 9px;
+    color: #0ff;
+    text-decoration: none;
+    letter-spacing: .1em
+}
+#npLink:hover {
+    text-shadow: 0 0 8px #0ff
+}
+#nowPlayingHud.is-empty,
+body:not(.playback-on) #nowPlayingHud {
+    display: none !important
+}
+/* === v10: PRESET BROWSER — Ghost Protocol + Scanlines live skin ===
+   Skin is driven by CSS custom props written from the Ghost Protocol /
+   V-Sync engines (updatePresetSkin()):
+   --pp-hue, --pp-scan-alpha, --pp-scan-size, --pp-scan-dur, --pp-ghost, --pp-glow */
+#preset-toggle-btn {
+    --pp-hue: 174;
+    --pp-ghost: 0;
+    --pp-glow: .3;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10020;
+    font-family: 'Courier New', monospace;
+    font-size: .66rem;
+    letter-spacing: .08em;
+    padding: 3px 12px;
+    border-radius: 0 0 8px 8px;
+    cursor: pointer;
+    display: none;
+    opacity: .5;
+    color: hsl(var(--pp-hue), 100%, 62%);
+    background: hsla(var(--pp-hue), 60%, 6%, .72);
+    border: 1px solid hsla(var(--pp-hue), 100%, 55%, .9);
+    box-shadow: 0 0 calc(6px + 10px * var(--pp-glow)) hsla(var(--pp-hue), 100%, 55%, calc(.28 + .3 * var(--pp-glow))),
+                inset 0 0 8px hsla(var(--pp-hue), 100%, 55%, .18);
+    text-shadow: 0 0 4px hsla(var(--pp-hue), 100%, 60%, .9);
+    animation: crt-flicker .2s infinite;
+    transition: all .2s
+}
+body.playback-on #preset-toggle-btn {
+    display: block
+}
+#preset-toggle-btn:hover {
+    background: hsla(var(--pp-hue), 100%, 55%, .85);
+    color: #04121a;
+    box-shadow: 0 2px 15px hsla(var(--pp-hue), 100%, 60%, .8)
+}
+/* === PRESET DROPDOWN — Ghost Protocol + Scanlines Skin === */
+#preset-dropdown-container {
+    --pp-hue: 174;
+    --pp-scan-alpha: .045;
+    --pp-scan-size: 3px;
+    --pp-scan-dur: 3s;
+    --pp-ghost: 0;
+    --pp-glow: .3;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 640px;
+    max-height: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg,
+                hsla(var(--pp-hue), 45%, 9%, .97) 0%,
+                hsla(var(--pp-hue), 55%, 5%, .97) 100%);
+    border-bottom: 1px solid hsla(var(--pp-hue), 100%, 55%, .8);
+    border-left: 1px solid hsla(var(--pp-hue), 100%, 55%, .3);
+    border-right: 1px solid hsla(var(--pp-hue), 100%, 55%, .3);
+    box-shadow: 0 0 calc(8px + 16px * var(--pp-glow)) hsla(var(--pp-hue), 100%, 55%, calc(.18 + .38 * var(--pp-glow))),
+                inset 0 0 calc(10px + 18px * var(--pp-ghost)) hsla(var(--pp-hue), 100%, 55%, .08),
+                inset 1px 0 0 hsla(4, 100%, 60%, calc(.10 * var(--pp-ghost))),
+                inset -1px 0 0 hsla(var(--pp-hue), 100%, 60%, calc(.16 * var(--pp-ghost)));
+    z-index: 10000;
+    transition: max-height .38s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity .3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 20px;
+    padding-bottom: 0;
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 0 0 10px 10px;
+}
+/* Scanline overlay — alpha/pitch/speed driven by the V-Sync + Scanlines engines */
+#preset-dropdown-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        hsla(var(--pp-hue), 100%, 60%, var(--pp-scan-alpha)) 0px,
+        hsla(var(--pp-hue), 100%, 60%, var(--pp-scan-alpha)) 1px,
+        transparent 1px,
+        transparent var(--pp-scan-size)
+    );
+    pointer-events: none;
+    z-index: 1;
+    animation: presetScanMove var(--pp-scan-dur) linear infinite;
+}
+#preset-dropdown-container::after {
+    content: 'GHOST PROTOCOL — PRESET MEMORY';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: 7.5px;
+    letter-spacing: .22em;
+    color: hsla(var(--pp-hue), 100%, 70%, calc(.3 + .35 * var(--pp-ghost)));
+    pointer-events: none;
+    z-index: 2;
+    white-space: nowrap;
+    text-shadow: 0 0 calc(4px + 6px * var(--pp-ghost)) hsla(var(--pp-hue), 100%, 60%, .6);
+    animation: crt-flicker .2s infinite;
+}
+/* Ghost scan-bar — visible only while the Ghost Protocol is engaged.
+   v10 fix: lives inside .preset-fxclip (overflow:hidden) so its translateY
+   sweep can never extend the panel's scroll region and spawn a scrollbar. */
+#preset-dropdown-container .preset-fxclip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: inherit;
+}
+#preset-dropdown-container .preset-ghostbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 12px;
+    pointer-events: none;
+    opacity: calc(var(--pp-ghost) * .85);
+    background: linear-gradient(to bottom, transparent,
+                hsla(var(--pp-hue), 100%, 65%, calc(.08 + .12 * var(--pp-ghost))), transparent);
+    mix-blend-mode: screen;
+    animation: presetGhostBar 4.2s linear infinite;
+}
+/* v10: top close strip — clicking the panel's top edge retracts it */
+#preset-dropdown-container .preset-closezone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    z-index: 4;
+    cursor: pointer;
+    background: transparent;
+}
+@keyframes presetScanMove {
+    from { background-position: 0 0; }
+    to   { background-position: 0 -60px; }
+}
+@keyframes presetGhostBar {
+    from { transform: translateY(-14px); }
+    to   { transform: translateY(110px); }
+}
+#preset-dropdown-container.open {
+    max-height: 40vh;
+    opacity: 1;
+    padding-bottom: 5px;
+    pointer-events: auto;
+    overflow-y: auto;
+}
+/* v10 fix: the panel never paints a scrollbar — not during the max-height
+   slide, not from decorative layers. Scrolling stays available (wheel/touch)
+   but invisible, so no glitchy right-edge scrollbar can ever appear. */
+#preset-dropdown-container {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#preset-dropdown-container::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+#preset-dropdown-container .preset-bar,
+#preset-dropdown-container .current-preset-display {
+    position: relative;
+    z-index: 2;
+}
+.preset-bar {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    box-sizing: border-box;
+}
+/* Fields (select/input) take the ghost-hued cyan skin... */
+.preset-bar select,
+.preset-bar input,
+.preset-bar button {
+    font-family: 'Courier New', monospace;
+    font-size: .66rem;
+    letter-spacing: .04em;
+    border: 1px solid hsla(var(--pp-hue), 100%, 55%, .75);
+    border-radius: 3px;
+    margin: 0;
+    padding: 2px 7px;
+    color: hsl(var(--pp-hue), 100%, 70%);
+    background: hsla(var(--pp-hue), 45%, 8%, .85);
+    cursor: pointer;
+    box-shadow: 0 0 calc(3px + 5px * var(--pp-glow)) hsla(var(--pp-hue), 100%, 55%, calc(.18 + .3 * var(--pp-glow)));
+    flex: 0 1 auto;
+    min-width: 44px;
+    line-height: 1.35;
+    transition: all .2s;
+}
+.preset-bar select:hover,
+.preset-bar input:hover,
+.preset-bar button:hover {
+    background: hsla(var(--pp-hue), 100%, 55%, .85);
+    color: #04121a;
+    border-color: hsl(var(--pp-hue), 100%, 70%);
+}
+.preset-bar select {
+    min-width: 90px;
+    max-width: 150px;
+}
+.preset-bar input[type="text"] {
+    min-width: 80px;
+    max-width: 130px;
+    background: hsla(var(--pp-hue), 30%, 4%, .9);
+    color: #fff;
+}
+.preset-bar input[type="text"]::placeholder {
+    color: rgba(255, 255, 255, .35);
+}
+/* ...while ALL action text is red and a size below the preset name */
+.preset-bar button {
+    color: #ff3131;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(255, 40, 40, .55);
+    border-color: rgba(255, 49, 49, .7);
+    background: hsla(0, 45%, 8%, .85);
+    box-shadow: 0 0 calc(3px + 5px * var(--pp-glow)) rgba(255, 49, 49, calc(.14 + .22 * var(--pp-glow)));
+}
+.preset-bar button:hover {
+    background: #ff3131;
+    color: #160404;
+    border-color: #ff6b6b;
+    text-shadow: none;
+}
+#presetPrevBtn,
+#presetNextBtn {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    padding: 0;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+}
+/* === v11: PRESET LIST MEMORY TOGGLE — User (Purple-Violet) / Machine (Orange-Yellow) ===
+   Two colors per state: USER = purple→violet gradient, MACHINE = orange→yellow gradient.
+   The active state also tints the preset list field 40% opaque. */
+#presetListToggleBtn {
+    min-width: 78px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+#presetListToggleBtn.list-user {
+    color: #e2ccff !important;
+    border-color: rgba(170, 90, 255, .95) !important;
+    background: linear-gradient(180deg, rgba(138, 43, 226, .60), rgba(186, 85, 255, .60)) !important;
+    text-shadow: 0 0 6px rgba(186, 85, 255, .85) !important;
+    box-shadow: 0 0 8px rgba(168, 60, 255, .50), inset 0 0 8px rgba(150, 50, 255, .28) !important;
+}
+#presetListToggleBtn.list-user:hover {
+    background: linear-gradient(180deg, rgba(158, 63, 255, .90), rgba(200, 120, 255, .88)) !important;
+    color: #17002b !important;
+    text-shadow: none !important;
+}
+#presetListToggleBtn.list-machine {
+    color: #fff0c2 !important;
+    border-color: rgba(255, 180, 40, .95) !important;
+    background: linear-gradient(180deg, rgba(255, 140, 0, .60), rgba(255, 215, 0, .55)) !important;
+    text-shadow: 0 0 6px rgba(255, 190, 60, .85) !important;
+    box-shadow: 0 0 8px rgba(255, 170, 40, .50), inset 0 0 8px rgba(255, 180, 60, .28) !important;
+}
+#presetListToggleBtn.list-machine:hover {
+    background: linear-gradient(180deg, rgba(255, 160, 20, .92), rgba(255, 228, 70, .88)) !important;
+    color: #271400 !important;
+    text-shadow: none !important;
+}
+/* Preset list field — colored 40% opaque by the active list-memory state */
+#presetSelect.list-user {
+    background: rgba(148, 44, 232, 0.40) !important;  /* purple-violet 40% */
+    border-color: rgba(178, 102, 255, .9) !important;
+    color: #f3e8ff !important;
+}
+#presetSelect.list-machine {
+    background: rgba(255, 160, 20, 0.40) !important;  /* orange-yellow 40% */
+    border-color: rgba(255, 200, 80, .9) !important;
+    color: #fff7e0 !important;
+}
+/* === v11: " -ʁ%AUTO%ʁ- " preset cycler === */
+#presetAutoBtn {
+    min-width: 88px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    color: #9ffcff !important;
+    border-color: rgba(0, 255, 209, .8) !important;
+    background: hsla(165, 90%, 8%, .85) !important;
+    text-shadow: 0 0 6px rgba(0, 255, 209, .6) !important;
+}
+#presetAutoBtn:hover {
+    background: rgba(0, 255, 209, .8) !important;
+    color: #00251d !important;
+    text-shadow: none !important;
+}
+#presetAutoBtn.auto-on {
+    color: #00281f !important;
+    background: linear-gradient(180deg, #23ffe3, #00d8b4) !important;
+    border-color: #7dfff0 !important;
+    text-shadow: none !important;
+    animation: presetAutoPulse 1.6s ease-in-out infinite;
+}
+@keyframes presetAutoPulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(35, 255, 227, .55); }
+    50% { box-shadow: 0 0 18px rgba(35, 255, 227, 1); }
+}
+/* Machine list is code-generated — delete actions stand down while it is active */
+.preset-bar button.preset-machine-locked {
+    opacity: .35 !important;
+    pointer-events: none !important;
+    filter: saturate(.35);
+}
+/* Preset name — distinctly larger than the action text, red */
+.current-preset-display {
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    color: #ff2a2a;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(255, 42, 42, .5);
+    pointer-events: none;
+    font-size: .92rem;
+    text-align: center;
+    padding: 1px 0 2px 0;
+    letter-spacing: .06em;
+    border-bottom: 1px solid rgba(255, 42, 42, .18);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#ui-toggle-tab {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 4000;
+    transition: right .3s, opacity .2s;
+    opacity: .95;
+    cursor: pointer
+}
+#ui-toggle-tab.is-collapsed {
+    right: var(--ui-tab-collapsed-right, -110px)
+}
+#ui-toggle-tab:hover {
+    right: 0;
+    opacity: 1
+}
+#toggle-ui-btn {
+    font-family: 'Courier New', monospace;
+    color: #0ff;
+    background: rgba(0, 20, 20, .7);
+    border: 2px solid #0ff;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    box-shadow: 0 0 8px rgba(0, 255, 255, .5), 0 0 16px rgba(0, 255, 255, .3), inset 0 0 10px rgba(0, 255, 255, .2);
+    text-shadow: 0 0 4px #0ff;
+    animation: crt-flicker .2s infinite;
+    padding: 6px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer
+}
+body:not(.playback-on) #rightRack,
+body:not(.playback-on) #sliderContainer,
+body:not(.playback-on) #preset-toggle-btn {
+    display: none !important
+}
+body:not(.ui-controls-hover) #preset-toggle-btn,
+body:not(.ui-controls-hover) #rightRack,
+body:not(.ui-controls-hover) #sliderContainer,
+body:not(.ui-controls-hover) #wired-btn,
+body:not(.ui-controls-hover) #ytInput,
+body:not(.ui-controls-hover) #startBtn,
+body:not(.ui-controls-hover) #openFileWrap {
+    opacity: .2 !important
+}
+body:not(.ui-controls-hover) #ghostBtnRack,
+body:not(.ui-controls-hover) #ghostProtocolBtn,
+body:not(.ui-controls-hover) #vsyncScanBtn {
+    opacity: .6 !important
+}
+body.ui-controls-hover #preset-toggle-btn,
+body.ui-controls-hover #rightRack,
+body.ui-controls-hover #sliderContainer,
+body.ui-controls-hover #ghostBtnRack,
+body.ui-controls-hover #wired-btn,
+body.ui-controls-hover #ytInput,
+body.ui-controls-hover #startBtn,
+body.ui-controls-hover #openFileWrap,
+body.ui-controls-hover #ghostProtocolBtn,
+body.ui-controls-hover #vsyncScanBtn {
+    opacity: 1 !important
+}
+body.ui-hidden .suggested,
+body.ui-hidden #ytInput,
+body.ui-hidden #startBtn,
+body.ui-hidden #openFileWrap,
+body.ui-hidden #rightRack,
+body.ui-hidden #sliderContainer,
+body.ui-hidden #ghostBtnRack,
+body.ui-hidden #wired-btn,
+body.ui-hidden #preset-toggle-btn,
+body.ui-hidden #preset-dropdown-container {
+    display: none !important
+}
+@media(max-width:768px) {
+    #ytInput {
+        width: 80vw;
+        font-size: 12px
+    }
+    #startBtn {
+        font-size: 12px;
+        padding: 8px 12px
+    }
+    #rightRack {
+        max-width: 108px
+    }
+    #rightRack .wired-button {
+        font-size: 8px;
+        padding: 3px 5px
+    }
+    #sliderContainer {
+        top: 52px;
+        left: 8px;
+        width: calc(100vw - 118px);
+        min-width: 0;
+        max-width: calc(100vw - 118px);
+        max-height: calc(100dvh - 108px)
+    }
+    .slider-group {
+        grid-template-columns: max-content minmax(28px, 1fr) auto auto
+    }
+    .slider-group label {
+        font-size: clamp(7px, 2.6vw, 10px)
+    }
+    #wired-btn {
+        left: 8px;
+        top: 8px;
+        padding: 6px 8px;
+        font-size: 12px
+    }
+    .suggested {
+        font-size: .65em
+    }
+    #suggestedNightCity {
+        font-size: .85em
+    }
+    #Defcon1Video {
+        font-size: 1.5em
+    }
+    #openFileWrap {
+        width: 200px;
+        height: 38px
+    }
+    #openFileBtn {
+        font-size: 11px
+    }
+    #preset-dropdown-container {
+        width: 98%;
+        padding-top: 18px
+    }
+    .preset-bar select,
+    .preset-bar input,
+    .preset-bar button {
+        font-size: .6rem;
+        padding: 2px 5px;
+        min-width: 38px;
+    }
+    .preset-bar select {
+        min-width: 74px;
+        max-width: 110px;
+    }
+    .preset-bar input[type="text"] {
+        min-width: 60px;
+        max-width: 96px;
+    }
+    #presetPrevBtn,
+    #presetNextBtn {
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        font-size: .85rem;
+    }
+    .current-preset-display {
+        font-size: .8rem;
+    }
+    #nowPlayingHud {
+        left: 8px;
+        top: 44px;
+        max-width: calc(100vw - 16px)
+    }
+    body.ui-hidden #nowPlayingHud {
+        top: 8px;
+        left: 8px
+    }
+    #ui-toggle-tab {
+        transform: translateY(-50%)
+    }
+    #toggle-ui-btn {
+        font-size: 12px;
+        padding: 8px 12px
+    }
+}
+@media(max-height:760px) {
+    #sliderContainer {
+        top: 58px;
+        max-height: calc(100dvh - 110px);
+        padding: 4px 6px
+    }
+    .slider-group {
+        margin-bottom: 1px;
+        gap: 2px 4px
+    }
+    .slider-group input[type=range] {
+        height: 14px
+    }
+}
+@media(prefers-reduced-motion:reduce) {
+    .wired-button,
+    #preset-toggle-btn,
+    #toggle-ui-btn {
+        animation: none
+    }
+    .wired-button::before {
+        animation: none
+    }
+}
+.suggested,
+#Defcon1Video,
+#testCanvas,
+#ytInput,
+#startBtn,
+#openFileWrap {
+    pointer-events: auto !important;
+    z-index: 2000
+}
+#Defcon1Video {
+    pointer-events: auto !important;
+    z-index: 2000
+}
+body:not(.playback-on) .suggested:hover,
+body:not(.playback-on) #Defcon1Video:hover,
+body:not(.playback-on) #testCanvas:hover {
+    opacity: 1 !important
+}
+
+/* ===== R3 HARD-LIGHT / MOONLIGHT mashup =================================
+   Old line: cyan wired CRT, Impact suggested links, magenta glitch.
+   R2 line: SOFT-EYE, Deepseek machine gold, zero-all crimson, HUD.
+   R3: moonlight silver wash + gold/magenta dual-rim, HARD-LIGHT toggle.
+   ===================================================================== */
+:root {
+    --r3-moon: #eaf4ff;
+    --r3-cyan: #7af7ff;
+    --r3-gold: #ffcc66;
+    --r3-mag: #ff2bd6;
+    --r3-indigo: #070414;
+}
+html, body {
+    background: radial-gradient(1200px 700px at 50% -10%, #1a2744 0%, #070414 42%, #000 100%) !important;
+}
+#moon-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 50% 18%, rgba(232, 244, 255, 0.16), transparent 46%),
+        radial-gradient(ellipse at 80% 90%, rgba(255, 43, 214, 0.08), transparent 42%),
+        repeating-linear-gradient(0deg, transparent 0 3px, rgba(122, 247, 255, 0.04) 3px 4px);
+    mix-blend-mode: soft-light;
+    opacity: .85;
+}
+#rev3-mark {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1500;
+    pointer-events: none;
+    color: var(--r3-moon);
+    font-family: Impact, 'Arial Black', sans-serif;
+    font-size: clamp(0.7rem, 2.2vw, 1.05rem);
+    letter-spacing: .42em;
+    text-transform: uppercase;
+    opacity: .28;
+    text-shadow: 2px 0 var(--r3-mag), -2px 0 var(--r3-cyan), 0 0 12px rgba(255, 204, 102, .45);
+    white-space: nowrap;
+}
+body.playback-on #rev3-mark { opacity: .1; }
+body.hard-light #moon-veil {
+    mix-blend-mode: overlay;
+    opacity: 1;
+    background:
+        radial-gradient(ellipse at 50% 20%, rgba(255, 204, 102, 0.22), transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(255, 43, 214, 0.16), transparent 45%),
+        repeating-linear-gradient(0deg, transparent 0 2px, rgba(255, 204, 102, 0.07) 2px 3px);
+}
+.wired-button {
+    color: var(--r3-cyan) !important;
+    background: rgba(6, 10, 24, 0.62) !important;
+    border: 2px solid var(--r3-cyan) !important;
+    box-shadow:
+        0 0 10px rgba(122, 247, 255, .45),
+        4px 0 0 rgba(255, 43, 214, .35),
+        -3px 0 0 rgba(255, 204, 102, .28),
+        inset 0 0 14px rgba(122, 247, 255, .12) !important;
+    text-shadow: 0 0 4px var(--r3-cyan), 0 0 10px rgba(255, 204, 102, .4) !important;
+}
+.wired-button:hover {
+    color: var(--r3-moon) !important;
+    border-color: var(--r3-gold) !important;
+}
+body.hard-light .wired-button {
+    color: var(--r3-gold) !important;
+    border-color: var(--r3-gold) !important;
+    box-shadow:
+        0 0 14px rgba(255, 204, 102, .55),
+        4px 0 0 rgba(255, 43, 214, .55),
+        inset 0 0 16px rgba(255, 43, 214, .12) !important;
+}
+#hardLightBtn {
+    letter-spacing: .06em;
+}
+#hardLightBtn.active,
+body.hard-light #hardLightBtn {
+    color: #1a0a00 !important;
+    background: linear-gradient(90deg, #ffcc66, #ff2bd6) !important;
+    border-color: #fff !important;
+    text-shadow: none !important;
+}
+.suggested {
+    font-family: Impact, 'Arial Black', 'Franklin Gothic Heavy', sans-serif !important;
+    background: none !important;
+    border: none !important;
+    letter-spacing: .06em;
+    text-shadow: 0 0 8px rgba(122, 247, 255, .55), 0 0 18px rgba(255, 204, 102, .25);
+}
+#suggestedMoonlight {
+    top: 25%;
+    color: var(--r3-moon) !important;
+    font-size: clamp(1.4em, 4.6vw, 2.8em);
+    letter-spacing: .28em;
+    opacity: .55;
+    text-shadow:
+        2px 0 var(--r3-mag),
+        -2px 0 var(--r3-cyan),
+        0 0 16px rgba(255, 204, 102, .7);
+}
+#suggestedMoonlight:hover,
+#suggestedMoonlight:focus {
+    opacity: 1 !important;
+    color: #fff !important;
+}
+#startBtn {
+    color: #070414 !important;
+    background: linear-gradient(90deg, #7af7ff 0%, #ffcc66 55%, #ff2bd6 100%) !important;
+    border: 1px solid #fff !important;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-shadow: none !important;
+    box-shadow: 0 0 18px rgba(255, 204, 102, .45);
+}
+#ytInput {
+    border-color: var(--r3-cyan) !important;
+    box-shadow: 0 0 12px rgba(122, 247, 255, .25);
+    background: rgba(7, 4, 20, 0.72) !important;
+}
+#Defcon1Video {
+    text-shadow: 0 0 10px var(--r3-cyan), 0 0 22px var(--r3-mag);
+}
+.zero-all-btn {
+    /* keep R2 crimson, rim it with moonlight */
+    box-shadow:
+        0 0 12px rgba(255, 45, 85, .65),
+        -3px 0 0 rgba(122, 247, 255, .45),
+        3px 0 0 rgba(255, 204, 102, .4) !important;
+}
+#softEyeBtn {
+    /* mash: keep R2 SOFT-EYE bar, moonlight rest state */
+    color: var(--r3-moon) !important;
+}
+.np-hud {
+    border-color: var(--r3-cyan) !important;
+}
+#presetListToggleBtn {
+    text-shadow: 0 0 6px var(--r3-gold);
+}
+/* ===== R3 EAR HUD + smoother HUD / effect chrome ===== */
+#nowPlayingHud,
+#earHud,
+#npHudPanel {
+    transition: opacity .45s ease, transform .45s ease, box-shadow .55s ease, border-color .45s ease, left .35s ease, top .35s ease
+}
+#npHudPanel {
+    transition: opacity .4s ease, background .45s ease, border-color .45s ease, box-shadow .55s ease
+}
+body.hard-light #npHudPanel {
+    border-color: var(--r3-gold);
+    box-shadow: 0 0 14px rgba(255, 45, 85, .4), inset 0 0 18px rgba(255, 204, 102, .08)
+}
+#earHud {
+    position: absolute;
+    left: 12px;
+    bottom: 58px;
+    z-index: 3200;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 228px;
+    max-width: min(280px, calc(100vw - 24px));
+    padding: 8px 10px 9px;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    background: rgba(0, 10, 18, .84);
+    border: 1px solid var(--r3-cyan, #7af7ff);
+    border-radius: 8px;
+    box-shadow: 0 0 14px rgba(122, 247, 255, .28), inset 0 0 16px rgba(122, 247, 255, .06);
+    backdrop-filter: blur(8px);
+    pointer-events: none
+}
+body.playback-on #earHud {
+    display: flex
+}
+body.ui-hidden #earHud {
+    bottom: 12px
+}
+body.hard-light #earHud {
+    border-color: var(--r3-gold);
+    box-shadow: 0 0 16px rgba(255, 45, 85, .4), -2px 0 0 rgba(122, 247, 255, .35), 2px 0 0 rgba(255, 204, 102, .35)
+}
+#earHud.is-beat {
+    box-shadow: 0 0 22px rgba(255, 255, 255, .45), 0 0 10px rgba(122, 247, 255, .55)
+}
+#earHud.is-audio {
+    border-color: #9dffc4
+}
+.ear-hud-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--r3-cyan, #7af7ff)
+}
+#earHudPhase {
+    color: #fff;
+    text-shadow: 0 0 6px #0ff
+}
+.ear-meters {
+    display: flex;
+    flex-direction: column;
+    gap: 3px
+}
+.ear-meter {
+    display: flex;
+    align-items: center;
+    gap: 6px
+}
+.ear-meter span {
+    flex: 0 0 28px;
+    font-size: 8px;
+    letter-spacing: .08em;
+    color: rgba(255, 255, 255, .62)
+}
+.ear-meter .ear-track {
+    flex: 1 1 auto;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(122, 247, 255, .12);
+    overflow: hidden
+}
+.ear-meter i {
+    display: block;
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #7af7ff, #fff);
+    box-shadow: 0 0 8px rgba(122, 247, 255, .65);
+    transition: width .14s ease-out
+}
+body.hard-light .ear-meter i {
+    background: linear-gradient(90deg, #ff2d55, #ffcc66)
+}
+#earHudSrc {
+    font-size: 9px;
+    letter-spacing: .04em;
+    color: rgba(255, 255, 255, .7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+#earBtn.ear-auto {
+    color: var(--r3-moon, #c9d7ff) !important
+}
+#earBtn.ear-audio {
+    color: #9dffc4 !important;
+    border-color: #9dffc4
+}
+#earBtn.ear-canvas {
+    color: var(--r3-cyan, #7af7ff) !important
+}
+#earBtn.ear-wait {
+    opacity: .78
+}

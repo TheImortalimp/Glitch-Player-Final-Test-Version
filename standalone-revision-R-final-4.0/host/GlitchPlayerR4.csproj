@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>GlitchPlayerR4</AssemblyName>
+    <RootNamespace>GlitchPlayerR4</RootNamespace>
+    <Version>4.0.0</Version>
+    <Authors>River Lyle Reuveni</Authors>
+    <Company>River Lyle Reuveni (Imortalimp)</Company>
+    <Product>Glitch Player — Standalone Revision R Final 4.0</Product>
+    <Description>Hardened WebView2 glitch visual player (TOTAL CONFLUENCE effects engine)</Description>
+    <Copyright>River Lyle Reuveni - imortalimp.nl - CC0 1.0</Copyright>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Release binaries carry no PDB path, so no local build paths or user names are shipped. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" GeneratePathProperty="true" />
+    <PackageReference Include="System.Management" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\webui\**\*" Link="webui\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The WebView2 package also references its WPF assembly; this host is WinForms-only. -->
+  <Target Name="PruneWebView2Wpf" BeforeTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <Reference Remove="@(Reference)" Condition="'%(FileName)' == 'Microsoft.Web.WebView2.Wpf'" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Self-contained builds redistribute the .NET runtime and the WebView2 SDK, so ship their license texts. -->
+  <Target Name="PublishThirdPartyLicenses" AfterTargets="Publish" Condition="'$(SelfContained)' == 'true'">
+    <ItemGroup>
+      <_R4Pack Include="@(ResolvedRuntimePack)"
+               Condition="'%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.NETCore.App' or '%(ResolvedRuntimePack.FrameworkName)' == 'Microsoft.WindowsDesktop.App'" />
+      <_R4License Include="@(_R4Pack->'%(PackageDirectory)\LICENSE.TXT')" Prefix="%(NuGetPackageId)" />
+      <_R4License Include="@(_R4Pack->'%(PackageDirectory)\LICENSE')" Prefix="%(NuGetPackageId)" />
+      <_R4License Include="@(_R4Pack->'%(PackageDirectory)\THIRD-PARTY-NOTICES.TXT')" Prefix="%(NuGetPackageId)" />
+      <_R4License Include="$(PkgMicrosoft_Web_WebView2)\LICENSE.txt;$(PkgMicrosoft_Web_WebView2)\NOTICE.txt" Prefix="Microsoft.Web.WebView2" />
+      <_R4License Remove="@(_R4License)" Condition="!Exists('%(FullPath)')" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(PkgMicrosoft_Web_WebView2)\LICENSE.txt') or '@(_R4Pack->Count())' != '2'"
+           Text="The .NET runtime or WebView2 SDK license texts could not be located for publishing." />
+    <Copy SourceFiles="@(_R4License)"
+          DestinationFiles="@(_R4License->'$(PublishDir)licenses\%(Prefix)-%(Filename).txt')" />
+  </Target>
+
+</Project>
