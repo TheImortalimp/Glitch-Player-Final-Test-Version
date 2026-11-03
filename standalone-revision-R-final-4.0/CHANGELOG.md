@@ -1,0 +1,122 @@
+# Changelog - Standalone Revision R Final 4.0
+
+## 4.0.0 - 2026-11-03 (GitHub release `RELEASE_4.0`)
+
+First published build of Revision R Final 4.0, a newly coded, hardened Windows player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view and a per-user NSIS installer. It merges the effects engines of Glitch Player 3.0, the Glitch Canvas Projector and AI WARP ENGINE.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.0.0-x64-setup.exe`, 44,726,047 bytes |
+| SHA-256 | `dd211d5105ab3552f53f3426bebcea5b536d9538cc94ce930cfe379618bfa6ad` |
+| CAB payload SHA-256 | `ebb83358b1d4ab8ac24b410eb46c9f3dee325b71af0df1857a89042348c111c4` |
+| Signed | No. Windows SmartScreen may warn. |
+
+> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are manual-only. This is not a photosensitivity-safe mode.
+
+### Merged effects engine
+
+- 43 effect voices, each with its own slider and lock and starting at 0:
+  - 18 from the Glitch Canvas Projector;
+  - 20 from Glitch Player Revision 3.0;
+  - 5 from AI WARP ENGINE.
+- The AI WARP MASTERS panel adds:
+  - DROP THE MILK?, a dependency-free, Milkdrop-inspired feedback automation with 80 auto presets;
+  - B&W Strength and Hue Offset masters that drive each core voice and its R3 twin together.
+- The projector's large printable ASCII and Unicode glyph banks are kept, with their original AI Warp / Revision 3 bank credits.
+- Presets:
+  - USER presets are kept in the `glitchCanvasPresets_v2` format, up to 500, with validated JSON import/export.
+  - The 80-preset MACHINE bank and the 250 LAB snapshots are frozen. Saving never changes a built-in preset.
+- Hard user locks hold a slider through presets, the preset glide, Auto Glitch, Continual Randomization and the AUTO cycler. A lock saved in a USER preset comes back as a preset lock, which the next preset releases.
+- Flash and Strobe are manual-only. Presets, Randomize and automation neither enable them nor change your levels, and their Trigger buttons use your manual level.
+- Freeze Frame (button or **S**) saves a PNG of the picture with its effects, without the app's controls. The host captures it with the HUD hidden, and the Save dialog starts in Pictures and refuses the app's own folders.
+
+### Smooth playback
+
+- The ASCII scatter field and R3 ASCII now draw strips from pre-drawn glyph sheets:
+  - ASCII work per frame went from about 20 ms to about 3 ms (p50);
+  - the glyph-sheet readback is deferred so it no longer stalls on the GPU (p50 16.6 ms to 1.7 ms).
+- The host reports every display's refresh rate, and the frame governor uses the rate that actually paces frames. A 24, 30 or 50 Hz projector or TV is no longer mistaken for overload.
+- Governor recovery:
+  - it steps back up after about 400 frames of headroom;
+  - the wait doubles (up to 64x) after a relapse and resets once the effects get lighter;
+  - an attached 30 Hz display doesn't hide a 60 Hz overload.
+
+### Startup, window and link tree
+
+- Startup is logo -> source picker -> effects HUD:
+  - The logo screen lists every accepted audio/video type with its codec caveat.
+  - Choose Media opens the local-file picker and the YouTube link tree.
+  - The effects HUD appears only after YouTube or local playback actually starts. Failed media leaves the picker available.
+- Borderless, draggable, resizable window with the bracketed **[R]** icon on the player, launcher, installer and uninstaller.
+- Floating controls (shield, refresh, fullscreen, minimize, maximize/restore, close) sit in their own 36 px top bar, so they no longer cover Auto Glitch, Show Presets or Now Playing. The logo and source screens' scrollbars start below that bar.
+- The YouTube link tree is a grid of named buttons with an artist/channel line and the full title as a tooltip. Raw URLs are no longer shown.
+- WHITE 2 BLACK 2 WHITE, the 3.0 fade link, is restored:
+  - it waits for confirmed playback like the other links;
+  - it switches on Continual Randomization only once loading starts.
+- Logo screen look:
+  - the 3.0 full-screen gold scan line and panel sheen are restored;
+  - the 4.0 [R] gleam is back: every 10 s a soft shine sweeps across the [R], and its tint drifts a full turn round the colour wheel every 24 s;
+  - the WHITE 2 BLACK 2 WHITE card carries the same tinted gleam;
+  - reduced-motion stops all of them.
+- The HUD mark reads REVISION 4 // HARD LIGHT // MOONLIGHT.
+- Taskbar Jump List **Refresh** (also in the floating controls) asks before stopping media and returning to the logo; No is the default.
+- WATCH / SOURCE and author links ask before opening in the Windows default browser, never inside the app.
+- F11, Alt+Enter and Esc fullscreen keys work while WebView2 has focus, without enabling browser shortcuts.
+
+### Hardening
+
+The hardening follows K-Meleon-R and AI WARP ENGINE. See [SECURITY.md](SECURITY.md) for details.
+
+- **Web UI:**
+  - strict CSP with `connect-src 'none'` and Trusted Types with no policies;
+  - no inline scripts or styles;
+  - tests fail the build if the CSP or the forbidden script sinks change.
+- **Navigation and frames:**
+  - only the app's own document may load at the top level;
+  - frames are limited to the YouTube embed;
+  - downloads are cancelled;
+  - `javascript:`, `data:`, `file:` and theme/pointer files are blocked;
+  - `chrome.webview` is removed from other documents.
+- **Permissions:** every WebView2 permission request (camera, microphone, clipboard, location, notifications and others) is denied without a prompt.
+- **WebView2:** no DevTools, host objects, browser accelerators or autofill. SmartScreen is required.
+- **Windows media controls:** `HardwareMediaKeyHandling` is turned off, so other programs, headsets and media keys can't pause or skip playback.
+- **Cursor guard** (from K-Meleon-R), at both the registry and the page layer.
+- **Capture shield** (off by default) and a **Defender watchdog** that only warns.
+- **Startup checks:**
+  - the app refuses WebView2 environment/policy overrides, profiler and startup hooks;
+  - `SetDllDirectory("")`;
+  - best-effort process mitigations.
+- **Packaging:**
+  - a small .NET Framework launcher verifies a hash-pinned `payload.cab`;
+  - it extracts the fixed manifest into a per-user runtime cache named by the CAB hash;
+  - it revalidates every file on each launch and refuses unexpected or redirected entries.
+  - This is verified extraction, not virtualization, encryption or code signing.
+- **Installer:** per user, no administrator rights, refuses to run while the app is open, downloads nothing. No telemetry, auto-update or FFmpeg.
+
+### Tests and verification
+
+- `build.cmd` runs 171 tests: 96 xUnit host tests, 74 Node web tests and 1 Windows CAB integration test. All passed for this installer.
+- The installed build was checked on Windows 11 Pro (x64):
+  - silent install;
+  - logo and card gleams, by screenshot bursts;
+  - Choose Media;
+  - close with no `host.log`;
+  - silent uninstall.
+- Earlier builds of this release covered YouTube and local playback, Refresh, fullscreen, drag/resize, Freeze Frame, presets and user locks. See [BUILD_STATUS.md](BUILD_STATUS.md) for exactly what was verified on which build.
+
+### Not verified / known limitations
+
+- The binaries are **not code-signed**. Compare the installer with its `.sha256` file before running it.
+- This exact installer was not re-checked at 150% scaling, in fullscreen or with the HUD hidden; earlier builds of this release were.
+- No other Windows versions or machines were tested.
+- Uninstalling keeps `%LOCALAPPDATA%\Glitch-Player-R4` (presets, settings and the runtime cache) unless you choose to delete it.
+- Security depends on the shared WebView2 Runtime staying up to date. YouTube content is third-party.
+
+### Commits
+
+- `b90c0ad`: add the hardened WebView2 app.
+- `427b6fe`: user locks, media-key block, Freeze Frame, smooth ASCII, cadence-aware governor.
+- `ed65294`: logo -> media picker -> HUD startup, borderless [R] window, CAB launcher.
+- `841cc41`: window bar clears the HUD, named YouTube link tree, REVISION 4 mark.
+- `abbde8d`: restored the WHITE 2 BLACK 2 WHITE fade link and the 3.0 logo gleam; scrollbars below the window bar.
+- Release commit: 4.0 [R] gleam and card gleam with hue drift, changelog and release notes.

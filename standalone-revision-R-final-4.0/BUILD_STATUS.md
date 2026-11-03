@@ -7,11 +7,12 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,705,544 bytes |
-| SHA-256 | `c850b357316fff89749a7e8cb29a2800befaf2c604213452d0e5b66817a70f61` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,119,902 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `c59ba2afc3b659d74a926cc5d205875e00d91c3aef4c8a86fcb8d5b63cd6d437` |
-| Runtime | 244 files, 144,692,541 bytes, extracted to the per-user cache named by the CAB hash |
+| Size | 44,726,047 bytes |
+| SHA-256 | `dd211d5105ab3552f53f3426bebcea5b536d9538cc94ce930cfe379618bfa6ad` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `3fefbe54246534d1a18c9c97f6a14d697776aea000c60cf86f483d4bfb70932b`) plus `payload.cab` (44,132,728 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `ebb83358b1d4ab8ac24b410eb46c9f3dee325b71af0df1857a89042348c111c4` |
+| Runtime | 244 files, 144,694,403 bytes, extracted to the per-user cache named by the CAB hash |
+| Published | GitHub release `RELEASE_4.0` (installer and its `.sha256`) |
 | Signed | No |
 | Built | 2026-11-03 |
 
@@ -31,7 +32,7 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
   - User locks against presets, the preset glide and Auto Glitch.
   - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
   - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text, including the restored 3.0 WHITE 2 BLACK 2 WHITE fade link, which waits for YouTube playback like the others and arms Continual Randomization only once loading starts. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, the native window bar that moves the HUD's top row below the floating window controls, and the logo/source screens' scrollbars starting below that bar.
-  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen (off with reduced motion), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
+  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the restored 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
 - **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 244 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
@@ -42,7 +43,17 @@ The cursor guard host-guard tests were checked against deliberately broken copie
 
 ## Verified on this machine
 
-**Current installer above (restored fade link, logo gleam, scrollbars below the window bar)**
+**Current installer above (4.0 [R] gleam and WHITE 2 BLACK 2 WHITE card gleam, both with a hue drift)**
+
+This build changes only `webui\css\welcome-screen.css`, `webui\css\r4.css` and a web test from the previous installer (`c850b357…`); the host, launcher and scripts are unchanged.
+
+- Silent install exits 0, and the launcher starts the player from the `ebb83358…` runtime cache. The window was 1280x800 on the 100%-scale display.
+- The logo screen keeps the 3.0 gold scan line and panel sheen. A 30-shot burst of the [R] (about 0.6 s apart) caught the 4.0 gleam crossing it with a tinted (violet) shine, and the panel sheen separately. The glow around the [R] has no hard rectangular edge.
+- Choose Media (real click) shows the link tree. A 26-shot burst of the WHITE 2 BLACK 2 WHITE card (about 0.3 s apart) caught one tinted sweep crossing the card from left to right; the title and artist line stay readable.
+- The floating X closed the app with no `host.log`. Silent uninstall exits 0 and removes the installed folder; the per-user runtime cache is kept.
+- In the browser preview, with animations paused at chosen times, the logo gleam showed violet at a 270° hue offset and the card gleam gold at 0° and violet at 225°. Exactly one link card has the gleam. The link tree still has eleven 76 px cards with no horizontal overflow at 1280x800. With reduced motion emulated, no animations run and both gleams are invisible.
+
+**Previous installer (`c850b357…`; restored fade link, logo gleam, scrollbars below the window bar)**
 
 This build changes only `webui\index.html`, `webui\js\glitch-player.js`, `webui\css\welcome-screen.css`, `webui\css\r4.css` and a web test from the previous installer (`6a8a818c…`); the host and launcher code are unchanged.
 

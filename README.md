@@ -2,12 +2,13 @@
 
 ## Revision R Final 4.0
 
-Revision 4.0 is a newly coded, hardened Windows app: a .NET 10 host with a locked-down WebView2 view and a per-user NSIS installer. It merges every effect from Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
+Revision 4.0 is a newly coded, hardened Windows app: a .NET 10 host with a locked-down WebView2 view and a per-user NSIS installer. It merges every effect from Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system: 43 effect voices, the AI WARP masters, and 80 MACHINE and 250 LAB built-in presets alongside your own.
 
+- [Download the Windows installer from the RELEASE_4.0 release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0) (`Glitch-Player-R4-4.0.0-x64-setup.exe`, 44,726,047 bytes). Its SHA-256 is `dd211d5105ab3552f53f3426bebcea5b536d9538cc94ce930cfe379618bfa6ad`; compare it before running setup. It is not code-signed, so Windows SmartScreen may warn.
 - [Read the 4.0 README](standalone-revision-R-final-4.0/README.md) for the merged effects, presets, building and installing. It includes a photosensitivity warning for the flash and strobe effects.
-- [Security and hardening](standalone-revision-R-final-4.0/SECURITY.md) and [build status](standalone-revision-R-final-4.0/BUILD_STATUS.md).
+- [Changelog](standalone-revision-R-final-4.0/CHANGELOG.md), [security and hardening](standalone-revision-R-final-4.0/SECURITY.md) and [build status](standalone-revision-R-final-4.0/BUILD_STATUS.md).
 
-No prebuilt 4.0 installer is published in this repository yet. Build it from source with `build.cmd`. It is not code-signed.
+The installer is published as a release asset rather than committed to the repository. You can also build it from source with `build.cmd`.
 
 ## Revision R Final 3.0
 

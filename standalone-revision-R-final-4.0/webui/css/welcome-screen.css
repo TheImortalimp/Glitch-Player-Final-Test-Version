@@ -69,7 +69,21 @@
   pointer-events: none;
 }
 
+/* The 4.0 logo gleam on top of the 3.0 scan and sheen; its tint drifts round the colour wheel.
+   It sweeps via background-position inside a soft mask, so the logo's glow is never clipped. */
+.welcomeMark::after {
+  position: absolute;
+  inset: -12px -20px;
+  content: '';
+  background: linear-gradient(110deg, transparent 34%, hsl(42 100% 62% / 0.36) 43%, rgba(255, 248, 211, 0.44) 49%, hsl(42 100% 62% / 0.36) 55%, transparent 64%) 135% 0 / 200% 100% no-repeat;
+  mask-image: radial-gradient(farthest-side, #000 62%, transparent);
+  animation: logo-gleam 10s ease-in-out infinite, gleam-hue 24s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
 .welcomeMark {
+  position: relative;
   flex-shrink: 0;
   color: #fff2bd;
   font-family: Georgia, 'Times New Roman', serif;
@@ -128,6 +142,18 @@
   30%, 70% { opacity: 0.8; }
 }
 
+@keyframes logo-gleam {
+  0%, 70% { background-position-x: 135%; opacity: 0; }
+  76% { opacity: 1; }
+  94%, 100% { background-position-x: -35%; opacity: 0; }
+}
+
+/* Shared with the WHITE 2 BLACK 2 WHITE link card in r4.css. */
+@keyframes gleam-hue {
+  from { filter: hue-rotate(0deg); }
+  to { filter: hue-rotate(360deg); }
+}
+
 @media (max-width: 560px) {
   .welcomePanel { width: calc(100vw - 28px); }
   .welcomeActions { width: 100%; }
@@ -137,4 +163,5 @@
 @media (prefers-reduced-motion: reduce) {
   #welcomeScreen::before,
   .welcomePanel::before { animation: none; }
+  .welcomeMark::after { animation: none; opacity: 0; }
 }

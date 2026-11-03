@@ -173,6 +173,24 @@ body.ui-hidden #windowControls { visibility: hidden; }
 #ytLinkTree > #testCanvas { --link-accent: #f5f6fa; }
 #ytLinkTree > #Defcon1Video { --link-accent: #ff2bd6; }
 
+/* The restored fade link carries the logo gleam; gleam-hue is in welcome-screen.css. */
+#ytLinkTree > #testCanvas::after {
+    position: absolute;
+    inset: 0 -60%;
+    content: '';
+    background: linear-gradient(110deg, transparent 34%, hsl(42 100% 62% / 0.3) 44%, rgba(255, 255, 255, 0.38) 50%, hsl(42 100% 62% / 0.3) 56%, transparent 66%);
+    transform: translateX(-100%);
+    animation: link-gleam 8s ease-in-out infinite, gleam-hue 24s linear infinite;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+@keyframes link-gleam {
+    0%, 62% { transform: translateX(-100%); opacity: 0; }
+    68%, 86% { opacity: 1; }
+    92%, 100% { transform: translateX(100%); opacity: 0; }
+}
+
 #ytLinkTree > .ytLink:hover,
 #ytLinkTree > .ytLink:focus-visible {
     background: rgba(18, 30, 44, 0.92) !important;
@@ -209,6 +227,7 @@ body.ui-hidden #windowControls { visibility: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
+    #ytLinkTree > #testCanvas::after { opacity: 0; }
 }
 
 .photosensitivityWarning {

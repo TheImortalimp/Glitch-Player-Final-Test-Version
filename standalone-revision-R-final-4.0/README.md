@@ -4,13 +4,13 @@ Revision R Final 4.0 is a newly coded, hardened Windows desktop player. It is a 
 
 > **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are manual-only: presets, randomize and automation neither enable them nor change your chosen slider levels. Their Trigger buttons require a nonzero manual level and use that level, not a random peak. This is not a photosensitivity-safe mode.
 
-The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, and [SECURITY.md](SECURITY.md) for the hardening.
+The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, [SECURITY.md](SECURITY.md) for the hardening and [CHANGELOG.md](CHANGELOG.md) for the changes in this release.
 
 ## Starting and controlling the window
 
-The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the local file picker and the YouTube link tree, not the effects HUD. The link tree is a grid of named buttons (for example TERMINAL 1987, REVISIONS, MOONLIGHT, DEFCON 1), each with an artist/channel line and the full title as a tooltip. WHITE 2 BLACK 2 WHITE, the 3.0 fade link, plays its looping fade and switches on Continual Randomization; Flash and Strobe stay manual. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
+The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the local file picker and the YouTube link tree, not the effects HUD. The link tree is a grid of named buttons (for example TERMINAL 1987, REVISIONS, MOONLIGHT, DEFCON 1), each with an artist/channel line and the full title as a tooltip. WHITE 2 BLACK 2 WHITE, the 3.0 fade link, plays its looping fade and switches on Continual Randomization; Flash and Strobe stay manual. Its card carries the same slow gleam as the logo. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
 
-Effects automation and whole-app filters wait until playback. The logo screen keeps the 3.0 gold look: a slow full-screen gold scan line and a soft sheen across the panel; reduced-motion stops both. Rapid decorative UI flicker is disabled.
+Effects automation and whole-app filters wait until playback. The logo screen keeps the 3.0 gold look, a slow full-screen gold scan line and a soft sheen across the panel, plus the 4.0 gleam: every 10 s a soft shine sweeps across the [R], and its tint drifts slowly round the colour wheel (a full turn every 24 s). Reduced-motion stops all of them. Rapid decorative UI flicker is disabled.
 
 The window has no native/custom title strip or visible border. Drag the empty top area, logo or source heading; resize at the invisible edges and corners. Floating controls provide shield, refresh, fullscreen, minimize, maximize/restore and close. They sit in a 36 px top bar of their own, so the HUD's top row (Auto Glitch, Show Presets, Now Playing and the faint REVISION 4 // HARD LIGHT // MOONLIGHT mark) starts below them. The full **[R]** icon is embedded in the player, launcher, installer and uninstaller.
 
@@ -91,7 +91,7 @@ Keyboard media keys, headset buttons and other apps can't control playback, beca
 
 Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, Windows .NET Framework 4.8 for the small launcher, and the Microsoft Edge WebView2 Runtime (Evergreen). The .NET 10 player runtime is bundled; no separate .NET 10 installation is needed.
 
-1. Run `Glitch-Player-R4-4.0.0-x64-setup.exe`. Compare its SHA-256 with the `.sha256` file first. Windows SmartScreen may warn because the file is unsigned.
+1. Download `Glitch-Player-R4-4.0.0-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.0 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
 2. Setup installs for the current account only, into `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, without administrator rights. It adds a Start Menu shortcut but no desktop shortcut.
 3. Setup and the uninstaller refuse to run while the app is open.
 

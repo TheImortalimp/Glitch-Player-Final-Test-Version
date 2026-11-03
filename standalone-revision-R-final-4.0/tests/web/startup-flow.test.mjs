@@ -92,8 +92,12 @@ test('effects work and whole-app filters wait until media starts, while display 
     const welcome = readWeb('css/welcome-screen.css');
     assert.match(welcome, /#welcomeScreen::before \{\s*position: fixed;[^}]*width: 150%;[^}]*animation: gold-scan 7s ease-in-out infinite;/);
     assert.match(welcome, /\.welcomePanel::before \{[^}]*animation: panel-sheen 6s ease-in-out infinite;/);
-    assert.match(welcome, /@media \(prefers-reduced-motion: reduce\) \{\s*#welcomeScreen::before,\s*\.welcomePanel::before \{ animation: none; \}/);
-    assert.doesNotMatch(welcome, /logo-gleam/);
+    assert.match(welcome, /@media \(prefers-reduced-motion: reduce\) \{\s*#welcomeScreen::before,\s*\.welcomePanel::before \{ animation: none; \}\s*\.welcomeMark::after \{ animation: none; opacity: 0; \}/);
+    assert.match(welcome, /\.welcomeMark \{\s*position: relative;\s*flex-shrink: 0;/);
+    assert.doesNotMatch(welcome, /\.welcomeMark \{[^}]*overflow/);
+    assert.match(welcome, /\.welcomeMark::after \{[^}]*hsl\(42 100% 62% \/ 0\.36\)[^}]*mask-image: radial-gradient\(farthest-side, #000 62%, transparent\);[^}]*animation: logo-gleam 10s ease-in-out infinite, gleam-hue 24s linear infinite;[^}]*pointer-events: none;/);
+    assert.match(welcome, /@keyframes logo-gleam \{\s*0%, 70% \{ background-position-x: 135%; opacity: 0; \}/);
+    assert.match(welcome, /@keyframes gleam-hue \{\s*from \{ filter: hue-rotate\(0deg\); \}\s*to \{ filter: hue-rotate\(360deg\); \}/);
 });
 
 test('local source readiness waits for actual playback and reports decoding / play failures', async () => {
@@ -182,4 +186,7 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
     assert.match(css, /:is\(#wired-btn, #nowPlayingHud, #rightRack, #sliderContainer,\s+#rev3-mark, #preset-toggle-btn, #preset-dropdown-container, \.notification\)\s*\{\s*translate: 0 var\(--r4-bar\);/);
     assert.match(css, /#windowDrag \{[^}]*height: var\(--r4-bar\);/);
     assert.match(css, /body:has\(> #windowControls:not\(\[hidden\]\)\) :is\(#welcomeScreen, #sourceScreen\) \{\s*border-top: var\(--r4-bar\) solid transparent;\s*background-origin: border-box;\s*\}/);
+    assert.match(css, /#ytLinkTree > #testCanvas::after \{[^}]*animation: link-gleam 8s ease-in-out infinite, gleam-hue 24s linear infinite;[^}]*pointer-events: none;/);
+    assert.deepEqual([...new Set(css.match(/#ytLinkTree > [^{]*::after/g))], ['#ytLinkTree > #testCanvas::after']);
+    assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{ animation: none !important;[^}]*\}\s*#ytLinkTree > #testCanvas::after \{ opacity: 0; \}/);
 });
