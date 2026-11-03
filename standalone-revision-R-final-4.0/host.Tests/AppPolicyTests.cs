@@ -81,12 +81,45 @@ public class AppPolicyTests
         Assert.Equal("presets:export", kind);
         Assert.Equal("{}", payload);
 
+        Assert.True(AppPolicy.TrySplitMessage("freeze:capture|7", out kind, out payload));
+        Assert.Equal("freeze:capture", kind);
+        Assert.Equal("7", payload);
+
         Assert.False(AppPolicy.TrySplitMessage("shell:run|calc", out _, out _));
         Assert.False(AppPolicy.TrySplitMessage("|log", out _, out _));
         Assert.False(AppPolicy.TrySplitMessage("log", out _, out _));
         Assert.False(AppPolicy.TrySplitMessage(new string('x', 33) + "|y", out _, out _));
         Assert.False(AppPolicy.TrySplitMessage("log|" + new string('x', AppPolicy.MaxMessageChars), out _, out _));
         Assert.False(AppPolicy.TrySplitMessage(null, out _, out _));
+        Assert.False(AppPolicy.TrySplitMessage("display:refresh|60", out _, out _));
+        Assert.False(AppPolicy.TrySplitMessage("freeze:captured|{}", out _, out _));
+    }
+
+    [Theory]
+    [InlineData(20u, true)]
+    [InlineData(24u, true)]
+    [InlineData(60u, true)]
+    [InlineData(500u, true)]
+    [InlineData(0u, false)]
+    [InlineData(1u, false)]
+    [InlineData(19u, false)]
+    [InlineData(501u, false)]
+    [InlineData(uint.MaxValue, false)]
+    public void IsPlausibleRefreshHz_RejectsDefaultAndOutOfRangeModes(uint hz, bool expected) =>
+        Assert.Equal(expected, AppPolicy.IsPlausibleRefreshHz(hz));
+
+    [Fact]
+    public void BuildDisplayRefreshMessage_PutsTheWindowFirstAndKeepsOnlyDistinctPlausibleRates()
+    {
+        Assert.Equal("display:refresh|60", AppPolicy.BuildDisplayRefreshMessage(60, []));
+        Assert.Equal("display:refresh|60", AppPolicy.BuildDisplayRefreshMessage(60, null));
+        Assert.Equal("display:refresh|60,24", AppPolicy.BuildDisplayRefreshMessage(60, [24, 60, 0, 1, 19, 501, 24]));
+        Assert.Equal("display:refresh|24,60,144", AppPolicy.BuildDisplayRefreshMessage(24, [60, 144]));
+        Assert.Null(AppPolicy.BuildDisplayRefreshMessage(0, [60]));
+        Assert.Null(AppPolicy.BuildDisplayRefreshMessage(1, [60]));
+
+        var many = AppPolicy.BuildDisplayRefreshMessage(60, Enumerable.Range(21, 100).Select(hz => (uint)hz));
+        Assert.Equal(AppPolicy.MaxReportedDisplays, many["display:refresh|".Length..].Split(',').Length);
     }
 
     [Theory]

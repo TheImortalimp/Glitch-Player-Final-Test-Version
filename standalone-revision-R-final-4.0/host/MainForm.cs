@@ -24,6 +24,9 @@ internal sealed class MainForm : Form
     private Rectangle restoreBounds;
     private FormWindowState restoreWindowState;
     private int lastRendererRecoveryTick;
+    private string refreshDevice;
+    private string postedRefresh;
+    private bool freezeFrameBusy;
 
     public MainForm()
     {
@@ -44,6 +47,9 @@ internal sealed class MainForm : Form
         Shown += OnShown;
         FormClosing += OnFormClosing;
         Resize += (_, _) => ApplyCaptureShield();
+        LocationChanged += (_, _) => PostDisplayRefresh(false);
+        Microsoft.Win32.SystemEvents.DisplaySettingsChanged += OnDisplaySettingsChanged;
+        FormClosed += (_, _) => Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
     }
 
     private void BuildTitleBar()
@@ -127,9 +133,11 @@ internal sealed class MainForm : Form
         var options = new CoreWebView2EnvironmentOptions
         {
             AllowSingleSignOnUsingOSPrimaryAccount = false,
+            // HardwareMediaKeyHandling off keeps playback out of the Windows media
+            // controls, so media keys, headsets and other apps cannot drive it.
             AdditionalBrowserArguments =
                 "--autoplay-policy=no-user-gesture-required " +
-                "--disable-features=CalculateNativeWinOcclusion " +
+                "--disable-features=CalculateNativeWinOcclusion,HardwareMediaKeyHandling " +
                 "--disable-backgrounding-occluded-windows " +
                 "--disable-renderer-backgrounding",
         };
@@ -180,6 +188,10 @@ internal sealed class MainForm : Form
         core.WebMessageReceived += OnWebMessageReceived;
         core.PermissionRequested += OnPermissionRequested;
         core.ProcessFailed += OnProcessFailed;
+        core.NavigationCompleted += (_, e) =>
+        {
+            if (e.IsSuccess) PostDisplayRefresh(true);
+        };
         core.ContainsFullScreenElementChanged += (_, _) =>
         {
             if (core.ContainsFullScreenElement) EnterFullScreen();
@@ -269,6 +281,9 @@ internal sealed class MainForm : Form
             case "presets:export":
                 ExportPresets(payload);
                 break;
+            case "freeze:capture":
+                await CaptureFreezeFrameAsync(payload);
+                break;
             case "log":
                 if (AppPolicy.IsLogEvent(payload)) HostLog.Write("renderer: " + payload);
                 else HostLog.Write("ignored invalid renderer log code");
@@ -357,15 +372,7 @@ internal sealed class MainForm : Form
             // Without this the dialog can open in the working directory, which is the install folder.
             InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
         };
-        while (true)
-        {
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
-            if (!AppPolicy.IsInsideFolder(dialog.FileName, AppContext.BaseDirectory) &&
-                !AppPolicy.IsInsideFolder(dialog.FileName, AppPaths.DataDir)) break;
-            MessageBox.Show(
-                "Choose a folder outside the app's install and data folders. Updates replace the install folder, and uninstall can remove both.",
-                AppPaths.AppName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
+        if (!ChooseSavePathOutsideApp(dialog)) return;
         try
         {
             File.WriteAllText(dialog.FileName, json, new UTF8Encoding(false));
@@ -376,6 +383,102 @@ internal sealed class MainForm : Form
             MessageBox.Show("The preset file could not be saved.\n\n" + error.Message, AppPaths.AppName,
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+    }
+
+    // Saved files never go into the install folder (replaced on update) or the data folder (removed on uninstall).
+    private bool ChooseSavePathOutsideApp(SaveFileDialog dialog)
+    {
+        while (true)
+        {
+            if (dialog.ShowDialog(this) != DialogResult.OK) return false;
+            if (!AppPolicy.IsInsideFolder(dialog.FileName, AppContext.BaseDirectory) &&
+                !AppPolicy.IsInsideFolder(dialog.FileName, AppPaths.DataDir)) return true;
+            MessageBox.Show(
+                "Choose a folder outside the app's install and data folders. Updates replace the install folder, and uninstall can remove both.",
+                AppPaths.AppName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
+    // FREEZE FRAME: the page hides its HUD and asks for a capture. The host takes the PNG itself,
+    // tells the page it can restore the HUD, and saves only through a user-chosen Save dialog.
+    // No image data is posted back into the page.
+    private async Task CaptureFreezeFrameAsync(string id)
+    {
+        if (!AppPolicy.IsRequestId(id))
+        {
+            HostLog.Write("rejected invalid freeze frame request");
+            return;
+        }
+        if (freezeFrameBusy)
+        {
+            PostFreezeResult(id, "A freeze frame is already being saved.");
+            return;
+        }
+        var core = view.CoreWebView2;
+        if (core == null) return;
+        freezeFrameBusy = true;
+        try
+        {
+            byte[] png;
+            try
+            {
+                using var stream = new MemoryStream();
+                await core.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, stream);
+                png = stream.ToArray();
+            }
+            catch (Exception error) when (error is InvalidOperationException or ArgumentException or System.Runtime.InteropServices.COMException)
+            {
+                HostLog.Write(AppPaths.HostLog, "freeze frame capture failed: " + error);
+                PostFreezeResult(id, "The frame could not be captured.");
+                return;
+            }
+            if (IsDisposed) return;
+            PostFreezeResult(id, png.Length == 0 ? "The frame could not be captured." : null);
+            if (png.Length == 0) return;
+            // The capture completion runs inside a WebView2 callback, and WebView2 holds back further
+            // events until that callback returns. Leave it before the modal dialog so a repeat request
+            // is answered "busy" now instead of queuing behind the dialog and capturing later.
+            await Task.Yield();
+            if (IsDisposed) return;
+
+            using var dialog = new SaveFileDialog
+            {
+                Title = "Save freeze frame",
+                Filter = "PNG image (*.png)|*.png",
+                DefaultExt = "png",
+                AddExtension = true,
+                FileName = "glitch-player-freeze-" +
+                    DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture) + ".png",
+                OverwritePrompt = true,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+            };
+            if (!ChooseSavePathOutsideApp(dialog)) return;
+            try
+            {
+                File.WriteAllBytes(dialog.FileName, png);
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                HostLog.Write(AppPaths.HostLog, "freeze frame save failed: " + error);
+                MessageBox.Show("The freeze frame could not be saved.\n\n" + error.Message, AppPaths.AppName,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        finally
+        {
+            freezeFrameBusy = false;
+        }
+    }
+
+    private void PostFreezeResult(string id, string error)
+    {
+        if (IsDisposed || view.CoreWebView2 == null) return;
+        try
+        {
+            view.CoreWebView2.PostWebMessageAsString("freeze:captured|" +
+                JsonSerializer.Serialize(new { id, ok = error == null, error }));
+        }
+        catch (InvalidOperationException e) { HostLog.Write(AppPaths.HostLog, "could not post freeze frame result: " + e.Message); }
     }
 
     private static byte[] LoadMediaKey()
@@ -568,6 +671,46 @@ internal sealed class MainForm : Form
             }
         }
         base.WndProc(ref m);
+    }
+
+    private void OnDisplaySettingsChanged(object sender, EventArgs e)
+    {
+        if (!IsHandleCreated || IsDisposed) return;
+        BeginInvoke(() =>
+        {
+            refreshDevice = null;
+            PostDisplayRefresh(false);
+        });
+    }
+
+    // The renderer's frame-rate governor assumes 60 Hz unless told otherwise; on a 24/30/50 Hz projector or TV
+    // every frame legitimately takes longer. WebView2 can pace frames to the primary display rather than the one
+    // showing the window, so every attached display's rate is reported, the window's first.
+    private void PostDisplayRefresh(bool force)
+    {
+        var core = view.CoreWebView2;
+        if (core == null || !IsHandleCreated || IsDisposed) return;
+        var device = Screen.FromHandle(Handle).DeviceName;
+        if (!force && device == refreshDevice) return;
+        refreshDevice = device;
+        var others = Screen.AllScreens.Where(screen => screen.DeviceName != device).Select(screen => ReadRefreshHz(screen.DeviceName));
+        var message = AppPolicy.BuildDisplayRefreshMessage(ReadRefreshHz(device), others);
+        if (message == null || (!force && message == postedRefresh)) return;
+        postedRefresh = message;
+        try
+        {
+            core.PostWebMessageAsString(message);
+        }
+        catch (InvalidOperationException error)
+        {
+            HostLog.Write(AppPaths.HostLog, "could not post the display refresh rate: " + error.Message);
+        }
+    }
+
+    private static uint ReadRefreshHz(string device)
+    {
+        var mode = new NativeMethods.DevMode { Size = (ushort)System.Runtime.InteropServices.Marshal.SizeOf<NativeMethods.DevMode>() };
+        return NativeMethods.EnumDisplaySettings(device, NativeMethods.EnumCurrentSettings, ref mode) ? mode.DisplayFrequency : 0;
     }
 
     private void OnFormClosing(object sender, FormClosingEventArgs e)

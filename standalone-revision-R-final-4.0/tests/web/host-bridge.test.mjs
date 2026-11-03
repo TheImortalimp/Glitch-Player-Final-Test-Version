@@ -178,3 +178,96 @@ test('renderer log codes are restricted to a short safe alphabet', () => {
     for (const code of ['', 'Upper', '../etc', 'a b', 'a|b', 'x'.repeat(65), 42, null]) bridge.host.log(code);
     assert.deepEqual(bridge.posted.map((p) => p.message), ['log|media:convert.failed_1']);
 });
+
+test('display refresh pushes are distinct integer 20–500 Hz lists and reach at most four listeners', () => {
+    const bridge = loadBridge();
+    const seen = [];
+    const lists = [];
+    bridge.host.onDisplayRefresh((hz, rates) => { seen.push(hz); lists.push(rates); });
+    for (const bad of ['display:refresh|19', 'display:refresh|501', 'display:refresh|24.5', 'display:refresh|-60',
+        'display:refresh|0x3C', 'display:refresh| 60', 'display:refresh|', 'display:refreshX|60', 'display:refresh|1000', 60,
+        'display:refresh|60,60', 'display:refresh|60,19', 'display:refresh|60,', 'display:refresh|,60', 'display:refresh|60;24',
+        'display:refresh|60, 24', 'display:refresh|60,24,25,30,48,50,72,75,90']) {
+        bridge.deliver(bad);
+    }
+    assert.deepEqual(seen, []);
+    bridge.deliver('display:refresh|24');
+    bridge.deliver('display:refresh|144');
+    bridge.deliver('display:refresh|60,24,25,30,48,50,72,75');
+    assert.deepEqual(seen, [24, 144, 60]);
+    assert.deepEqual(lists.map((rates) => [...rates]), [[24], [144], [60, 24, 25, 30, 48, 50, 72, 75]]);
+    lists[2].push(999);
+
+    const late = [];
+    bridge.host.onDisplayRefresh((hz, rates) => late.push([hz, [...rates]]));
+    assert.deepEqual(late, [[60, [60, 24, 25, 30, 48, 50, 72, 75]]], 'a late listener receives an unaltered copy at once');
+    bridge.host.onDisplayRefresh('not a function');
+    bridge.host.onDisplayRefresh(() => {});
+    bridge.host.onDisplayRefresh(() => {});
+    const overflow = [];
+    bridge.host.onDisplayRefresh((hz) => overflow.push(hz));
+    bridge.deliver('display:refresh|60');
+    assert.deepEqual(overflow, []);
+    assert.deepEqual(seen, [24, 144, 60, 60]);
+    assert.equal(bridge.posted.length, 0, 'the page never asks the host for anything to learn the rate');
+});
+
+test('freeze frame posts one numeric capture request and settles only on the matching host reply', async () => {
+    const bridge = loadBridge();
+    const capture = bridge.host.captureFreezeFrame();
+    assert.equal(bridge.posted.length, 1);
+    assert.match(bridge.posted[0].message, /^freeze:capture\|[0-9]{1,20}$/);
+    assert.equal(bridge.posted[0].objects, undefined, 'a capture request carries no files');
+    const id = bridge.posted[0].message.slice('freeze:capture|'.length);
+    await assert.rejects(bridge.host.captureFreezeFrame(), /already being captured/);
+    assert.equal(bridge.posted.length, 1, 'a second capture is refused while one is in flight');
+
+    let settled = false;
+    capture.then(() => { settled = true; }, () => { settled = true; });
+    for (const bad of [
+        'freeze:captured|' + JSON.stringify({ id: String(Number(id) + 1), ok: true }),
+        'freeze:captured|' + JSON.stringify({ id: Number(id), ok: true }),
+        'freeze:captured|not json',
+        'freeze:captured|null',
+        'freeze:capturedX|' + JSON.stringify({ id, ok: true }),
+        'xfreeze:captured|' + JSON.stringify({ id, ok: true }),
+        'freeze:captured|' + JSON.stringify({ id, ok: true, pad: 'x'.repeat(1100) }),
+        { id, ok: true }
+    ]) bridge.deliver(bad);
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(settled, false);
+    bridge.deliver('freeze:captured|' + JSON.stringify({ id, ok: true, error: null }));
+    await capture;
+    assert.equal(bridge.timers.size, 0);
+
+    const failed = bridge.host.captureFreezeFrame();
+    const failedId = bridge.posted[1].message.slice('freeze:capture|'.length);
+    assert.notEqual(failedId, id);
+    bridge.deliver('freeze:captured|' + JSON.stringify({ id: failedId, ok: 'true', error: 'E'.repeat(400) }));
+    await assert.rejects(failed, (error) => error.message === 'E'.repeat(300));
+});
+
+test('freeze frame times out, frees the slot and needs the native host', async () => {
+    const bridge = loadBridge();
+    const capture = bridge.host.captureFreezeFrame();
+    const [timer] = bridge.timers.values();
+    assert.equal(timer.ms, 10000);
+    timer.fn();
+    await assert.rejects(capture, /timed out/);
+    const id = bridge.posted[0].message.slice('freeze:capture|'.length);
+    bridge.deliver('freeze:captured|' + JSON.stringify({ id, ok: true }));
+
+    const next = bridge.host.captureFreezeFrame();
+    assert.equal(bridge.posted.length, 2);
+    bridge.deliver('freeze:captured|' + JSON.stringify({ id: bridge.posted[1].message.slice(15), ok: true }));
+    await next;
+
+    const outside = loadBridge({ native: false });
+    await assert.rejects(outside.host.captureFreezeFrame(), /app host/);
+    assert.equal(outside.posted.length, 0);
+
+    const gone = loadBridge({ throwOnPost: true });
+    await assert.rejects(gone.host.captureFreezeFrame(), /rejected the request/);
+    await assert.rejects(gone.host.captureFreezeFrame(), /rejected the request/, 'a failed post frees the slot');
+    assert.equal(gone.timers.size, 0);
+});

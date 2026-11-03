@@ -10,6 +10,8 @@ The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATU
 
 There are 43 effect voices: 39 timed overlay voices and 4 filter-path master voices. Each has its own slider and lock and starts at 0. An effect only appears when you, a preset or Auto Glitch raise its slider.
 
+A lock you set holds its slider through presets, the preset glide, Auto Glitch, Continual Randomization and the AUTO preset cycler. Locks saved in a preset are released by the next preset you apply. ZERO ALL EFFECTS still zeroes every voice, including locked ones.
+
 | Source | Voices |
 | --- | --- |
 | Glitch Canvas Projector (18) | Neon Grad, Scanlines, Flash, HSL Rainbow, ASCII, Font Burn, Strobe, Gemini Bomb, Data Bands, VHS Glitch, Chromatic Echo, Temporal Slices, Signal Tear, Cyber Rain, Prism Rift, Orbit HUD, R3 Ghost Spectrum, R3 V-Sync |
@@ -24,6 +26,16 @@ The AI WARP MASTERS panel adds:
 AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included.
 
 The printable ASCII and Unicode glyph banks from the projector are included, with their original AI Warp / Revision 3 bank credits.
+
+## Smooth playback
+
+A frame governor watches frame timing. When the machine can't keep up, it lowers the effects canvas in up to two steps: first a lower resolution and glyph density, then lower still with effects drawn at half rate. After about 400 frames with clear headroom (about 17 s at 24 Hz, 7 s at 60 Hz) it steps back up. If a step up has to be undone soon after, the wait before the next try doubles each time, and goes back to normal once the effects get lighter.
+
+The app reports every display's refresh rate to the page, so a 24, 30 or 50 Hz projector or TV isn't mistaken for overload. WebView2 can pace frames to the primary display rather than the one showing the window, so the governor uses the rate that matches the measured frame timing.
+
+## Freeze Frame
+
+Once playback has started, **FREEZE FRAME** (bottom-left buttons) or **S** saves a still of the picture with its effects, without the app's controls. The app asks where to save the PNG; the dialog starts in Pictures and refuses the app's install and data folders.
 
 ## Presets
 
@@ -60,7 +72,10 @@ YouTube links you enter play through the privacy-enhanced embed (`youtube-nocook
 | F11 or Alt+Enter | Toggle fullscreen |
 | Esc | Leave fullscreen; close the preset browser |
 | D | Toggle DROP THE MILK? (ignored while typing) |
+| S | Freeze Frame (ignored while typing and on the welcome screen) |
 | Ctrl+Alt+G | Hidden GHOST / OF ME preset (asks for confirmation first, because it flashes) |
+
+Keyboard media keys, headset buttons and other apps can't control playback, because the player doesn't register with Windows media controls. Use the app's own controls.
 
 ## Install and uninstall
 
@@ -114,7 +129,7 @@ npm test
 | `webui\js\glitch-player.js` | Merged player core, effects registry and preset system |
 | `webui\js\glitch-engine.js`, `r3-factories.js`, `r3-ghost-vsync.js`, `glyph-library.js` | Effect engines and glyph banks |
 | `webui\js\r4-policy.js`, `host-bridge.js`, `yt-embed.js` | Input validation, the narrow host bridge and the YouTube embed |
-| `tests\web\` | Node tests for the merge manifest, policy, bridge, static CSP rules and host guards (cursor guard, permissions) |
+| `tests\web\` | Node tests for the merge manifest, policy, bridge, static CSP rules, host guards (cursor guard, permissions, media controls), Freeze Frame, locks and the frame governor |
 | `installer\` | `setup.nsi` and the installer notices |
 
 ## Credits and license

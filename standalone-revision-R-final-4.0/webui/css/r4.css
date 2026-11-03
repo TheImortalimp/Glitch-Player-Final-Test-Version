@@ -122,6 +122,17 @@ body.playback-on #sliderContainer::after {
     height: 120px;
 }
 
+/* FREEZE FRAME: hide every control layer while the host captures the picture.
+   Only the stage (#effects-wrapper), the FX veils and the SVG filter defs stay;
+   descendants are listed too because a child with visibility: visible would
+   otherwise reappear, and transitions are cut so nothing fades out late.
+   bindFreezeFrame in glitch-player.js toggles the class. */
+html.freeze-frame-capture body > :not(#effects-wrapper):not(#moon-veil):not(#color-shift-overlay):not(.svg-defs),
+html.freeze-frame-capture body > :not(#effects-wrapper):not(#moon-veil):not(#color-shift-overlay):not(.svg-defs) * {
+    visibility: hidden !important;
+    transition: none !important;
+}
+
 /* LAB 250 list skin (USER = purple-violet, MACHINE = orange-yellow). */
 #presetListToggleBtn.list-lab {
     border-color: rgba(60, 230, 255, 0.95) !important;

@@ -47,6 +47,46 @@ internal static class NativeMethods
         public uint Flags;
     }
 
+    internal const int EnumCurrentSettings = -1;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct DevMode
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        public ushort SpecVersion;
+        public ushort DriverVersion;
+        public ushort Size;
+        public ushort DriverExtra;
+        public uint Fields;
+        public int PositionX;
+        public int PositionY;
+        public uint DisplayOrientation;
+        public uint DisplayFixedOutput;
+        public short Color;
+        public short Duplex;
+        public short YResolution;
+        public short TTOption;
+        public short Collate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string FormName;
+        public ushort LogPixels;
+        public uint BitsPerPel;
+        public uint PelsWidth;
+        public uint PelsHeight;
+        public uint DisplayFlags;
+        public uint DisplayFrequency;
+        public uint IcmMethod;
+        public uint IcmIntent;
+        public uint MediaType;
+        public uint DitherType;
+        public uint Reserved1;
+        public uint Reserved2;
+        public uint PanningWidth;
+        public uint PanningHeight;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, EntryPoint = "EnumDisplaySettingsW")]
+    internal static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DevMode devMode);
+
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern bool ReleaseCapture();
 

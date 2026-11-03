@@ -469,6 +469,14 @@
           let isAutomatedMasters = false;
           let randomTargets = {};
           const sliderLocks = {};
+          /* Locks switched on by the last applied preset. Those are released by
+             the next preset; locks the user set by hand are hard and survive. */
+          const presetLockKeys = new Set();
+          function toggleUserLock(key) {
+              presetLockKeys.delete(key);
+              sliderLocks[key] = !sliderLocks[key];
+              return sliderLocks[key];
+          }
           const sliderElements = {};
           const sliderWritten = {};
           const masterControls = {
@@ -2428,7 +2436,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const base = name.endsWith(' GC#(3)') ? 'R3 ' + name.slice(0, -7) : name;
                       return effectLiveStrength(base);
                   },
-                  sizeFor() { return 1; }, depthFor() { return 1; }, triggerButtonEffect() {}
+                  sizeFor() { return 1; }, depthFor() { return 1; }, triggerButtonEffect() {},
+                  paintGlyphScatter: paintScatterField
               };
               r3Runners = window.GC3FactoryBank.createRunners(r3Engine);
               r3System = window.R3GhostVsync.create(r3Engine);
@@ -3052,6 +3061,83 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               }
           }
 
+          /* The 006 scatter re-rolls a dense multi-script glyph field every frame.
+             Drawing it as one fillText per cell (thousands of font-fallback text
+             runs) was most of the frame time, so the glyphs are drawn once, with the
+             same fillText calls, into a few white variant sheets at a fixed
+             reference pitch. Each frame assembles the field from random-length
+             single-row strips taken from random variants, rows and offsets, scaled to
+             the live pitch, then tints it and blends it once. Rows sit in taller
+             slots so glyphs that overflow their cell vertically are not clipped.
+             Sheets are kept per glyph set, built one per frame and never depend on
+             the pitch, so slider fades never stall a frame. The R3 ASCII voice uses
+             the same painter through its engine binding. */
+          const SCATTER_REF = 24;
+          const SCATTER_COLS = 64;
+          const SCATTER_ROWS = 24;
+          const SCATTER_MARGIN = 6;
+          const SCATTER_SLOT = SCATTER_REF + 2 * SCATTER_MARGIN;
+          const SCATTER_VARIANTS = 4;
+          const scatterPool = { sheets: new WeakMap(), field: null, fieldCtx: null };
+
+          function buildScatterVariant(chSet) {
+              const cv = document.createElement('canvas');
+              cv.width = SCATTER_COLS * SCATTER_REF;
+              cv.height = SCATTER_ROWS * SCATTER_SLOT;
+              const cx = cv.getContext('2d');
+              cx.textBaseline = 'top';
+              cx.fillStyle = '#fff';
+              cx.font = 'bold ' + SCATTER_REF + 'px monospace';
+              for (let r = 0; r < SCATTER_ROWS; r++) {
+                  const y = r * SCATTER_SLOT + SCATTER_MARGIN;
+                  for (let c = 0; c < SCATTER_COLS; c++) {
+                      if (Math.random() < 0.5) cx.fillText(chSet[(Math.random() * chSet.length) | 0], c * SCATTER_REF, y);
+                  }
+              }
+              return cv;
+          }
+
+          function paintScatterField(ctx, w, h, pitch, chSet, color, alpha) {
+              const pool = scatterPool;
+              let variants = pool.sheets.get(chSet);
+              if (!variants) pool.sheets.set(chSet, variants = []);
+              if (variants.length < SCATTER_VARIANTS) variants.push(buildScatterVariant(chSet));
+              if (!pool.field) {
+                  pool.field = document.createElement('canvas');
+                  pool.fieldCtx = pool.field.getContext('2d');
+              }
+              const field = pool.field, fx = pool.fieldCtx;
+              if (field.width !== w || field.height !== h) {
+                  field.width = w;
+                  field.height = h;
+              }
+              fx.globalCompositeOperation = 'source-over';
+              fx.imageSmoothingEnabled = true;
+              fx.imageSmoothingQuality = 'medium';
+              fx.clearRect(0, 0, w, h);
+              const nv = variants.length;
+              const k = pitch / SCATTER_REF, slotH = SCATTER_SLOT * k, lift = SCATTER_MARGIN * k;
+              for (let yy = 0; yy < h; yy += pitch) {
+                  for (let xx = 0; xx < w;) {
+                      const len = 16 + ((Math.random() * 17) | 0);
+                      const c0 = (Math.random() * (SCATTER_COLS - len + 1)) | 0;
+                      const r = (Math.random() * SCATTER_ROWS) | 0;
+                      fx.drawImage(variants[(Math.random() * nv) | 0],
+                          c0 * SCATTER_REF, r * SCATTER_SLOT, len * SCATTER_REF, SCATTER_SLOT,
+                          xx, yy - lift, len * pitch, slotH);
+                      xx += len * pitch;
+                  }
+              }
+              fx.globalCompositeOperation = 'source-in';
+              fx.fillStyle = color;
+              fx.fillRect(0, 0, w, h);
+              ctx.save();
+              ctx.globalCompositeOperation = 'difference';
+              ctx.globalAlpha *= alpha;
+              ctx.drawImage(field, 0, 0);
+              ctx.restore();
+          }
+
           function glitchASCIIArtOverlayFactory(getStrength, isPersistent) {
               /* R1.3 STYLE ROTOR (user request): this voice rotates HEAVILY
                  between two souls — the final-006 full-grid rainbow
@@ -3142,28 +3228,14 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (rotW > 0.02) {
                       const sp006 = Math.max(10 + (1 - s) * 20,
                           Math.sqrt((w * h) / renderBudget.asciiCells));
-                      gctx.save();
-                      gctx.textBaseline = 'top';
-                      gctx.globalCompositeOperation = 'difference';
                       /* R1.4: the scatter's rainbow is source-keyed — a
                          colorful video pulls the field toward its own
                          spectrum; a grey one lets the full wheel fly */
                       const scatterHue = (videoPalette.hue +
                           (Math.random() - 0.5) * 360 * srcSpreadK() + 360) % 360;
-                      gctx.fillStyle = fxHsla(scatterHue, 100, 70,
+                      paintScatterField(gctx, w, h, Math.max(4, sp006 + (Math.random() - 0.5) * s * 1.5), chSet,
+                          fxHsla(scatterHue, 100, 70, 1),
                           Math.min(1, 0.8 * s) * rotW);
-                      gctx.font = 'bold ' +
-                          (sp006 + (Math.random() - 0.5) * s * 1.5).toFixed(1) +
-                          'px monospace';
-                      for (let yy = 0; yy < h; yy += sp006) {
-                          for (let xx = 0; xx < w; xx += sp006) {
-                              if (Math.random() < 0.5) {
-                                  gctx.fillText(
-                                      chSet[(Math.random() * chSet.length) | 0], xx, yy);
-                              }
-                          }
-                      }
-                      gctx.restore();
                   }
                   /* R1.2: the appearance FREQUENCY is set by the ASCII slider —
                      ~0.6 stacks/s at a whisper up to ~9/s at full, gently
@@ -4712,7 +4784,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const intensity = clamp01(masterControls.effectIntensity);
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  const raw = clamp01((effectAlphas[name] || 0) * masterOpacity * glitchBoost * intensity);
+                  const raw = clamp01((effectAlphas[name] || 0) * masterOpacity * (sliderLocks[name] ? 1 : glitchBoost) * intensity);
                   const rate = (blendProfiles[name].rate || 0.2) * 5.0 * blendTempo * harmony * ((SOFT.enabled && SOFT.k < 0.45) ? 0.62 : 1) * (document.body.classList.contains('hard-light') ? 1.12 : 1);
                   const prev = smoothedStrength[name] === undefined ? raw : smoothedStrength[name];
                   const rateUse = raw < 0.01 ? rate * 1.28 : rate;
@@ -4789,7 +4861,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               globalLock.className = 'lock-button';
               globalLock.textContent = '<LOCK!>';
               globalLock.addEventListener('click', () => {
-                  sliderLocks.global = !sliderLocks.global;
+                  toggleUserLock('global');
                   globalLock.classList.toggle('locked', sliderLocks.global);
                   globalLock.textContent = sliderLocks.global ? '[LOCKED!]' : '<LOCK!>';
               });
@@ -4828,7 +4900,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       /* v11: touching a slider after ZERO ALL EFFECTS restarts the
                          levels — a parked (0) global opacity is revived so the touch
                          is actually visible, and the automation systems wake up. */
-                      if ((+masterOpacity || 0) <= 0.02) {
+                      if (!sliderLocks.global && (+masterOpacity || 0) <= 0.02) {
                           masterOpacity = 0.85;
                           randomTargets.global = masterOpacity;
                           sliderWritten.global = masterOpacity;
@@ -4864,7 +4936,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   lock.className = 'lock-button';
                   lock.textContent = '<LOCK!>';
                   lock.addEventListener('click', () => {
-                      sliderLocks[def.name] = !sliderLocks[def.name];
+                      toggleUserLock(def.name);
                       lock.classList.toggle('locked', sliderLocks[def.name]);
                       lock.textContent = sliderLocks[def.name] ? '[LOCKED!]' : '<LOCK!>';
                   });
@@ -4926,7 +4998,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   lock.title = 'Lock ' + d.label;
                   sliderLocks['master:' + d.key] = false;
                   lock.addEventListener('click', () => {
-                      sliderLocks['master:' + d.key] = !sliderLocks['master:' + d.key];
+                      toggleUserLock('master:' + d.key);
                       lock.classList.toggle('locked', sliderLocks['master:' + d.key]);
                       lock.textContent = sliderLocks['master:' + d.key] ? '[LOCKED!]' :
                           '<LOCK!>';
@@ -5397,13 +5469,17 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               syncAiWarpMastersUi();
           })();
 
+          /* Single-key shortcuts never fire while the user is typing in a field. */
+          function isTypingTarget(t) {
+              return !!t && (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' ||
+                  (t.tagName === 'INPUT' && !/^(range|button|checkbox|radio)$/i.test(t.type)));
+          }
+
           /* Local keyboard only: D toggles DROP THE MILK? (never while typing). */
           document.addEventListener('keydown', (e) => {
               if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
               if (e.key !== 'd' && e.key !== 'D') return;
-              const t = e.target;
-              if (t && (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' ||
-                  (t.tagName === 'INPUT' && !/^(range|button|checkbox|radio)$/i.test(t.type)))) return;
+              if (isTypingTarget(e.target)) return;
               e.preventDefault();
               toggleMilk();
           });
@@ -6555,7 +6631,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           }
           if (vsyncLockBtn) {
               vsyncLockBtn.addEventListener('click', () => {
-                  sliderLocks.vsync = !sliderLocks.vsync;
+                  toggleUserLock('vsync');
                   vsyncLockBtn.classList.toggle('locked', sliderLocks.vsync);
                   vsyncLockBtn.textContent = sliderLocks.vsync ? '[LOCKED!]' : '<LOCK!>';
                   const mode = getVsyncMode();
@@ -7978,6 +8054,59 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               paint();
           })();
 
+          /* FREEZE FRAME (S or the rack button): hide every control layer, let the
+             HUD-free picture paint, then ask the host to capture it. The host saves
+             the PNG through its own Save dialog; no image data returns to the page.
+             The hiding rule is html.freeze-frame-capture in css/r4.css. */
+          (function bindFreezeFrame() {
+              const btn = document.getElementById('freezeFrameBtn');
+              const root = document.documentElement;
+              let busy = false;
+              const hudFreePaint = () => new Promise((resolve) => {
+                  const fallback = setTimeout(resolve, 250);
+                  requestAnimationFrame(() => requestAnimationFrame(() => {
+                      clearTimeout(fallback);
+                      resolve();
+                  }));
+              });
+              async function freezeFrame() {
+                  if (busy) return;
+                  const host = window.GlitchHost;
+                  if (!host || !host.isNativeHost || typeof host.captureFreezeFrame !== 'function') {
+                      showNotificationMessage('FREEZE FRAME needs the Glitch Player app host.', 3000);
+                      return;
+                  }
+                  busy = true;
+                  if (btn) btn.disabled = true;
+                  root.classList.add('freeze-frame-capture');
+                  let message = 'FREEZE FRAME CAPTURED \u00b7 CHOOSE WHERE TO SAVE THE PNG';
+                  try {
+                      await hudFreePaint();
+                      await host.captureFreezeFrame();
+                  } catch (error) {
+                      message = 'FREEZE FRAME failed: ' + error.message;
+                  } finally {
+                      root.classList.remove('freeze-frame-capture');
+                      busy = false;
+                      if (btn) btn.disabled = false;
+                  }
+                  showNotificationMessage(message, 3000);
+              }
+              if (btn) {
+                  btn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      freezeFrame();
+                  });
+              }
+              document.addEventListener('keydown', (e) => {
+                  if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+                  if (e.key !== 's' && e.key !== 'S') return;
+                  if (isTypingTarget(e.target) || (welcomeScreen && !welcomeScreen.hidden)) return;
+                  e.preventDefault();
+                  freezeFrame();
+              });
+          })();
+
 
           (function bindTestCanvas() {
               const el = $('testCanvas');
@@ -8461,6 +8590,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   const n = profileNames[i];
                   const to = presetTravel.toA[n];
                   if (to === undefined) continue;
+                  if (sliderLocks[n] && !presetLockKeys.has(n)) continue;
                   const v = presetTravel.fromA[n] + (to - presetTravel.fromA[n]) * k;
                   effectAlphas[n] = v;
                   randomTargets[n] = to;
@@ -8470,14 +8600,15 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       el.value = v.toFixed(3);
                   }
               }
-              const op = presetTravel.fromOp + (presetTravel.toOp - presetTravel.fromOp) * k;
+              const globalHeld = sliderLocks.global && !presetLockKeys.has('global');
+              const op = globalHeld ? masterOpacity : presetTravel.fromOp + (presetTravel.toOp - presetTravel.fromOp) * k;
               masterOpacity = op;
               if (presetTravel.toG !== undefined && presetTravel.toG !== null) {   /* R2: ghost glide */
                   ghostLevel = presetTravel.fromG + (presetTravel.toG - presetTravel.fromG) * k;
                   if (ghostProtocolSlider && document.activeElement !== ghostProtocolSlider) ghostProtocolSlider.value = ghostLevel.toFixed(3);
                   if (u >= 1) { presetTravel.toG = null; if (typeof updateGhostUi === 'function') updateGhostUi(); }
               }
-              randomTargets.global = presetTravel.toOp;
+              if (!globalHeld) randomTargets.global = presetTravel.toOp;
               if (globalSliderEl && (sliderWritten.global === undefined || Math.abs(op - sliderWritten.global) > 0.006)) {
                   sliderWritten.global = op;
                   globalSliderEl.value = op.toFixed(3);
@@ -8488,16 +8619,20 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function applySettings(s) {
               if (!s) return;
-              /* v11: presets fully own the board — every lock is reset first (no
-                 leakage from the previously applied preset), toggle side-effects
-                 can no longer overwrite the preset's saved levels, and turning a
-                 saved automation OFF never zeroes anything (only ZERO ALL parks). */
-              for (const key in sliderLocks) {
-                  if (sliderLocks.hasOwnProperty(key)) sliderLocks[key] = false;
-              }
+              /* v11: presets own every unlocked control; toggle side-effects can
+                 no longer overwrite the preset's saved levels, and turning a
+                 saved automation OFF never zeroes anything (only ZERO ALL parks).
+                 Locks the previous preset switched on are released first (no
+                 leakage between presets). Locks the user set by hand are hard
+                 (AI WARP parity): that voice, global opacity, master or V-Sync
+                 keeps its level through the preset and its glide. */
+              presetLockKeys.forEach((key) => { sliderLocks[key] = false; });
+              presetLockKeys.clear();
+              const held = (key) => !!sliderLocks[key];
               const travelTo = {};
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
+                  if (held(name)) continue;
                   const v = s.alphas && s.alphas[name] !== undefined ? s.alphas[name] : 0;
                   travelTo[name] = v;
                   randomTargets[name] = v;
@@ -8509,7 +8644,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                  calm, 1.3–2.0 s inside a crescendo (was a fixed 0.96 s) */
               {
                   const tr = softWild() ? GlitchEngine.SOFT_EYE.pace.presetTravelWildMs : GlitchEngine.SOFT_EYE.pace.presetTravelMs;
-                  beginAlphaTravel(travelTo, s.masterOpacity, tr[0] + Math.random() * (tr[1] - tr[0]));
+                  beginAlphaTravel(travelTo, held('global') ? masterOpacity : s.masterOpacity,
+                      tr[0] + Math.random() * (tr[1] - tr[0]));
               }
               if (s.ghostLevel !== undefined) {
                   /* R2: the ghost level glides with the preset instead of jumping */
@@ -8521,11 +8657,11 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   const idx = ghostModes.indexOf(s.ghostMode);
                   if (idx >= 0) ghostModeIndex = idx;
               }
-              if (s.vsyncMode !== undefined) {
+              if (!held('vsync') && s.vsyncMode !== undefined) {
                   const idx = vsyncModes.indexOf(s.vsyncMode);
                   if (idx >= 0) vsyncModeIndex = idx;
               }
-              if (s.vsyncLevels) {
+              if (!held('vsync') && s.vsyncLevels) {
                   ['ON', 'GHOST_OFF', 'FULL'].forEach((m) => {
                       if (s.vsyncLevels[m] !== undefined && vsyncScripts[m]) {
                           vsyncScripts[m].level = s.vsyncLevels[m];
@@ -8540,7 +8676,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               }
               if (s.masterControls) {
                   MASTER_KEYS.forEach((k) => {
-                      if (s.masterControls[k] !== undefined) {
+                      if (s.masterControls[k] !== undefined && !held('master:' + k)) {
                           masterControls[k] = s.masterControls[k];
                           masterTargets[k] = masterControls[k];
                           if (window.__masterSliderEls && window.__masterSliderEls[k]) {
@@ -8569,8 +8705,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               }
               if (s.locks) {
                   for (const key in s.locks) {
-                      if (s.locks.hasOwnProperty(key)) {
-                          sliderLocks[key] = !!s.locks[key];
+                      if (s.locks.hasOwnProperty(key) && s.locks[key] && !sliderLocks[key]) {
+                          sliderLocks[key] = true;
+                          presetLockKeys.add(key);
                       }
                   }
               }
@@ -8637,13 +8774,13 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               if (s.alphas) {
                   for (let i = 0; i < profileNames.length; i++) {
                       const name = profileNames[i];
-                      if (s.alphas[name] !== undefined) {
+                      if (s.alphas[name] !== undefined && travelTo[name] !== undefined) {
                           randomTargets[name] = s.alphas[name];
                           if (presetTravel.toA) presetTravel.toA[name] = s.alphas[name];
                       }
                   }
               }
-              if (s.masterOpacity !== undefined) {
+              if (s.masterOpacity !== undefined && !(sliderLocks.global && !presetLockKeys.has('global'))) {
                   randomTargets.global = s.masterOpacity;
                   presetTravel.toOp = s.masterOpacity;
               }
@@ -9613,9 +9750,95 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               { drawEveryN: 2, asciiCells: 10500, scale: 0.8, cap: 1 }
           ];
           let qualityTier = renderBudget.lowPower ? 2 : 0;
+          let qualityFloor = qualityTier;
           let emaFrameMs = 16.7,
               governorSlow = 0,
               governorFast = 0;
+          /* Recovery: the 14 ms "fast frame" test below can only pass on displays
+             faster than ~71 Hz, so on a 24–60 Hz display a dropped tier would never
+             return. A tier also steps back up once frames keep the display's cadence
+             and the main-thread work of drawn frames leaves clear headroom in the
+             frame period. A step up that is undone soon after doubles the wait
+             before the next one, up to about 7 minutes at 60 Hz, so a board held
+             back by its GPU (which main-thread work cannot show) stops probing.
+             The usual wait returns once drawn frames need clearly less work than
+             when the step up failed, e.g. after a lighter preset. */
+          const GOVERNOR_UP_WORK = 0.45;
+          const GOVERNOR_UP_FRAMES = 400;
+          const GOVERNOR_RELAPSE_FRAMES = 600;
+          const GOVERNOR_MAX_WAIT = 64;
+          const GOVERNOR_LIGHTER_WORK = 0.7;
+          let emaWorkMs = 0,
+              governorFrames = 0,
+              governorUpAt = -1e9,
+              governorUpWait = 1,
+              governorUpWork = 0,
+              governorRelapseWork = 0,
+              drawWorkMs = -1;
+          /* The frame-time thresholds below are tuned for 60 Hz. On a 24/30/50 Hz
+             projector or TV every frame legitimately takes 20–42 ms, which would
+             otherwise read as overload and drop the board to half-rate drawing,
+             so the native host reports the monitor's real refresh rate. WebView2
+             can pace frames to another display than the one showing the window
+             (it follows the primary display), so the host sends every display's
+             rate, the window's first, and the measured frame cadence picks the
+             one actually in use. A cadence that matches no display (a 60 Hz
+             board that only manages 30 fps) is real overload and keeps the
+             governor's thresholds. Half of 60 Hz looks exactly like a 30 Hz
+             display, so a display slower than a cadence already measured for
+             this display setup is never taken as the one pacing frames. */
+          let governorPace = 1;
+          let displayRates = [];
+          let displayRatesKey = '';
+          let fastestCadenceMs = Infinity;
+          let cadenceHz = 0;
+          let cadenceCount = 0;
+          const cadenceRing = new Float32Array(48);
+          const cadenceSorted = new Float32Array(48);
+
+          function setGovernorHz(hz) {
+              const pace = Math.max(1, 60 / hz);
+              if (Math.abs(pace - governorPace) < 0.02) return;
+              governorPace = pace;
+              emaFrameMs = 1000 / hz;
+              governorSlow = 0;
+              governorFast = 0;
+              if (qualityTier > qualityFloor) {
+                  qualityTier = qualityFloor;
+                  applyQualityTier();
+              }
+          }
+
+          function setDisplayRefresh(hz, rates) {
+              displayRates = Array.isArray(rates) && rates.length ? rates : [hz];
+              const key = displayRates.join(',');
+              if (key !== displayRatesKey) {
+                  displayRatesKey = key;
+                  fastestCadenceMs = Infinity;
+              }
+              if (!displayRates.includes(cadenceHz)) cadenceHz = 0;
+              setGovernorHz(cadenceHz || hz);
+          }
+
+          function noteFrameCadence(dtMs) {
+              if (!displayRates.length || !(dtMs > 0 && dtMs < 250)) return;
+              cadenceRing[cadenceCount++] = dtMs;
+              if (cadenceCount < cadenceRing.length) return;
+              cadenceCount = 0;
+              cadenceSorted.set(cadenceRing);
+              cadenceSorted.sort();
+              const p10 = cadenceSorted[4];
+              if (p10 < fastestCadenceMs) fastestCadenceMs = p10;
+              let best = 0;
+              for (const hz of displayRates) {
+                  if (fastestCadenceMs < 900 / hz) continue;
+                  const off = Math.abs(p10 - 1000 / hz);
+                  if (off <= 100 / hz && (!best || off < Math.abs(p10 - 1000 / best))) best = hz;
+              }
+              if (!best || best === cadenceHz) return;
+              cadenceHz = best;
+              setGovernorHz(best);
+          }
 
           function applyQualityTier() {
               const t = QUALITY_TIERS[qualityTier];
@@ -9626,29 +9849,46 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               resizeGlitchCanvas(true);
           }
 
-          function governorStep(dtMs) {
+          function governorStep(dtMs, workMs) {
+              governorFrames++;
               emaFrameMs = emaFrameMs * 0.92 + dtMs * 0.08;
+              if (workMs >= 0) emaWorkMs = emaWorkMs > 0 ? emaWorkMs * 0.9 + workMs * 0.1 : workMs;
               let lit = 0;
               for (let i = 0; i < profileNames.length; i++) {
                   if ((effectAlphas[profileNames[i]] || 0) > 0.05) lit++;
               }
               const heavy = (isContinuallyRandomizing ? 1 : 0) + (isAutoGlitching ? 1 : 0) + (lit > 6 ? 1 : 0) + (
                   isAiWarpActive ? 1 : 0) + (milk.active && milk.target > 0.001 ? 1 : 0);
-              const slowThresh = heavy >= 2 ? 24 : 27;
+              const slowThresh = (heavy >= 2 ? 24 : 27) * governorPace;
               const slowNeed = heavy >= 2 ? 50 : 80;
+              const period = (1000 / 60) * governorPace;
+              const headroom = emaFrameMs < period * 1.2 && emaWorkMs > 0 && emaWorkMs < GOVERNOR_UP_WORK * period;
+              const upWait = governorRelapseWork > 0 && emaWorkMs > 0 &&
+                  emaWorkMs < GOVERNOR_LIGHTER_WORK * governorRelapseWork ? 1 : governorUpWait;
               if (emaFrameMs > slowThresh) { governorSlow++;
-                  governorFast = 0; } else if (emaFrameMs < 14 && qualityTier > (renderBudget.lowPower ? 2 : 0)) {
+                  governorFast = 0; } else if ((emaFrameMs < 14 * governorPace || headroom) && qualityTier > (renderBudget.lowPower ? 2 : 0)) {
                   governorFast++;
                   governorSlow = 0; } else { governorSlow = 0;
                   governorFast = 0; }
               if (governorSlow > slowNeed && qualityTier < 2) {
                   qualityTier++;
                   applyQualityTier();
+                  if (governorFrames - governorUpAt < GOVERNOR_RELAPSE_FRAMES) {
+                      governorUpWait = Math.min(GOVERNOR_MAX_WAIT, governorUpWait * 2);
+                      governorRelapseWork = governorUpWork;
+                  } else {
+                      governorUpWait = 1;
+                      governorRelapseWork = 0;
+                  }
                   governorSlow = 0;
                   governorFast = 0;
-              } else if (governorFast > 400 && qualityTier > 0 && heavy < 3) {
+              } else if (governorFast > GOVERNOR_UP_FRAMES * upWait && qualityTier > 0 && (heavy < 3 || headroom)) {
                   qualityTier--;
                   applyQualityTier();
+                  governorUpAt = governorFrames;
+                  governorUpWait = upWait;
+                  governorUpWork = emaWorkMs;
+                  emaWorkMs = 0;
                   governorSlow = 0;
                   governorFast = 0;
               }
@@ -9657,6 +9897,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           function frame(now) {
               requestAnimationFrame(frame);
               if (document.hidden) { lastFrameTime = now; return; }
+              const workStart = performance.now();
               const dtMs = now - lastFrameTime;
               const dt = Math.min(0.05, dtMs * 0.001);
               lastFrameTime = now;
@@ -9709,8 +9950,14 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   updatePresetSkin(); }
               antiWashoutStep(now, dt);
               updateContinuousEffectsCache();
-              governorStep(dtMs);
-              if ((frameCount % renderBudget.drawEveryN) === 0) draw(now);
+              noteFrameCadence(dtMs);
+              // A minimised or suspended window resumes with one long gap; it is not render load.
+              governorStep(Math.min(dtMs, 250), drawWorkMs);
+              drawWorkMs = -1;
+              if ((frameCount % renderBudget.drawEveryN) === 0) {
+                  draw(now);
+                  drawWorkMs = performance.now() - workStart;
+              }
           }
 
           (function adaptToConnection() {
@@ -9723,6 +9970,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       applyQualityTier(); } else if (slow) { qualityTier = Math.max(qualityTier, 1);
                       applyQualityTier(); }
               } catch (e) {}
+              qualityFloor = qualityTier;
+              if (window.GlitchHost && typeof window.GlitchHost.onDisplayRefresh === 'function')
+                  window.GlitchHost.onDisplayRefresh(setDisplayRefresh);
           })();
 
           /* ------------------------------------------------------------------ *

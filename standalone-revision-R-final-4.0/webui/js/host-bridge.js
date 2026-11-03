@@ -33,9 +33,57 @@
         }
     }
 
+    let displayRefreshHz = 0;
+    let displayRates = [];
+    const refreshListeners = [];
+
+    // "<window display Hz>[,<other display Hz>...]": at most eight distinct integer rates.
+    function onDisplayRefresh(text) {
+        if (!/^[0-9]{2,3}(,[0-9]{2,3}){0,7}$/.test(text)) return;
+        const rates = text.split(',').map(Number);
+        if (rates.some((hz) => hz < 20 || hz > 500) || new Set(rates).size !== rates.length) return;
+        displayRefreshHz = rates[0];
+        displayRates = rates;
+        refreshListeners.forEach((listener) => {
+            try { listener(rates[0], rates.slice()); } catch (_) {}
+        });
+    }
+
+    // At most one freeze frame is in flight; the host replies once it holds the picture.
+    let freezeRequest = null;
+
+    function onFreezeCaptured(text) {
+        if (!freezeRequest || text.length > 1024) return;
+        let result;
+        try {
+            result = JSON.parse(text);
+        } catch (_) {
+            return;
+        }
+        if (!result || result.id !== freezeRequest.id) return;
+        const request = freezeRequest;
+        freezeRequest = null;
+        clearTimeout(request.timer);
+        if (result.ok === true) {
+            request.resolve();
+        } else {
+            request.reject(new Error(typeof result.error === 'string' && result.error
+                ? result.error.slice(0, 300)
+                : 'The frame could not be captured.'));
+        }
+    }
+
     function onHostMessage(event) {
         if (typeof event.data !== 'string' || event.data.length > 2200000) return;
         const divider = event.data.indexOf('|');
+        if (divider === 'display:refresh'.length && event.data.slice(0, divider) === 'display:refresh') {
+            onDisplayRefresh(event.data.slice(divider + 1));
+            return;
+        }
+        if (divider === 'freeze:captured'.length && event.data.slice(0, divider) === 'freeze:captured') {
+            onFreezeCaptured(event.data.slice(divider + 1));
+            return;
+        }
         if (divider !== 'media:result'.length || event.data.slice(0, divider) !== 'media:result') return;
         let result;
         try {
@@ -129,9 +177,44 @@
             return post('presets:export|' + json);
         },
 
+        // Asks the host to capture the rendered page. The host saves the PNG through its own
+        // Save dialog, so no image data ever comes back into the page.
+        captureFreezeFrame() {
+            if (!isNativeHost) return Promise.reject(new Error('Freeze Frame needs the Glitch Player app host.'));
+            if (freezeRequest) return Promise.reject(new Error('A freeze frame is already being captured.'));
+            const id = String(++nextId);
+            return new Promise((resolve, reject) => {
+                const timer = setTimeout(() => {
+                    if (freezeRequest && freezeRequest.id === id) freezeRequest = null;
+                    reject(new Error('The freeze frame request timed out.'));
+                }, 10000);
+                freezeRequest = { id, resolve, reject, timer };
+                let sent = false;
+                try {
+                    sent = post('freeze:capture|' + id);
+                } catch (error) {
+                    clearTimeout(timer);
+                    freezeRequest = null;
+                    reject(error);
+                    return;
+                }
+                if (!sent) {
+                    clearTimeout(timer);
+                    freezeRequest = null;
+                    reject(new Error('The local app host is unavailable.'));
+                }
+            });
+        },
+
         log(code) {
             if (typeof code !== 'string' || !/^[a-z0-9][a-z0-9:._-]{0,63}$/.test(code)) return;
             post('log|' + code);
+        },
+
+        onDisplayRefresh(listener) {
+            if (typeof listener !== 'function' || refreshListeners.length >= 4) return;
+            refreshListeners.push(listener);
+            if (displayRefreshHz) listener(displayRefreshHz, displayRates.slice());
         }
     });
 })();

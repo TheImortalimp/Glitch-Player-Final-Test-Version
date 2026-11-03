@@ -4,10 +4,13 @@
  * GC#(3) FACTORY BANK — Glitch Revision 3 integration
  * Source factory block: https://www.imortalimp.nl/glitch-canvas-html/Glitch-Revision-3.html
  *
- * Important: the factory source between the two R3 markers below is copied verbatim
- * from Revision 3. This bridge deliberately does not rewrite the R3 factory bodies.
- * It gives them an isolated Canvas/WebGL runtime and maps their original names onto
- * the separate " GC#(3)" voice rails in AI Warp Engine.
+ * Important: the factory source between the two R3 markers below is the Revision 3
+ * source as carried by AI Warp Engine (including its v6.4.x additions). This bridge
+ * gives it an isolated Canvas/WebGL runtime and maps its original names onto the
+ * separate " GC#(3)" voice rails. The only 4.0 changes inside the markers are two
+ * same-look performance rewrites in the ASCII voice: the 006 scatter can use the
+ * host's cached glyph-scatter painter, and the continual ASCII sheet batches its
+ * rows and defers its luminance read-back.
  *
  * No SVG filters, filter URLs, or SVG scripting are used here.
  */
@@ -37,6 +40,9 @@
     let currentDepth = 1;
     let activeEffects = []; // only used by R3's one-shot helper; GC#(3) runs persistent factories.
     const renderBudget = { asciiCells: 21000 };
+    /* The host's shared glyph-scatter painter (see the ASCII 006 face); null keeps
+       the original per-cell loop. */
+    let paintGlyphScatter = null;
     /* Host scratch surface used by the Data Bands / VHS Glitch GC#(3) slicers. */
     const scratch = root.document && root.document.createElement ? root.document.createElement('canvas') : { width: 0, height: 0 };
     const scratchCtx = scratch.getContext ? scratch.getContext('2d') : null;
@@ -937,7 +943,45 @@
                the live canvas (source + voices) luminance, mapped onto a density ramp
                and the glyph atlas. When the canvas is transparent (YouTube iframe) or
                unreadable, a flowing procedural field keeps the stream running. */
-            const ASCII_SHEET = { cv: null, cx: null, cols: 0, rows: 0, lum: null, cov: 0, sampledAt: -1e9, ramp: null };
+            const ASCII_SHEET = { cv: null, cx: null, cols: 0, rows: 0, lum: null, cov: 0, sampledAt: -1e9, ramp: null,
+                level: null, glyph: null, pending: false, pendingAt: 0, sampleId: 0, ready: null, readyFrom: 0,
+                metricsKey: '', pitch: null };
+
+            function readSheetLuminance(S, image) {
+                const cols = S.cols, rows = S.rows;
+                try {
+                    S.cx.clearRect(0, 0, cols, rows);
+                    S.cx.drawImage(image, 0, 0, cols, rows);
+                    const px = S.cx.getImageData(0, 0, cols, rows).data;
+                    let covered = 0;
+                    for (let i = 0, n = cols * rows; i < n; i++) {
+                        const a = px[i * 4 + 3] / 255;
+                        S.lum[i] = a > 0.05 ? (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255 : -1;
+                        if (a > 0.05) covered++;
+                    }
+                    S.cov = covered / (cols * rows);
+                } catch (e) { S.cov = 0; }
+            }
+
+            /* Every sheet glyph has the same advance in Courier New, so a whole row of
+               one level can be one fillText with the letter spacing that puts each
+               glyph exactly on its cell (pixel-identical to a fillText per cell, at a
+               fraction of the canvas commands). Returns null when the font in use is
+               not monospaced for every glyph, which keeps the per-cell path. */
+            function sheetRowPitch(S, sp) {
+                const key = gctx.font + '|' + sp;
+                if (S.metricsKey === key) return S.pitch;
+                S.metricsKey = key;
+                S.pitch = null;
+                if (!('letterSpacing' in gctx)) return null;
+                const advance = gctx.measureText(' ').width;
+                for (const ch of S.ramp.concat(S.alpha)) {
+                    if (Math.abs(gctx.measureText(ch).width - advance) > 0.01) return null;
+                }
+                S.pitch = sp - advance;
+                return S.pitch;
+            }
+
             function paintAsciiSheet(w, h, s, master, baseHue, now) {
                 const budget = Math.min(renderBudget.asciiCells, 7000);
                 const sp = Math.max(9, Math.round(Math.sqrt((w * h) / budget)));
@@ -955,23 +999,43 @@
                 if (S.cols !== cols || S.rows !== rows || !S.lum) {
                     S.cols = cols; S.rows = rows;
                     S.lum = new Float32Array(cols * rows);
+                    S.level = new Int8Array(cols * rows);
+                    S.glyph = new Array(cols * rows);
+                    S.cov = 0;
                     S.sampledAt = -1e9;
                     if (S.cv) { S.cv.width = cols; S.cv.height = rows; }
                 }
-                if (S.cx && now - S.sampledAt > 90) {
+                /* The luminance read-back is deferred: reading pixels waits until the
+                   GPU has finished all work queued so far, which right after a frame is
+                   most of that frame. The scaled copy is still taken at this point of
+                   the frame, but read one sampling period later, just before the next
+                   copy, when the GPU is long done with it; the previous sample is used
+                   meanwhile. */
+                if (S.ready && now - S.readyFrom >= 80) {
+                    const bitmap = S.ready;
+                    S.ready = null;
+                    if (bitmap.width === S.cols && bitmap.height === S.rows) readSheetLuminance(S, bitmap);
+                    bitmap.close();
+                }
+                if (S.cx && !S.ready && now - S.sampledAt > 90 && (!S.pending || now - S.pendingAt > 1000)) {
                     S.sampledAt = now;
-                    try {
-                        S.cx.clearRect(0, 0, cols, rows);
-                        S.cx.drawImage(mainCanvas, 0, 0, cols, rows);
-                        const px = S.cx.getImageData(0, 0, cols, rows).data;
-                        let covered = 0;
-                        for (let i = 0, n = cols * rows; i < n; i++) {
-                            const a = px[i * 4 + 3] / 255;
-                            S.lum[i] = a > 0.05 ? (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255 : -1;
-                            if (a > 0.05) covered++;
-                        }
-                        S.cov = covered / (cols * rows);
-                    } catch (e) { S.cov = 0; }
+                    if (typeof root.createImageBitmap === 'function') {
+                        const id = S.sampleId += 1;
+                        S.pending = true;
+                        S.pendingAt = now;
+                        root.createImageBitmap(mainCanvas, { resizeWidth: cols, resizeHeight: rows, resizeQuality: 'low' }).then((bitmap) => {
+                            if (id !== S.sampleId) { bitmap.close(); return; }
+                            S.pending = false;
+                            if (S.ready) S.ready.close();
+                            S.ready = bitmap;
+                            S.readyFrom = now;
+                        }, () => {
+                            if (id === S.sampleId) S.pending = false;
+                            S.cov = 0;
+                        });
+                    } else {
+                        readSheetLuminance(S, mainCanvas);
+                    }
                 }
                 const t = now * 0.001;
                 const tick = Math.floor(now / 140);
@@ -979,8 +1043,8 @@
                 const hue = fxLerpHue(videoPalette.hue, baseHue, 0.5);
                 const aBase = Math.min(0.85, master * 0.9) * (0.6 + 0.4 * s);
                 const LEVELS = 6;
-                const buckets = [];
-                for (let k = 0; k < LEVELS; k++) buckets.push([]);
+                const level = S.level, glyph = S.glyph;
+                let used = 0;
                 for (let r = 0; r < rows; r++) {
                     for (let c = 0; c < cols; c++) {
                         const i = r * cols + c;
@@ -989,21 +1053,41 @@
                             L = 0.5 + 0.28 * Math.sin(c * 0.23 + t * 1.3) + 0.22 * Math.sin(r * 0.31 - t * 0.9 + c * 0.07);
                         }
                         L = clamp01(L * (0.8 + 0.4 * beat));
-                        if (L < 0.12) continue;
+                        if (L < 0.12) { level[i] = -1; continue; }
                         const seed = ((c * 131 + r * 337 + tick * 53) % 997) / 997;
                         const ch = seed < 0.1 * (0.4 + L) ? S.alpha[(c * 7 + r * 13 + tick) % S.alpha.length] : ramp[Math.min(rl, (L * rl) | 0)];
-                        buckets[Math.min(LEVELS - 1, (L * LEVELS) | 0)].push(ch, c * sp, r * sp);
+                        const k = Math.min(LEVELS - 1, (L * LEVELS) | 0);
+                        level[i] = k;
+                        glyph[i] = ch;
+                        used |= 1 << k;
                     }
                 }
                 gctx.save();
                 gctx.textBaseline = 'top';
                 gctx.font = 'bold ' + Math.max(8, sp - 1) + 'px "Courier New", monospace';
+                const pitch = sheetRowPitch(S, sp);
+                if (pitch !== null) gctx.letterSpacing = pitch + 'px';
                 for (let k = 0; k < LEVELS; k++) {
-                    const list = buckets[k];
-                    if (!list.length) continue;
+                    if (!(used & (1 << k))) continue;
                     const lv = (k + 1) / LEVELS;
                     gctx.fillStyle = fxHsla((hue + k * 7) % 360, 78, 38 + lv * 40, aBase * (0.35 + 0.65 * lv));
-                    for (let j = 0; j < list.length; j += 3) gctx.fillText(list[j], list[j + 1], list[j + 2]);
+                    for (let r = 0; r < rows; r++) {
+                        const base = r * cols;
+                        if (pitch === null) {
+                            for (let c = 0; c < cols; c++) if (level[base + c] === k) gctx.fillText(glyph[base + c], c * sp, r * sp);
+                            continue;
+                        }
+                        let first = -1, last = -1;
+                        for (let c = 0; c < cols; c++) {
+                            if (level[base + c] !== k) continue;
+                            if (first < 0) first = c;
+                            last = c;
+                        }
+                        if (first < 0) continue;
+                        let line = '';
+                        for (let c = first; c <= last; c++) line += level[base + c] === k ? glyph[base + c] : ' ';
+                        gctx.fillText(line, first * sp, r * sp);
+                    }
                 }
                 gctx.restore();
             }
@@ -1099,28 +1183,33 @@
                     if (rotW > 0.02) {
                         const sp006 = Math.max(10 + (1 - s) * 20,
                             Math.sqrt((w * h) / renderBudget.asciiCells));
-                        gctx.save();
-                        gctx.textBaseline = 'top';
-                        gctx.globalCompositeOperation = 'difference';
                         /* R1.4: the scatter's rainbow is source-keyed — a
                            colorful video pulls the field toward its own
                            spectrum; a grey one lets the full wheel fly */
                         const scatterHue = (videoPalette.hue +
                             (Math.random() - 0.5) * 360 * srcSpreadK() + 360) % 360;
-                        gctx.fillStyle = fxHsla(scatterHue, 100, 70,
-                            Math.min(1, 0.8 * s) * rotW);
-                        gctx.font = 'bold ' +
-                            (sp006 + (Math.random() - 0.5) * s * 1.5).toFixed(1) +
-                            'px monospace';
-                        for (let yy = 0; yy < h; yy += sp006) {
-                            for (let xx = 0; xx < w; xx += sp006) {
-                                if (Math.random() < 0.5) {
-                                    gctx.fillText(
-                                        chSet[(Math.random() * chSet.length) | 0], xx, yy);
+                        const scatterA = Math.min(1, 0.8 * s) * rotW;
+                        const scatterPx = sp006 + (Math.random() - 0.5) * s * 1.5;
+                        if (paintGlyphScatter) {
+                            /* 4.0: the same field from cached glyph sheets, one blend */
+                            paintGlyphScatter(gctx, w, h, Math.max(4, scatterPx), chSet,
+                                fxHsla(scatterHue, 100, 70, 1), scatterA);
+                        } else {
+                            gctx.save();
+                            gctx.textBaseline = 'top';
+                            gctx.globalCompositeOperation = 'difference';
+                            gctx.fillStyle = fxHsla(scatterHue, 100, 70, scatterA);
+                            gctx.font = 'bold ' + scatterPx.toFixed(1) + 'px monospace';
+                            for (let yy = 0; yy < h; yy += sp006) {
+                                for (let xx = 0; xx < w; xx += sp006) {
+                                    if (Math.random() < 0.5) {
+                                        gctx.fillText(
+                                            chSet[(Math.random() * chSet.length) | 0], xx, yy);
+                                    }
                                 }
                             }
+                            gctx.restore();
                         }
-                        gctx.restore();
                     }
                     /* R1.2: the appearance FREQUENCY is set by the ASCII slider —
                        ~0.6 stacks/s at a whisper up to ~9/s at full, gently
@@ -2458,6 +2547,7 @@
         currentEngine = engine;
         gctx = context;
         mainCanvas = engine.canvas;
+        paintGlyphScatter = typeof engine.paintGlyphScatter === 'function' ? engine.paintGlyphScatter : null;
         customTime = now;
         masterOpacity = clamp01(engine.masterOpacity == null ? 0.95 : engine.masterOpacity);
         masterControls = {

@@ -67,6 +67,31 @@ test('the host awaits the page-level cursor guard before its first navigation', 
     assert.match(main, /CursorGuard\.HardenBrowser\(core\);/);
 });
 
+test('playback is kept out of Windows media controls, so media keys and other apps cannot drive it', () => {
+    const main = hostSource('MainForm.cs');
+    const features = /--disable-features=([A-Za-z,]+)/.exec(main);
+    assert.ok(features, 'AdditionalBrowserArguments disables features');
+    assert.ok(features[1].split(',').includes('HardwareMediaKeyHandling'));
+    assert.equal((main.match(/--disable-features=/g) || []).length, 1, 'a second flag would override the first');
+});
+
+test('the host pushes only validated refresh rates and drops its display-settings subscription on close', () => {
+    const main = hostSource('MainForm.cs');
+    const start = main.indexOf('private void PostDisplayRefresh(');
+    assert.ok(start > 0, 'PostDisplayRefresh exists');
+    const body = main.slice(start, start + main.slice(start).search(/\r?\n    \}\r?\n/));
+    assert.match(body, /AppPolicy\.BuildDisplayRefreshMessage\(ReadRefreshHz\(device\), others\);/);
+    assert.match(body, /if \(message == null \|\| \(!force && message == postedRefresh\)\) return;/);
+    assert.match(body, /core\.PostWebMessageAsString\(message\);/);
+    assert.doesNotMatch(main, /"display:/, 'only AppPolicy builds the display message');
+    assert.match(main, /SystemEvents\.DisplaySettingsChanged \+= OnDisplaySettingsChanged;/);
+    assert.match(main, /FormClosed \+= \(_, _\) => Microsoft\.Win32\.SystemEvents\.DisplaySettingsChanged -= OnDisplaySettingsChanged;/);
+    const policy = hostSource('AppPolicy.cs');
+    const split = policy.slice(policy.indexOf('public static bool TrySplitMessage('), policy.indexOf('public static bool IsPlausibleRefreshHz('));
+    assert.match(split, /return kind is "media:convert"/);
+    assert.doesNotMatch(split, /"display:/, 'the page cannot send display messages to the host');
+});
+
 test('every WebView2 permission request is denied without a prompt and is not remembered', () => {
     const main = hostSource('MainForm.cs');
     assert.match(main, /core\.PermissionRequested \+= OnPermissionRequested;/);

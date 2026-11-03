@@ -33,6 +33,7 @@ Open an issue at <https://github.com/TheImortalimp/Glitch-Player-Final-Test-Vers
 - These are turned off: DevTools, host objects, default context menus, the status bar, zoom, pinch zoom, swipe navigation, password autosave, general autofill and browser accelerator keys.
 - SmartScreen reputation checking is required.
 - The fixed browser arguments allow media to start without a user gesture and stop Chromium from throttling a covered or background window, so effects keep running smoothly.
+- They also turn off `HardwareMediaKeyHandling`, so the player never registers a Windows media session. Other programs, headsets and keyboard media keys can't pause, skip or otherwise control playback. Without this, another program could pause the video through the session.
 
 ## Navigation, frames and windows
 
@@ -61,6 +62,16 @@ The web UI talks to the host only through `chrome.webview.postMessage`; no host 
   - The dialog starts in Documents and refuses the app's install and data folders.
 - `log` accepts only short codes matching `^[a-z0-9][a-z0-9:._-]{0,63}$`.
 - `ui:escape` leaves fullscreen.
+- `freeze:capture` (Freeze Frame) takes only a request ID of at most 20 ASCII digits, and only one capture runs at a time:
+  - The page hides its controls, and the host captures the view itself with `CapturePreviewAsync`.
+  - The page gets back only the request ID and success or an error message, so no image data enters the page and downloads stay blocked.
+  - The PNG is written only to a file you choose in a Save dialog. The dialog starts in Pictures and refuses the app's install and data folders.
+
+The host sends the page only these messages, and the page checks each one:
+
+- `media:result` is accepted only for a pending conversion request, and its URL must be a converted file on `https://media-r4.local/` of the requested kind.
+- `freeze:captured` is accepted only for the pending Freeze Frame request ID, and only up to 1,024 characters.
+- `display:refresh` lists at most 8 distinct display refresh rates, the window's display first. The host sends only rates from 20 to 500 Hz, and the page drops any message that isn't a comma-separated list of such rates. The rates only scale the frame governor's timing thresholds.
 
 ## Web UI
 

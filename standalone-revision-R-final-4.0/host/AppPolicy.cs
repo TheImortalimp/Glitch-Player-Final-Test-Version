@@ -81,7 +81,27 @@ internal static class AppPolicy
         if (bar <= 0 || bar > 32) return false;
         kind = message[..bar];
         payload = message[(bar + 1)..];
-        return kind is "media:convert" or "media:cancel" or "presets:export" or "ui:escape" or "log";
+        return kind is "media:convert" or "media:cancel" or "presets:export" or "freeze:capture" or "ui:escape" or "log";
+    }
+
+    // 0 and 1 mean "hardware default" in DEVMODE; anything outside 20–500 Hz is not a real display mode.
+    public static bool IsPlausibleRefreshHz(uint hz) => hz is >= 20 and <= 500;
+
+    public const int MaxReportedDisplays = 8;
+
+    // WebView2 can pace frames to another attached display (the primary one) instead of the display showing the
+    // window, so the window's rate comes first, followed by every other distinct plausible rate; the page matches
+    // its measured frame cadence against them.
+    public static string BuildDisplayRefreshMessage(uint windowHz, IEnumerable<uint> otherHz)
+    {
+        if (!IsPlausibleRefreshHz(windowHz)) return null;
+        var rates = new List<uint> { windowHz };
+        foreach (var hz in otherHz ?? Array.Empty<uint>())
+        {
+            if (rates.Count >= MaxReportedDisplays) break;
+            if (IsPlausibleRefreshHz(hz) && !rates.Contains(hz)) rates.Add(hz);
+        }
+        return "display:refresh|" + string.Join(',', rates.Select(hz => hz.ToString(System.Globalization.CultureInfo.InvariantCulture)));
     }
 
     public static bool IsRequestId(string id) =>
