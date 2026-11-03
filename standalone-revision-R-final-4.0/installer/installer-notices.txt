@@ -24,7 +24,8 @@ Installer notices - please read before continuing.
 
 3. REQUIREMENTS
    64-bit Windows 10 version 2004 (build 19041) or later, and the
-   Microsoft Edge WebView2 Runtime (Evergreen). The WebView2 Runtime ships
+   Windows .NET Framework 4.8 and Microsoft Edge WebView2 Runtime
+   (Evergreen). The WebView2 Runtime ships
    with Windows 11 and current Windows 10. Setup checks for it but does not
    download anything.
 
@@ -41,12 +42,20 @@ Installer notices - please read before continuing.
    folder unless you choose to delete it. Export your presets first if you
    want a backup.
 
+   Setup installs a small launcher and payload.cab. The launcher verifies
+   its pinned CAB hash and extracts a versioned runtime under the same
+   data folder, rechecking all runtime file hashes on every launch.
+   The cache stays with your data on uninstall unless deletion is chosen.
+   This is verified extraction, not virtualization or an OS sandbox.
+   The unsigned launcher does not prove publisher identity.
+
 6. PHOTOSENSITIVITY WARNING
    The app can produce rapid flashing, strobing and high-contrast flicker.
-   Flash and Strobe start at zero. Some built-in MACHINE presets and the
-   hidden GHOST / OF ME preset contain flash and strobe; GHOST / OF ME asks
-   for confirmation first. Do not use these effects if you or anyone
-   watching may be sensitive to flashing light.
+   Flash and Strobe start at zero and require their own manual controls.
+   Presets and automation leave their chosen levels alone. Other effects
+   and source videos can still flash; this is not a photosensitivity-safe
+   mode. Do not use these effects if you or anyone watching may be
+   sensitive to flashing light.
 
 7. LICENSES
    Glitch Player is dedicated to the public domain under CC0 1.0 by
@@ -54,5 +63,5 @@ Installer notices - please read before continuing.
    Revision 3, the Glitch Canvas Projector and AI WARP ENGINE (CC0 1.0 /
    The Unlicense) by the same author. Bundled components keep their own
    licenses: the .NET runtime (MIT) and the Microsoft WebView2 SDK. Their
-   full license texts are installed in the "licenses" folder; see
+   full license texts are in the CAB/extracted runtime's "licenses" folder; see
    THIRD-PARTY-NOTICES.txt.

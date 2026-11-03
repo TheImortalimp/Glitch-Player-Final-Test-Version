@@ -1,5 +1,5 @@
 ; Glitch Player - standalone-revision-R-final-4.0 per-user installer.
-; Built by build.cmd, which passes VERSION, SRC (the self-contained publish folder) and OUTDIR.
+; Built by build.cmd, which passes VERSION, SRC (the launcher/CAB folder) and OUTDIR.
 ; No elevation, no scripts, no downloads.
 Unicode true
 ManifestDPIAware true
@@ -16,7 +16,7 @@ RequestExecutionLevel user
   !error "Pass /DVERSION=<major.minor.patch>"
 !endif
 !ifndef SRC
-  !error "Pass /DSRC=<self-contained publish folder>"
+  !error "Pass /DSRC=<launcher and CAB folder>"
 !endif
 !ifndef OUTDIR
   !define OUTDIR "."
@@ -45,6 +45,8 @@ VIAddVersionKey "CompanyName" "River Lyle Reuveni (Imortalimp)"
 VIAddVersionKey "LegalCopyright" "River Lyle Reuveni - imortalimp.nl - CC0 1.0"
 
 !define MUI_ABORTWARNING
+!define MUI_ICON "..\assets\r4.ico"
+!define MUI_UNICON "..\assets\r4.ico"
 !insertmacro MUI_PAGE_WELCOME
 !define MUI_PAGE_HEADER_TEXT "Installer notices"
 !define MUI_PAGE_HEADER_SUBTEXT "Signing, system changes, privacy, your data and photosensitivity."

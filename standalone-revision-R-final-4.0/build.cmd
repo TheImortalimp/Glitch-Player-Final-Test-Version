@@ -22,6 +22,9 @@ if not defined MAKENSIS (echo [build] NSIS 3 ^(makensis.exe^) is required.& exit
 
 pushd "%ROOT%" || exit /b 1
 
+echo [build] App icon
+node "tools\build-assets.mjs" || goto :fail
+
 echo [build] .NET host tests
 dotnet test "host.Tests\GlitchPlayerR4.Tests.csproj" -c Release --nologo || goto :fail
 
@@ -42,9 +45,11 @@ dir /s /b "%PUBLISH%\*ffmpeg*" "%PUBLISH%\*ffprobe*" "%PUBLISH%\*ffplay*" >nul 2
 dir /s /b "%PUBLISH%\*.pdb" >nul 2>&1 && goto :symbols
 
 echo [build] Compiling the installer
+node "tools\package-cab.mjs" || goto :fail
+node --test "tests/packaging/*.test.mjs" || goto :fail
 if exist "%SETUP%" del /f /q "%SETUP%"
 if exist "%SETUP%.sha256" del /f /q "%SETUP%.sha256"
-"%MAKENSIS%" /V2 "/DVERSION=%VERSION%" "/DSRC=%PUBLISH%" "/DOUTDIR=%OUT%" "installer\setup.nsi" || goto :fail
+"%MAKENSIS%" /V2 "/DVERSION=%VERSION%" "/DSRC=%OUT%\app" "/DOUTDIR=%OUT%" "installer\setup.nsi" || goto :fail
 if not exist "%SETUP%" goto :fail
 
 set "HASH="

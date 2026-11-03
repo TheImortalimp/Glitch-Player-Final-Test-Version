@@ -9,12 +9,6 @@ namespace GlitchPlayerR4;
 internal sealed class MainForm : Form
 {
     private const int BorderSize = 6;
-    private readonly Panel titleBar = new();
-    private readonly Label titleLabel = new();
-    private readonly Button captureButton = new();
-    private readonly Button minimizeButton = new();
-    private readonly Button maximizeButton = new();
-    private readonly Button closeButton = new();
     private readonly WebView2 view = new();
     private LocalMediaConverter mediaConverter;
     private CancellationTokenSource mediaConversion;
@@ -27,23 +21,23 @@ internal sealed class MainForm : Form
     private string refreshDevice;
     private string postedRefresh;
     private bool freezeFrameBusy;
+    private bool windowDialogBusy;
 
     public MainForm()
     {
-        Text = "Glitch Player — Standalone Revision R Final 4.0";
+        Text = "Glitch Player R4";
         Name = "GlitchPlayerR4";
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.None;
         MinimumSize = new Size(480, 320);
         Size = new Size(1280, 800);
-        Padding = new Padding(BorderSize);
+        Padding = Padding.Empty;
         BackColor = Color.FromArgb(8, 10, 15);
         KeyPreview = true;
-        BuildTitleBar();
+        Icon = Icon.ExtractAssociatedIcon(Environment.ProcessPath);
         view.Dock = DockStyle.Fill;
         view.DefaultBackgroundColor = Color.FromArgb(8, 10, 15);
         Controls.Add(view);
-        Controls.Add(titleBar);
         Shown += OnShown;
         FormClosing += OnFormClosing;
         Resize += (_, _) => ApplyCaptureShield();
@@ -52,66 +46,13 @@ internal sealed class MainForm : Form
         FormClosed += (_, _) => Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= OnDisplaySettingsChanged;
     }
 
-    private void BuildTitleBar()
-    {
-        titleBar.Dock = DockStyle.Top;
-        titleBar.Height = 34;
-        titleBar.BackColor = Color.FromArgb(20, 24, 34);
-        titleBar.Padding = new Padding(8, 0, 0, 0);
-        titleBar.MouseDown += (_, e) =>
-        {
-            if (e.Button == MouseButtons.Left && e.Clicks == 2) ToggleMaximize();
-            else if (e.Button == MouseButtons.Left) BeginNativeDrag();
-        };
-
-        titleLabel.Text = "GLITCH PLAYER  //  STANDALONE REVISION R FINAL 4.0";
-        titleLabel.ForeColor = Color.FromArgb(147, 226, 255);
-        titleLabel.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-        titleLabel.AutoSize = false;
-        titleLabel.Dock = DockStyle.Fill;
-        titleLabel.TextAlign = ContentAlignment.MiddleLeft;
-        titleLabel.MouseDown += (_, e) =>
-        {
-            if (e.Button == MouseButtons.Left && e.Clicks == 2) ToggleMaximize();
-            else if (e.Button == MouseButtons.Left) BeginNativeDrag();
-        };
-
-        captureButton.Text = Settings.Get("shield", "off") == "on" ? "CAPTURE SHIELD: ON" : "CAPTURE SHIELD: OFF";
-        captureButton.Width = 142;
-        captureButton.Click += (_, _) => ToggleCaptureShield();
-        captureButton.AccessibleName = "Toggle screenshot exclusion";
-
-        ConfigureTitleButton(minimizeButton, "—", "Minimize", (_, _) => WindowState = FormWindowState.Minimized);
-        ConfigureTitleButton(maximizeButton, "□", "Maximize or restore", (_, _) => ToggleMaximize());
-        ConfigureTitleButton(closeButton, "×", "Close", (_, _) => Close());
-
-        titleBar.Controls.Add(titleLabel);
-        titleBar.Controls.Add(closeButton);
-        titleBar.Controls.Add(maximizeButton);
-        titleBar.Controls.Add(minimizeButton);
-        titleBar.Controls.Add(captureButton);
-    }
-
-    private static void ConfigureTitleButton(Button button, string text, string name, EventHandler click)
-    {
-        button.Text = text;
-        button.AccessibleName = name;
-        button.Width = 42;
-        button.Dock = DockStyle.Right;
-        button.FlatStyle = FlatStyle.Flat;
-        button.FlatAppearance.BorderSize = 0;
-        button.BackColor = Color.FromArgb(20, 24, 34);
-        button.ForeColor = Color.White;
-        button.Font = new Font("Segoe UI", 10);
-        button.Click += click;
-    }
-
     private async void OnShown(object sender, EventArgs e)
     {
         if (initializing) return;
         initializing = true;
         try
         {
+            WindowShell.ConfigureWindow(Handle, AppPaths.LauncherPath);
             await InitializeWebViewAsync();
             ApplyCaptureShield();
         }
@@ -178,7 +119,12 @@ internal sealed class MainForm : Form
         settings.IsGeneralAutofillEnabled = false;
         settings.AreBrowserAcceleratorKeysEnabled = false;
         settings.IsReputationCheckingRequired = true;
+        settings.IsNonClientRegionSupportEnabled = true;
 
+        view.KeyDown += (_, e) =>
+        {
+            if (HandleWindowKey(e.KeyData)) e.Handled = true;
+        };
         DefenderGuard.Attach(core);
         CaptureGuard.HardenBrowser(core);
         CursorGuard.HardenBrowser(core);
@@ -190,7 +136,7 @@ internal sealed class MainForm : Form
         core.ProcessFailed += OnProcessFailed;
         core.NavigationCompleted += (_, e) =>
         {
-            if (e.IsSuccess) PostDisplayRefresh(true);
+            if (e.IsSuccess) { PostDisplayRefresh(true); PostWindowState(); }
         };
         core.ContainsFullScreenElementChanged += (_, _) =>
         {
@@ -206,7 +152,11 @@ internal sealed class MainForm : Form
         if (AppPolicy.IsAppDocument(e.Uri)) return;
         e.Cancel = true;
         HostLog.Write(AppPaths.HostLog, "blocked top-level navigation: " + AppPolicy.Shorten(e.Uri));
-        if (AppPolicy.IsAllowedExternalUri(e.Uri)) ConfirmExternalOpen(e.Uri);
+        if (e.IsUserInitiated && AppPolicy.IsAllowedExternalUri(e.Uri))
+        {
+            var uri = e.Uri;
+            BeginInvoke(() => ConfirmExternalOpen(uri));
+        }
     }
 
     private void OnFrameNavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
@@ -219,7 +169,11 @@ internal sealed class MainForm : Form
     private void OnNewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
         e.Handled = true;
-        if (AppPolicy.IsAllowedExternalUri(e.Uri)) ConfirmExternalOpen(e.Uri);
+        if (e.IsUserInitiated && AppPolicy.IsAllowedExternalUri(e.Uri))
+        {
+            var uri = e.Uri;
+            BeginInvoke(() => ConfirmExternalOpen(uri));
+        }
         else HostLog.Write(AppPaths.HostLog, "blocked new window: " + AppPolicy.Shorten(e.Uri));
     }
 
@@ -235,11 +189,14 @@ internal sealed class MainForm : Form
     private void ConfirmExternalOpen(string uri)
     {
         if (!AppPolicy.IsAllowedExternalUri(uri)) return;
-        if (MessageBox.Show(
-                "Open this link in your default browser?\n\n" + AppPolicy.Shorten(uri),
-                AppPaths.AppName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+        if (windowDialogBusy) { HostLog.Write("ignored external link while a confirmation is active"); return; }
+        windowDialogBusy = true;
         try
         {
+            if (MessageBox.Show(this,
+                    "Open this link in your default browser?\n\n" + AppPolicy.Shorten(uri),
+                    AppPaths.AppName, MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });
         }
         catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException or System.Security.SecurityException)
@@ -248,6 +205,7 @@ internal sealed class MainForm : Form
             MessageBox.Show("The link could not be opened by the default browser.", AppPaths.AppName,
                 MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+        finally { windowDialogBusy = false; }
     }
 
     private async void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -272,6 +230,10 @@ internal sealed class MainForm : Form
 
         switch (kind)
         {
+            case "window:command":
+                if (AppPolicy.IsWindowCommand(payload)) BeginInvoke(() => RunWindowCommand(payload));
+                else HostLog.Write("rejected invalid window command");
+                break;
             case "media:convert":
                 await ConvertLocalMediaAsync(payload, e);
                 break;
@@ -392,6 +354,7 @@ internal sealed class MainForm : Form
         {
             if (dialog.ShowDialog(this) != DialogResult.OK) return false;
             if (!AppPolicy.IsInsideFolder(dialog.FileName, AppContext.BaseDirectory) &&
+                !AppPolicy.IsInsideFolder(dialog.FileName, Path.GetDirectoryName(AppPaths.LauncherPath)) &&
                 !AppPolicy.IsInsideFolder(dialog.FileName, AppPaths.DataDir)) return true;
             MessageBox.Show(
                 "Choose a folder outside the app's install and data folders. Updates replace the install folder, and uninstall can remove both.",
@@ -551,17 +514,19 @@ internal sealed class MainForm : Form
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (keyData == Keys.F11 || keyData == (Keys.Alt | Keys.Enter))
+        return HandleWindowKey(keyData) || base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    private bool HandleWindowKey(Keys keyData)
+    {
+        bool toggle = keyData == Keys.F11 || keyData == (Keys.Alt | Keys.Enter);
+        if (!toggle && !(keyData == Keys.Escape && fullScreen)) return false;
+        BeginInvoke(() =>
         {
-            ToggleFullScreen();
-            return true;
-        }
-        if (keyData == Keys.Escape && fullScreen)
-        {
-            ExitFullScreen();
-            return true;
-        }
-        return base.ProcessCmdKey(ref msg, keyData);
+            if (toggle) ToggleFullScreen();
+            else ExitFullScreen();
+        });
+        return true;
     }
 
     private void ToggleFullScreen()
@@ -577,11 +542,11 @@ internal sealed class MainForm : Form
         restoreBounds = Bounds;
         restoreWindowState = WindowState;
         SuspendLayout();
-        titleBar.Visible = false;
         Padding = Padding.Empty;
         FormBorderStyle = FormBorderStyle.None;
         Bounds = Screen.FromControl(this).Bounds;
         ResumeLayout(true);
+        PostWindowState();
     }
 
     private void ExitFullScreen()
@@ -589,11 +554,11 @@ internal sealed class MainForm : Form
         if (!fullScreen) return;
         fullScreen = false;
         SuspendLayout();
-        titleBar.Visible = true;
-        Padding = new Padding(BorderSize);
+        Padding = Padding.Empty;
         Bounds = restoreBounds;
         WindowState = restoreWindowState;
         ResumeLayout(true);
+        PostWindowState();
     }
 
     private void ToggleMaximize()
@@ -602,19 +567,12 @@ internal sealed class MainForm : Form
         WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : FormWindowState.Maximized;
     }
 
-    private void BeginNativeDrag()
-    {
-        if (WindowState == FormWindowState.Maximized) return;
-        NativeMethods.ReleaseCapture();
-        NativeMethods.SendMessage(Handle, NativeMethods.WmNcLButtonDown, (nint)NativeMethods.HtCaptionHit, 0);
-    }
-
     private void ToggleCaptureShield()
     {
         var enabled = Settings.Get("shield", "off") != "on";
         Settings.Set("shield", enabled ? "on" : "off");
-        captureButton.Text = enabled ? "CAPTURE SHIELD: ON" : "CAPTURE SHIELD: OFF";
         ApplyCaptureShield();
+        PostWindowState();
     }
 
     private void ApplyCaptureShield()
@@ -629,6 +587,17 @@ internal sealed class MainForm : Form
 
     protected override void WndProc(ref Message m)
     {
+        if (m.Msg == WindowShell.RefreshMessage || m.Msg == WindowShell.ActivateMessage)
+        {
+            bool refresh = m.Msg == WindowShell.RefreshMessage;
+            BeginInvoke(() =>
+            {
+                if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+                Activate();
+                if (refresh) RefreshPlayer();
+            });
+            return;
+        }
         if (m.Msg == NativeMethods.WmNcHitTest && !fullScreen && WindowState == FormWindowState.Normal)
         {
             var x = unchecked((short)((long)m.LParam & 0xFFFF));
@@ -671,6 +640,62 @@ internal sealed class MainForm : Form
             }
         }
         base.WndProc(ref m);
+    }
+
+    private void PostWindowState()
+    {
+        if (view.CoreWebView2 == null) return;
+        try { view.CoreWebView2.PostWebMessageAsString("window:state|" + (fullScreen ? "full" : "window") + "," + (Settings.Get("shield", "off") == "on" ? "on" : "off")); }
+        catch (InvalidOperationException error) { HostLog.Write("could not post window state: " + error.Message); }
+    }
+
+    private void RunWindowCommand(string command)
+    {
+        switch (command)
+        {
+            case "minimize": WindowState = FormWindowState.Minimized; break;
+            case "maximize": ToggleMaximize(); break;
+            case "fullscreen": ToggleFullScreen(); break;
+            case "close": Close(); break;
+            case "shield": ToggleCaptureShield(); break;
+            case "refresh": RefreshPlayer(); break;
+            default:
+                int hit = command switch
+                {
+                    "resize-left" => NativeMethods.HtLeft, "resize-right" => NativeMethods.HtRight,
+                    "resize-top" => NativeMethods.HtTop, "resize-bottom" => NativeMethods.HtBottom,
+                    "resize-top-left" => NativeMethods.HtTopLeft, "resize-top-right" => NativeMethods.HtTopRight,
+                    "resize-bottom-left" => NativeMethods.HtBottomLeft, "resize-bottom-right" => NativeMethods.HtBottomRight,
+                    _ => 0
+                };
+                if (hit != 0 && !fullScreen && WindowState == FormWindowState.Normal)
+                {
+                    NativeMethods.ReleaseCapture();
+                    NativeMethods.SendMessage(Handle, NativeMethods.WmNcLButtonDown, hit, 0);
+                }
+                break;
+        }
+    }
+
+    private void RefreshPlayer()
+    {
+        if (windowDialogBusy || freezeFrameBusy || view.CoreWebView2 == null) return;
+        windowDialogBusy = true;
+        try
+        {
+            if (MessageBox.Show(this, "Stop the current media and return to the logo screen?\n\nUnsaved effect changes will be lost. Saved presets are kept.",
+                    "Refresh Glitch Player", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button2) != DialogResult.Yes) return;
+            mediaConversion?.Cancel();
+            mediaRequestId = null;
+            view.CoreWebView2.Reload();
+        }
+        catch (InvalidOperationException error)
+        {
+            HostLog.Write("refresh failed: " + error.Message);
+            MessageBox.Show(this, "The player could not refresh. Close and reopen it.", AppPaths.AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+        finally { windowDialogBusy = false; }
     }
 
     private void OnDisplaySettingsChanged(object sender, EventArgs e)

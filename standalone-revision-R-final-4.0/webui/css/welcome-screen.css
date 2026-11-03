@@ -2,9 +2,12 @@
   position: fixed;
   inset: 0;
   z-index: 20000;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 40px 0;
+  overflow: auto;
   color: #f8f1df;
   background: radial-gradient(circle at 50% 28%, rgba(255, 211, 101, 0.14), transparent 34%), linear-gradient(145deg, #050505 0%, #17120a 48%, #030303 100%);
 }
@@ -17,12 +20,12 @@
 }
 
 #welcomeScreen::before {
-  width: 150%;
+  width: 100%;
+  top: 24%;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 222, 130, 0.7), transparent);
   box-shadow: 0 0 28px rgba(255, 195, 72, 0.55);
-  transform: rotate(-18deg) translateY(-18vh);
-  animation: gold-scan 7s ease-in-out infinite;
+  opacity: 0.18;
 }
 
 #welcomeScreen::after {
@@ -42,7 +45,9 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  padding: clamp(30px, 7vw, 56px) clamp(22px, 7vw, 64px);
+  margin: auto 0;
+  flex-shrink: 0;
+  padding: clamp(22px, 4vw, 36px) clamp(22px, 5vw, 44px);
   overflow: hidden;
   border: 1px solid rgba(255, 217, 117, 0.72);
   border-radius: 10px;
@@ -51,17 +56,22 @@
   text-align: center;
 }
 
-.welcomePanel::before {
+.welcomeMark::after {
   position: absolute;
-  inset: 0;
+  inset: -20% -50%;
   content: '';
-  background: linear-gradient(115deg, transparent 18%, rgba(255, 248, 211, 0.16) 38%, transparent 49%);
-  transform: translateX(-120%);
-  animation: panel-sheen 6s ease-in-out infinite;
+  background: linear-gradient(110deg, transparent 40%, rgba(255, 248, 211, 0.24) 49%, transparent 58%);
+  transform: translateX(-110%);
+  animation: logo-gleam 10s ease-in-out infinite;
+  mix-blend-mode: screen;
   pointer-events: none;
 }
 
 .welcomeMark {
+  position: relative;
+  overflow: hidden;
+  padding: 8px 12px;
+  flex-shrink: 0;
   color: #fff2bd;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(3.5rem, 12vw, 5.8rem);
@@ -76,6 +86,10 @@
 .welcomeStatus { position: static; margin: 0; color: #d9aa48; font-family: monospace; font-size: 0.68rem; letter-spacing: 0.18em; }
 .welcomePanel h1 { position: static; margin: 0; color: #fff4ce; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.35rem, 4vw, 2rem); font-weight: 400; letter-spacing: 0.07em; text-transform: uppercase; }
 .welcomeDescription { position: static; max-width: 34ch; margin: 0; color: #c6b58d; font-family: monospace; font-size: 0.78rem; line-height: 1.6; }
+.welcomeMedia { color: #c6b58d; font: 0.72rem/1.6 monospace; text-align: left; }
+.welcomeMedia p { position: static; margin: 0.35rem 0; }
+.welcomeMedia strong { color: #f2d27e; }
+.welcomeMedia .codecNote { color: #a99a7c; font-size: 0.67rem; }
 .welcomeRule { width: min(220px, 70%); height: 1px; margin: 8px 0; background: linear-gradient(90deg, transparent, #e5b64c, transparent); box-shadow: 0 0 12px rgba(255, 202, 75, 0.64); }
 .welcomeActions { position: relative; display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 12px; }
 
@@ -105,14 +119,10 @@
 .welcomeStatus { color: #9e8c65; font-size: 0.58rem; }
 .statusDot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #dca72f; box-shadow: 0 0 10px #f5c85f; }
 
-@keyframes panel-sheen {
-  0%, 35% { transform: translateX(-120%); }
-  65%, 100% { transform: translateX(120%); }
-}
-
-@keyframes gold-scan {
-  0%, 100% { opacity: 0; }
-  30%, 70% { opacity: 0.8; }
+@keyframes logo-gleam {
+  0%, 70% { transform: translateX(-110%); opacity: 0; }
+  76% { opacity: 1; }
+  94%, 100% { transform: translateX(110%); opacity: 0; }
 }
 
 @media (max-width: 560px) {
@@ -122,6 +132,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #welcomeScreen::before,
-  .welcomePanel::before { animation: none; }
+  .welcomeMark::after { animation: none; opacity: 0; }
 }

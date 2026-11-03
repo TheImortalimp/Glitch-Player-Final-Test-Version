@@ -16,8 +16,16 @@ internal static class Program
     };
 
     [STAThread]
-    private static void Main()
+    private static void Main(string[] args)
     {
+        if (args.Length != 0 && (args.Length != 2 || args[0] != "--launcher" ||
+            !Path.IsPathFullyQualified(args[1]) || !File.Exists(args[1]) ||
+            !Path.GetFileName(args[1]).Equals("GlitchPlayerR4.exe", StringComparison.OrdinalIgnoreCase)))
+        {
+            MessageBox.Show("The launcher arguments are not valid.", AppPaths.AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+        }
+        AppPaths.LauncherPath = args.Length == 2 ? Path.GetFullPath(args[1]) : Environment.ProcessPath;
         if (!ValidateEnvironment())
         {
             MessageBox.Show(
@@ -29,6 +37,7 @@ internal static class Program
         NativeMethods.SetDllDirectory("");
         CursorGuard.HardenProcess();
         ApplicationConfiguration.Initialize();
+        WindowShell.Initialize();
         Directory.CreateDirectory(AppPaths.DataDir);
         Directory.CreateDirectory(AppPaths.ProfileDir);
         Directory.CreateDirectory(AppPaths.MediaCacheDir);

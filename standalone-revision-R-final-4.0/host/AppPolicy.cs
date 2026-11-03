@@ -81,8 +81,13 @@ internal static class AppPolicy
         if (bar <= 0 || bar > 32) return false;
         kind = message[..bar];
         payload = message[(bar + 1)..];
-        return kind is "media:convert" or "media:cancel" or "presets:export" or "freeze:capture" or "ui:escape" or "log";
+        return kind is "media:convert" or "media:cancel" or "presets:export" or "freeze:capture" or "ui:escape" or "window:command" or "log";
     }
+
+    public static bool IsWindowCommand(string command) => command is
+        "minimize" or "maximize" or "fullscreen" or "close" or "shield" or "refresh" or
+        "resize-left" or "resize-right" or "resize-top" or "resize-bottom" or
+        "resize-top-left" or "resize-top-right" or "resize-bottom-left" or "resize-bottom-right";
 
     // 0 and 1 mean "hardware default" in DEVMODE; anything outside 20–500 Hz is not a real display mode.
     public static bool IsPlausibleRefreshHz(uint hz) => hz is >= 20 and <= 500;

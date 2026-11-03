@@ -11,16 +11,35 @@
     <link rel="stylesheet" href="css/r4.css">
 </head>
 <body>
+    <div id="windowDrag" aria-hidden="true"></div>
+    <nav id="windowControls" aria-label="Window controls" hidden>
+        <button type="button" data-window-command="shield" id="windowShield" title="Toggle capture shield">SHIELD: OFF</button>
+        <button type="button" data-window-command="refresh" title="Refresh player">REFRESH</button>
+        <button type="button" data-window-command="fullscreen" title="Fullscreen (F11)" aria-label="Toggle fullscreen">FULL</button>
+        <button type="button" data-window-command="minimize" title="Minimize" aria-label="Minimize">_</button>
+        <button type="button" data-window-command="maximize" title="Maximize or restore" aria-label="Maximize or restore">[]</button>
+        <button type="button" data-window-command="close" title="Close" aria-label="Close">X</button>
+    </nav>
+    <div id="windowResize" hidden aria-hidden="true">
+        <i data-resize="top"></i><i data-resize="bottom"></i><i data-resize="left"></i><i data-resize="right"></i>
+        <i data-resize="top-left"></i><i data-resize="top-right"></i><i data-resize="bottom-left"></i><i data-resize="bottom-right"></i>
+    </div>
     <section id="welcomeScreen" role="dialog" aria-modal="true" aria-label="Glitch Canvas initialization">
         <div class="welcomePanel">
             <div class="welcomeMark" aria-hidden="true"><span>[</span>R<span>]</span></div>
             <p class="welcomeKicker">STANDALONE REVISION R FINAL 4.0</p>
             <h1>Glitch Canvas Initialization</h1>
-            <p class="welcomeDescription">A visual media shell for YouTube, MP4, and MP3 playback.</p>
-            <p class="photosensitivityWarning" role="note">Photosensitivity warning: this app includes flash and strobe effects, and some MACHINE presets, randomize and auto modes switch them on. Start with low effect levels and stop playback if you feel discomfort.</p>
+            <p class="welcomeDescription">Choose YouTube or local media next. The effects controls appear once your media starts.</p>
+            <div class="welcomeMedia" aria-label="Accepted media">
+                <p><strong>YouTube</strong> video and playlist links</p>
+                <p><strong>Audio</strong> <span id="welcomeAudioTypes"></span></p>
+                <p><strong>Video</strong> <span id="welcomeVideoTypes"></span></p>
+                <p class="codecNote">File extensions accepted by the picker. Playback/conversion depends on installed Windows codecs; not every file is decodable.</p>
+            </div>
+            <p class="photosensitivityWarning" role="note">Photosensitivity warning: effects and source videos can flash. Flash and Strobe stay off until you use their own controls; presets and automation never enable them or change your chosen levels. This is not a photosensitivity-safe mode.</p>
             <div class="welcomeRule" aria-hidden="true"></div>
             <div class="welcomeActions">
-                <button id="welcomeEnterBtn" type="button" autofocus>Enter Player</button>
+                <button id="welcomeEnterBtn" type="button">Choose Media</button>
                 <a class="welcomeSiteLink" href="https://www.imortalimp.nl" target="_blank" rel="noopener noreferrer">imortalimp.nl</a>
             </div>
             <p class="welcomeStatus"><span class="statusDot" aria-hidden="true"></span> LOCAL APP HOST READY</p>
@@ -87,7 +106,10 @@
         <div class="slider-group"><label id="vsyncScanLabel">V-Sync: OFF (level held)</label><input type="range" min="0" max="1" step="0.001" value="0.6" id="vsyncScanSlider"><button type="button" id="vsyncLockBtn" class="lock-button">&#60;LOCK!&#62;</button></div>
         <div class="slider-group"><label>Random Seed:</label><input type="range" min="0" max="1" step="0.001" value="0" id="randomSeedSlider"></div>
     </div>
-    <input id="ytInput" type="text" placeholder="Paste YouTube URL or 11-character video ID" autocomplete="off" spellcheck="false">
+    <section id="sourceScreen" aria-label="Choose YouTube or local media" hidden>
+    <h1 id="sourceHeading" tabindex="-1">CHOOSE YOUR SOURCE</h1>
+    <p id="sourceHint">YouTube link tree or local audio/video. Effects controls open after playback starts.</p>
+    <input id="ytInput" type="text" aria-label="YouTube video or playlist" placeholder="Paste YouTube URL or 11-character video ID" autocomplete="off" spellcheck="false">
     <button id="startBtn">Start and Play</button>
     <h2 id="suggestedVideo" class="suggested">SUGGESTED VIDEO : https://www.youtube.com/watch?v=gopYmb38DgM</h2>
     <h2 id="suggestedVideo3" class="suggested">SUGGESTED LINK : https://www.youtube.com/watch?v=uvSXL6ypLlw</h2>
@@ -97,14 +119,13 @@
     <h2 id="suggestedMoonlight" class="suggested">MOONLIGHT</h2>
     <h2 id="suggestedFractals" class="suggested">§§3+ Hours of Trippy Fractals§§</h2>
     <h2 id="suggestedNightCity" class="suggested">Night City Walk ✧ Cyberpunk Neon Rain Ambience | Dreamy Synthwave Vibes | Sleep ✧ Chill ✧ Relax</h2>
-    <h2 id="testCanvas" class="suggested">Fade "WHITE 2 BLACK 2 WHITE"</h2>
     <h2 id="suggestedDarksynth" class="suggested" title="Harpazz Mix — Checkmate [extreme slowed] · @HarpazzOfficial">DARKSYNTH RADIO</h2>
     <h2 id="Defcon1Video">DEFCON 1</h2>
-    <button id="zeroAllInitBtn" class="wired-button zero-all-btn zero-all-init">⬛ ZERO ALL EFFECTS</button>
     <div id="openFileWrap">
         <span id="openFileBtn">Open Local Media</span>
         <input type="file" id="fileInput" accept="audio/*,video/*,.mkv,.avi,.wmv,.asf,.wma,.mov,.flac,.opus,.aac,.amr,.ts,.m2ts,.mts,.mpg,.mpeg,.3gp,.3g2,.aiff,.aif,.ac3,.m4v,.m4a,.mp3,.mp4,.wav,.ogg,.oga,.ogv,.webm" title="Select a local audio or video file">
     </div>
+    </section>
     <button id="preset-toggle-btn" aria-expanded="false" aria-controls="preset-dropdown-container">Show Presets</button>
     <div id="preset-dropdown-container">
         <div class="preset-fxclip" aria-hidden="true">

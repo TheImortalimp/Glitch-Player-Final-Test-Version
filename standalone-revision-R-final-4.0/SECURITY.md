@@ -17,6 +17,12 @@ Open an issue at <https://github.com/TheImortalimp/Glitch-Player-Final-Test-Vers
 
 ## Startup checks
 
+The installed launcher (`launcher\Launcher.cs`, Windows .NET Framework 4.8) first verifies a build-pinned SHA-256 of `payload.cab`. It extracts only manifest-listed members to build-generated relative paths in a versioned per-user runtime cache. It rejects duplicate/unlisted members, split cabinets, unexpected cached files, wrong lengths/hashes and reparse points. Newly created runtime directories have protected current-user/System ACLs. Directory handles prevent directory replacement while in use; verified file handles deny writes/deletion until the player exits. Every launch revalidates the CAB and the extracted files.
+
+The launcher refuses WebView2 and CLR profiler overrides and the .NET startup-hook/additional-dependency/shared-store variables. It uses a current-user-only mutex for single-instance launches; the taskbar Refresh command targets the matching cached host and requests a confirmation, not arbitrary execution.
+
+**CAB packaging is not virtualization or a security boundary.** Runtime files are extracted and readable. Hashes detect a payload changed independently of the launcher; the launcher and installer are unsigned and do not authenticate the publisher. A process already running as the same user (or administrator) can replace the launcher or interfere with the app. No claim is made to resist that threat. Incomplete/invalid caches fail closed with a specific recovery path rather than silently loading a fallback.
+
 `host\Program.cs` runs these checks before any window is created:
 
 - The app refuses to start if any of these environment variables is set: `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, `WEBVIEW2_PIPE_FOR_SCRIPT_DEBUGGER`, `WEBVIEW2_WAIT_FOR_SCRIPT_DEBUGGER`, `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER`, `WEBVIEW2_USER_DATA_FOLDER`, `WEBVIEW2_RELEASE_CHANNEL_PREFERENCE`, `WEBVIEW2_CHANNEL_SEARCH_KIND`.
@@ -37,10 +43,10 @@ Open an issue at <https://github.com/TheImortalimp/Glitch-Player-Final-Test-Vers
 
 ## Navigation, frames and windows
 
-- The only top-level document allowed is `https://player-r4.local/index.html`, which is a virtual host mapped to the installed `webui` folder. Every other top-level navigation is cancelled.
+- The only top-level document allowed is `https://player-r4.local/index.html`, which is a virtual host mapped to the verified runtime's `webui` folder. Every other top-level navigation is cancelled.
 - Converted media is served from `https://media-r4.local/`. The web bridge accepts only `https://media-r4.local/<64 hex>.mp4` or `.m4a` URLs from the host.
 - The only frames allowed are `https://www.youtube-nocookie.com`, `https://www.youtube.com`, `about:blank` and `about:srcdoc`. Allowed URLs must use HTTPS on the default port with no user information.
-- New windows never open inside the app. HTTPS links to `imortalimp.nl`, `www.imortalimp.nl`, `youtube.com`, `www.youtube.com`, `m.youtube.com`, `music.youtube.com` or `youtu.be` open in your default browser only after you confirm. Anything else is blocked.
+- New windows never open inside the app. HTTPS links to `imortalimp.nl`, `www.imortalimp.nl`, `youtube.com`, `www.youtube.com`, `m.youtube.com`, `music.youtube.com` or `youtu.be` open through the Windows default-browser association only after a user-initiated navigation and confirmation. Anything else is blocked. The confirmation runs outside the WebView2 event callback, defaults to No and cannot stack with Refresh confirmations.
 - These are always blocked:
   - The `javascript:`, `data:`, `vbscript:`, `file:` and `ms-settings:` navigation schemes.
   - Theme and pointer files: `.theme`, `.themepack`, `.deskthemepack`, `.cur` and `.ani`.
@@ -62,6 +68,7 @@ The web UI talks to the host only through `chrome.webview.postMessage`; no host 
   - The dialog starts in Documents and refuses the app's install and data folders.
 - `log` accepts only short codes matching `^[a-z0-9][a-z0-9:._-]{0,63}$`.
 - `ui:escape` leaves fullscreen.
+- `window:command` accepts only fixed minimize/maximize/fullscreen/close/shield/refresh and eight resize-edge tokens. No paths, URLs, coordinates or shell commands are accepted. Refresh cancels conversion only after confirmation and reloads the same app document without deleting presets.
 - `freeze:capture` (Freeze Frame) takes only a request ID of at most 20 ASCII digits, and only one capture runs at a time:
   - The page hides its controls, and the host captures the view itself with `CapturePreviewAsync`.
   - The page gets back only the request ID and success or an error message, so no image data enters the page and downloads stay blocked.
@@ -72,6 +79,7 @@ The host sends the page only these messages, and the page checks each one:
 - `media:result` is accepted only for a pending conversion request, and its URL must be a converted file on `https://media-r4.local/` of the requested kind.
 - `freeze:captured` is accepted only for the pending Freeze Frame request ID, and only up to 1,024 characters.
 - `display:refresh` lists at most 8 distinct display refresh rates, the window's display first. The host sends only rates from 20 to 500 Hz, and the page drops any message that isn't a comma-separated list of such rates. The rates only scale the frame governor's timing thresholds.
+- `window:state` accepts only `window|full` mode and `on|off` shield state, separated by a comma. This updates native-control labels and disables resize regions in fullscreen.
 
 ## Web UI
 

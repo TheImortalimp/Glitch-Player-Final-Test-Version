@@ -16,6 +16,7 @@
     <Description>Hardened WebView2 glitch visual player (TOTAL CONFLUENCE effects engine)</Description>
     <Copyright>River Lyle Reuveni - imortalimp.nl - CC0 1.0</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\assets\r4.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationVisualStyles>true</ApplicationVisualStyles>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

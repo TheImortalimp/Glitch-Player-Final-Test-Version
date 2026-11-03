@@ -7,6 +7,23 @@ public class AppPolicyTests
     private static readonly string Hash = new('a', 64);
 
     [Theory]
+    [InlineData("refresh", true)]
+    [InlineData("minimize", true)]
+    [InlineData("maximize", true)]
+    [InlineData("fullscreen", true)]
+    [InlineData("close", true)]
+    [InlineData("shield", true)]
+    [InlineData("resize-top-left", true)]
+    [InlineData("resize-bottom-right", true)]
+    [InlineData("refresh|file.exe", false)]
+    [InlineData("resize-123", false)]
+    [InlineData("refresh\n", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void WindowCommands_AreFixedTokens(string command, bool expected) =>
+        Assert.Equal(expected, AppPolicy.IsWindowCommand(command));
+
+    [Theory]
     [InlineData("https://player-r4.local/index.html", true)]
     [InlineData("https://PLAYER-R4.LOCAL/index.html", true)]
     [InlineData("https://player-r4.local/other.html", false)]

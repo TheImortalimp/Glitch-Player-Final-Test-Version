@@ -33,9 +33,9 @@ test('applying a preset releases only preset-sourced locks and never moves a use
 
 test('the preset glide and Auto Glitch boost skip user-locked voices', () => {
     const glide = functionBody('stepPresetTravel');
-    assert.match(glide, /if \(sliderLocks\[n\] && !presetLockKeys\.has\(n\)\) continue;/);
+    assert.match(glide, /if \(isManualLight\(n\) \|\| \(sliderLocks\[n\] && !presetLockKeys\.has\(n\)\)\) continue;/);
     assert.match(glide, /const globalHeld = sliderLocks\.global && !presetLockKeys\.has\('global'\);/);
-    assert.match(functionBody('updateSmoothedStrengths'), /\(sliderLocks\[name\] \? 1 : glitchBoost\)/);
+    assert.match(functionBody('updateSmoothedStrengths'), /\(automationHeld\(name\) \? 1 : glitchBoost\)/);
 });
 
 test('the frame governor scales its thresholds to the display refresh rate reported by the host', () => {

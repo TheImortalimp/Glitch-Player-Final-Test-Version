@@ -5,6 +5,7 @@ namespace GlitchPlayerR4;
 internal static class AppPaths
 {
     public const string AppName = "Glitch-Player-R4";
+    public static string LauncherPath { get; set; } = Environment.ProcessPath;
 
     public static readonly string DataDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);

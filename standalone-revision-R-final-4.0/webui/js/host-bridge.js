@@ -76,6 +76,12 @@
     function onHostMessage(event) {
         if (typeof event.data !== 'string' || event.data.length > 2200000) return;
         const divider = event.data.indexOf('|');
+        if (/^window:state\|(window|full),(on|off)$/.test(event.data)) {
+            const [mode, shield] = event.data.slice('window:state|'.length).split(',');
+            document.body.classList.toggle('native-fullscreen', mode === 'full');
+            document.getElementById('windowShield').textContent = 'SHIELD: ' + shield.toUpperCase();
+            return;
+        }
         if (divider === 'display:refresh'.length && event.data.slice(0, divider) === 'display:refresh') {
             onDisplayRefresh(event.data.slice(divider + 1));
             return;
@@ -115,6 +121,20 @@
     }
 
     if (isNativeHost) window.chrome.webview.addEventListener('message', onHostMessage);
+    if (isNativeHost && typeof document !== 'undefined') {
+        document.getElementById('windowControls').hidden = false;
+        document.getElementById('windowResize').hidden = false;
+        document.querySelectorAll('[data-window-command]').forEach((button) => {
+            button.addEventListener('click', () => post('window:command|' + button.dataset.windowCommand));
+        });
+        document.querySelectorAll('[data-resize]').forEach((edge) => {
+            edge.addEventListener('pointerdown', (event) => {
+                if (event.button !== 0) return;
+                event.preventDefault();
+                post('window:command|resize-' + edge.dataset.resize);
+            });
+        });
+    }
 
     window.GlitchHost = Object.freeze({
         isNativeHost,

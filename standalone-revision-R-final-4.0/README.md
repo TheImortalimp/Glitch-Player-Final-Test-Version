@@ -2,9 +2,19 @@
 
 Revision R Final 4.0 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
 
-> **Photosensitivity warning:** the app can produce rapid flashing, strobing and high-contrast flicker. Flash and Strobe start at zero. Some built-in MACHINE presets and the hidden GHOST / OF ME preset contain flash and strobe. Don't use these effects if you or anyone watching may be sensitive to flashing light.
+> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are manual-only: presets, randomize and automation neither enable them nor change your chosen slider levels. Their Trigger buttons require a nonzero manual level and use that level, not a random peak. This is not a photosensitivity-safe mode.
 
 The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, and [SECURITY.md](SECURITY.md) for the hardening.
+
+## Starting and controlling the window
+
+The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the YouTube link tree and local file picker, not the effects HUD. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
+
+Effects automation and whole-app filters wait until playback. The logo has a slow, localized gleam rather than a full-panel flash; reduced-motion disables it. Rapid decorative UI flicker is disabled.
+
+The window has no native/custom title strip or visible border. Drag the empty top area, logo or source heading; resize at the invisible edges and corners. Floating controls provide shield, refresh, fullscreen, minimize, maximize/restore and close. The full **[R]** icon is embedded in the player, launcher, installer and uninstaller.
+
+Right-click the running app's Windows taskbar icon for **Refresh** (also available in the floating controls). It asks before stopping media and returning to the logo; No is the default. Saved USER presets remain; unsaved levels reset, including manual Flash/Strobe levels. WATCH / SOURCE and author links ask before opening in the Windows default browser, never in the app.
 
 ## Merged effects
 
@@ -23,7 +33,7 @@ The AI WARP MASTERS panel adds:
 - **DROP THE MILK?**: AI WARP's dependency-free, Milkdrop-inspired feedback automation with 80 auto presets and its own opacity slider and lock.
 - **B&W Strength** and **Hue Offset**: masters that drive each core voice and its R3 twin together.
 
-AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included.
+AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included. Saved Flash/Strobe values in immutable snapshots remain intact, but are not applied: these two controls always keep the user's current manual levels.
 
 The printable ASCII and Unicode glyph banks from the projector are included, with their original AI Warp / Revision 3 bank credits.
 
@@ -73,19 +83,27 @@ YouTube links you enter play through the privacy-enhanced embed (`youtube-nocook
 | Esc | Leave fullscreen; close the preset browser |
 | D | Toggle DROP THE MILK? (ignored while typing) |
 | S | Freeze Frame (ignored while typing and on the welcome screen) |
-| Ctrl+Alt+G | Hidden GHOST / OF ME preset (asks for confirmation first, because it flashes) |
+| Ctrl+Alt+G | Hidden GHOST / OF ME preset (asks for confirmation; Flash/Strobe retain their manual levels) |
 
 Keyboard media keys, headset buttons and other apps can't control playback, because the player doesn't register with Windows media controls. Use the app's own controls.
 
 ## Install and uninstall
 
-Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, and the Microsoft Edge WebView2 Runtime (Evergreen), which is included with Windows 11 and current Windows 10.
+Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, Windows .NET Framework 4.8 for the small launcher, and the Microsoft Edge WebView2 Runtime (Evergreen). The .NET 10 player runtime is bundled; no separate .NET 10 installation is needed.
 
 1. Run `Glitch-Player-R4-4.0.0-x64-setup.exe`. Compare its SHA-256 with the `.sha256` file first. Windows SmartScreen may warn because the file is unsigned.
 2. Setup installs for the current account only, into `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, without administrator rights. It adds a Start Menu shortcut but no desktop shortcut.
 3. Setup and the uninstaller refuse to run while the app is open.
 
 Your data is kept in `%LOCALAPPDATA%\Glitch-Player-R4`: the WebView2 profile with your presets, `settings.json`, the media cache and key, and size-capped logs. Uninstalling keeps this folder unless you choose to delete it. Export your presets first if you want a backup.
+
+### CAB payload, not a ZIP or virtualized filesystem
+
+The working package in `out\app` is an in-folder `GlitchPlayerR4.exe` launcher plus `payload.cab` and informational SHA-256 files. The installer installs these working files; it does not install a loose copy of the player runtime.
+
+The launcher verifies the CAB against a SHA-256 embedded at build time, then extracts its fixed manifest into `%LOCALAPPDATA%\Glitch-Player-R4\runtime\<CAB SHA-256>`. On every launch it verifies the complete cached file set and each file's size/hash before starting the player. CAB members use generated identifiers, not archive-supplied output paths. Redirected folders/files, unexpected members and extra cached files are refused; verified files stay read-locked while the player runs. An interrupted or damaged cache fails visibly; remove only the version folder named in the error to regenerate it from the verified CAB.
+
+This is **verified extraction, not virtualization, encryption, code signing or an OS sandbox**. Executable files must exist on disk, and the unsigned launcher cannot establish publisher authenticity or defend against an already-compromised account. Runtime caches are retained with other app data on uninstall unless you choose data deletion. Runtime dependency licenses are inside the CAB and its extracted `licenses` directory.
 
 The app includes K-Meleon-R's cursor guard. While the app runs, it resets mouse pointers that aren't built-in Windows cursors and turns off "allow themes to change mouse pointers". These per-user changes stay after the app closes; see [SECURITY.md](SECURITY.md).
 
@@ -94,8 +112,9 @@ The app includes K-Meleon-R's cursor guard. While the app runs, it resets mouse 
 Requirements:
 
 - The .NET 10 SDK
-- Node.js 22 or later (only for the web UI tests)
+- Node.js 22 or later (tests, icon generation and CAB packaging)
 - NSIS 3 (`makensis.exe` on `PATH` or in Program Files)
+- Windows `makecab.exe` and the .NET Framework C# compiler (the launcher uses the Windows-provided .NET Framework/WPF assemblies; no new package dependency)
 
 From this folder, run:
 
@@ -105,10 +124,12 @@ build.cmd
 
 `build.cmd` is a plain cmd script that doesn't use PowerShell or change the execution policy. It:
 
-1. Runs the .NET and web tests.
+1. Generates the nine-size [R] icon and runs the .NET and web tests.
 2. Publishes the self-contained `win-x64` host to `out\publish`.
 3. Checks that the publish output contains the web UI and license files, and no FFmpeg files or `.pdb` symbols.
-4. Compiles `out\Glitch-Player-R4-4.0.0-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it.
+4. Builds `out\app\payload.cab` and compiles the small launcher with pinned CAB and file hashes.
+5. Tests fresh/cached extraction and rejection of changed CABs, modified files, unexpected files and redirected cache entries.
+6. Compiles `out\Glitch-Player-R4-4.0.0-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it. No ZIP is produced.
 
 To run the tests on their own:
 
@@ -131,6 +152,8 @@ npm test
 | `webui\js\r4-policy.js`, `host-bridge.js`, `yt-embed.js` | Input validation, the narrow host bridge and the YouTube embed |
 | `tests\web\` | Node tests for the merge manifest, policy, bridge, static CSP rules, host guards (cursor guard, permissions, media controls), Freeze Frame, locks and the frame governor |
 | `installer\` | `setup.nsi` and the installer notices |
+| `launcher\`, `tools\`, `assets\` | Verified CAB bootstrapper, packaging/icon tools and the generated [R] icon |
+| `tests\packaging\` | Real launcher extraction and CAB/cache integrity checks |
 
 ## Credits and license
 

@@ -3,10 +3,18 @@
       if (!R4) throw new Error('r4-policy.js must load before glitch-player.js.');
       const welcomeScreen = document.getElementById('welcomeScreen');
       const welcomeEnterBtn = document.getElementById('welcomeEnterBtn');
+      const sourceScreen = document.getElementById('sourceScreen');
+      const playbackControls = ['rightRack', 'ghostBtnRack', 'sliderContainer', 'preset-toggle-btn',
+          'preset-dropdown-container', 'ui-toggle-tab', 'earHud', 'nowPlayingHud'];
+      playbackControls.forEach((id) => { const el = document.getElementById(id); if (el) el.inert = true; });
+      document.getElementById('welcomeAudioTypes').textContent = R4.mediaExtensions.audio.join(', ').toUpperCase();
+      document.getElementById('welcomeVideoTypes').textContent = R4.mediaExtensions.video.join(', ').toUpperCase();
       if (welcomeScreen && welcomeEnterBtn) {
           welcomeEnterBtn.addEventListener('click', () => {
               welcomeScreen.hidden = true;
               document.body.classList.add('welcome-dismissed');
+              sourceScreen.hidden = false;
+              document.getElementById('sourceHeading').focus();
           });
       }
       /* ============================================================================
@@ -598,15 +606,6 @@
           /* ------------------------------------------------------------------ *
            *  4. Local MP3 / MP4 path                                            *
            * ------------------------------------------------------------------ */
-          function tryPlayElement(el) {
-              if (!el) return;
-              const attempt = () => { try { const p = el.play(); if (p && p.catch) p.catch(() => {}); } catch (
-                  e) {} };
-              attempt();
-              el.addEventListener('canplay', attempt, { once: true });
-              el.addEventListener('loadeddata', attempt, { once: true });
-          }
-
           function extractId3Artwork(file) {
               return file.slice(0, Math.min(file.size, 4 * 1024 * 1024)).arrayBuffer().then((buf) => {
                   const bytes = new Uint8Array(buf);
@@ -630,7 +629,7 @@
                       if (settled) return;
                       settled = true;
                       el.removeEventListener('error', onError);
-                      el.removeEventListener('loadeddata', onLoaded);
+                      el.removeEventListener('playing', onLoaded);
                       if (cancelLocalAttempt === cancel) cancelLocalAttempt = null;
                       if (error) reject(error);
                       else resolve();
@@ -653,11 +652,14 @@
                   };
                   cancelLocalAttempt = cancel;
                   el.addEventListener('error', onError);
-                  el.addEventListener('loadeddata', onLoaded);
+                  el.addEventListener('playing', onLoaded);
                   el.crossOrigin = 'anonymous';
                   el.src = url;
                   el.load();
-                  tryPlayElement(el);
+                  el.play().catch((error) => {
+                      error.mediaCode = el.error ? el.error.code : (error.name === 'NotSupportedError' ? 4 : 0);
+                      finish(error);
+                  });
               });
           }
 
@@ -705,8 +707,6 @@
               const firstAttempt = attemptLocalSource(mediaEl, localMediaUrl, kind);
               if (previousUrl) { try { URL.revokeObjectURL(previousUrl); } catch (e) {} }
 
-              activatePlaybackUi(isAudio ? 'local-audio' : 'local-video');
-              if (openFileWrap) openFileWrap.style.display = 'none';
               const applyLocalHud = () => {
                   if (stale()) return;
                   setNowPlaying({
@@ -740,6 +740,7 @@
 
               try {
                   await firstAttempt;
+                  if (!stale()) activatePlaybackUi(isAudio ? 'local-audio' : 'local-video');
                   return;
               } catch (error) {
                   if (stale() || error.name === 'AbortError') return;
@@ -776,6 +777,7 @@
                   return;
               }
               if (stale()) return;
+              activatePlaybackUi(isAudio ? 'local-audio' : 'local-video');
               if (localMediaUrl) { try { URL.revokeObjectURL(localMediaUrl); } catch (e) {}
                   localMediaUrl = null; }
               applyLocalHud();
@@ -823,8 +825,7 @@
 
           function startPlayback(url, loop = false) {
               if (!isHttpOrigin()) {
-                  activatePlaybackUi('canvas');
-                  showNotificationMessage('YouTube needs http:// — controls unlocked. Use "Open Local MP3/MP4" or move sliders to start effects.',
+                  showNotificationMessage('YouTube needs the app host or a local preview server. Choose a local media file instead.',
                       5600);
                   return;
               }
@@ -837,6 +838,10 @@
               const target = parseAllowedYouTubeInput(url);
               if (!target) { alert('Please enter a valid YouTube video, playlist URL, or 11-character video ID'); return; }
               const { videoId, playlistId } = target;
+              ++localMediaGeneration;
+              if (cancelLocalAttempt) cancelLocalAttempt();
+              if (window.GlitchHost) window.GlitchHost.cancelAllLocalMedia();
+              [video, localAudio].forEach((el) => { if (el) el.pause(); });
 
               const playerVars = {
                   controls: 0,
@@ -871,6 +876,7 @@
                           onReady: onPlayerReady,
                           onStateChange: onPlayerStateChange,
                           onError: function() {
+                              if (nowPlaying.kind !== 'youtube') return;
                               showNotificationMessage('YouTube could not load that video (private / region / embed blocked). Try another link or local MP3/MP4.',
                                   6500);
                           }
@@ -910,7 +916,9 @@
                   looping: !!(loop && videoId && !playlistId),
                   duration: 0
               });
-              activatePlaybackUi('youtube');
+              if (ytWarpShell) ytWarpShell.style.display = 'block';
+              if (ytFrame) ytFrame.style.display = 'block';
+              showNotificationMessage('Loading YouTube. Effects controls open when playback starts.', 5000);
               ensureOverlayStack();
           }
 
@@ -1062,6 +1070,10 @@
           setInterval(tickNowPlayingTime, 250);
 
           function onPlayerReady() {
+              if (nowPlaying.kind !== 'youtube') {
+                  if (player) player.stopVideo();
+                  return;
+              }
               if (ytWarpShell) ytWarpShell.style.display = 'block';
               if (ytFrame) ytFrame.style.display = 'block';
               if (video) video.style.display = 'none';
@@ -1074,6 +1086,8 @@
           }
 
           function onPlayerStateChange(ev) {
+              if (nowPlaying.kind !== 'youtube') return;
+              if (ev.data === 1) activatePlaybackUi('youtube');
               if (ev.data === 0 && activeLoopVideoId && player) {
                   try {
                       player.seekTo(0, true);
@@ -4606,6 +4620,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               { name: 'R3 Hue/Color Cycle', defaultAlpha: 0 }
           ];
           const effectAlphas = {};
+          function isManualLight(name) {
+              return name === 'Flash' || name === 'Strobe';
+          }
+          function automationHeld(name) {
+              return isManualLight(name) || !!sliderLocks[name];
+          }
           const smoothedStrength = {};
           const continuousEffectCache = {};
           const triggerTimestamps = {};
@@ -4784,7 +4804,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const intensity = clamp01(masterControls.effectIntensity);
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  const raw = clamp01((effectAlphas[name] || 0) * masterOpacity * (sliderLocks[name] ? 1 : glitchBoost) * intensity);
+                  const raw = clamp01((effectAlphas[name] || 0) * masterOpacity * (automationHeld(name) ? 1 : glitchBoost) * intensity);
                   const rate = (blendProfiles[name].rate || 0.2) * 5.0 * blendTempo * harmony * ((SOFT.enabled && SOFT.k < 0.45) ? 0.62 : 1) * (document.body.classList.contains('hard-light') ? 1.12 : 1);
                   const prev = smoothedStrength[name] === undefined ? raw : smoothedStrength[name];
                   const rateUse = raw < 0.01 ? rate * 1.28 : rate;
@@ -4888,6 +4908,11 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   slider.max = 1;
                   slider.step = 0.01;
                   slider.value = def.defaultAlpha;
+                  slider.setAttribute('aria-label', def.name);
+                  if (isManualLight(def.name)) {
+                      label.textContent = def.name + ' (manual only):';
+                      slider.title = 'Only this slider changes the level. Presets and automation leave it alone.';
+                  }
                   sliderElements[def.name] = slider;
                   slider.addEventListener('input', () => {
                       const v = parseFloat(slider.value) || 0;
@@ -5281,7 +5306,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let woke = false;
               [[core, 0.35], ['R3 ' + core, 0.20]].forEach((pair) => {
                   const name = pair[0], v = pair[1];
-                  if (sliderLocks[name] || !Object.prototype.hasOwnProperty.call(effectAlphas, name)) return;
+                  if (automationHeld(name) || !Object.prototype.hasOwnProperty.call(effectAlphas, name)) return;
                   effectAlphas[name] = v;
                   randomTargets[name] = v;
                   sliderWritten[name] = v;
@@ -5479,12 +5504,21 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           document.addEventListener('keydown', (e) => {
               if (e.defaultPrevented || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
               if (e.key !== 'd' && e.key !== 'D') return;
+              if (!document.body.classList.contains('playback-on')) return;
               if (isTypingTarget(e.target)) return;
               e.preventDefault();
               toggleMilk();
           });
 
           function triggerTimedEffect(def) {
+              if (isManualLight(def.name)) {
+                  if (!(effectAlphas[def.name] > 0)) {
+                      showNotificationMessage('Raise the ' + def.name + ' slider explicitly before triggering it.', 3500);
+                      return;
+                  }
+                  activeEffects.push(def.factory(() => effectLiveStrength(def.name)));
+                  return;
+              }
               const profile = blendProfiles[def.name];
               const floorMin = profile ? profile.ambient[1] + (profile.peak[1] - profile.ambient[1]) * 0.35 : 0.2;
               const floorMax = profile ? profile.peak[1] : 0.4;
@@ -5697,6 +5731,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           }
 
           function applyMasterFilters() {
+              if (!document.body.classList.contains('playback-on')) {
+                  document.documentElement.style.filter = '';
+                  document.body.style.filter = '';
+                  masterFilterPrimed = false;
+                  return;
+              }
               const now = performance.now();
               if (masterFilterPrimed && now - lastMasterFilterApply < 12) return;
               masterFilterPrimed = true;
@@ -6865,7 +6905,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       ['Data Bands', 'VHS Glitch', 'Scanlines', 'ASCII', 'Matrix ASCII'] :
                       ['Neon Grad', 'Scanlines', 'Font Burn', 'HSL Rainbow', 'Matrix Chord'];
                   const name = moodPool[(Math.random() * moodPool.length) | 0];
-                  if (name && !sliderLocks[name] && blendProfiles[name]) {
+                  if (name && !automationHeld(name) && blendProfiles[name]) {
                       const p = blendProfiles[name];
                       const tgt = p.ambient[0] + Math.random() * (p.ambient[1] - p.ambient[0] + 0.02);
                       effectAlphas[name] = (effectAlphas[name] || 0) * 0.70 + tgt * 0.30;
@@ -7225,7 +7265,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           function randRange(r) { return r[0] + Math.random() * (r[1] - r[0]); }
 
           function pickPeakEffects(count) {
-              const pool = peakPool.slice();
+              const pool = peakPool.filter((name) => !isManualLight(name));
               const out = new Set();
               while (out.size < count && pool.length) {
                   out.add(pool.splice((Math.random() * pool.length) | 0, 1)[0]);
@@ -7266,7 +7306,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   : peakPool;
               const pickCount = 4 + ((Math.random() * 3) | 0);
               activePeakEffects = new Set();
-              const shuffled = warpPeakPool.slice().sort(() => Math.random() - 0.5);
+              const shuffled = warpPeakPool.filter((name) => !isManualLight(name)).sort(() => Math.random() - 0.5);
               for (let i = 0; i < Math.min(pickCount, shuffled.length); i++) activePeakEffects.add(shuffled[i]);
               const mode = randBehavior;
               const allowWild = !isAutoGlitching && softWild();   /* R2: 'wild' only inside a crescendo */
@@ -7283,7 +7323,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (sliderLocks[name]) continue;
+                  if (automationHeld(name)) continue;
                   // Aesthetic burst has priority — don't overwrite its targets
                   if (aestheticBurstLocked && aestheticBurstLocked.has(name)) continue;
                   /* R1 (006 final): parked sliders never join the randomization
@@ -7518,7 +7558,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (sliderLocks[name]) continue;
+                  if (automationHeld(name)) continue;
                   const target = randomTargets[name];
                   if (target === undefined) continue;
                   const cur = effectAlphas[name] || 0;
@@ -7589,7 +7629,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               if (isContinuallyRandomizing || !isAutoGlitching || now < nextUnparkAt) return;
               nextUnparkAt = now + 1400 + Math.random() * 3200;
               const parked = profileNames.filter((n) =>
-                  !sliderLocks[n] && (effectAlphas[n] || 0) < PARKED_EPSILON);
+                  !automationHeld(n) && (effectAlphas[n] || 0) < PARKED_EPSILON);
               if (!parked.length) return;
               const name = parked[(Math.random() * parked.length) | 0];
               const profile = blendProfiles[name];
@@ -7640,6 +7680,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
               if (isAutoGlitching && autoGlitchInstances.length === 0) {
                   timedEffectsDefs.forEach((def) => {
+                      if (isManualLight(def.name)) return;
                       const profile = blendProfiles[def.name];
                       const ceiling = profile ? profile.peak[1] : 0.25;
                       const getStrength = () => {
@@ -7681,7 +7722,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       if (def && !softWild() && GlitchEngine.SOFT_EYE.lightVoices.indexOf(def.name) !== -1) {
                           def = timedEffectsDefs.find((d) => d.name === 'Neon Grad') || def;
                       }
-                      if (def) {
+                      if (def && !isManualLight(def.name)) {
                           const p = blendProfiles[def.name];
                           const floor = p ? p.peak[1] * 0.75 : 0.32;
                           activeEffects.push(def.factory(() => Math.min(0.75, floor * (0.55 + Math.random() *
@@ -7703,7 +7744,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let chromaLead = null;
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (!sliderLocks[name]) {
+                  if (!automationHeld(name)) {
                       const profile = blendProfiles[name];
                       const parked = (effectAlphas[name] || 0) < PARKED_EPSILON && Math.random() < 0.5;
                       let value = parked ? 0 : randRange(activePeakEffects.has(name) ? profile.peak :
@@ -7733,7 +7774,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let chromaLead = null;
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (!sliderLocks[name]) {
+                  if (!automationHeld(name)) {
                       let v = rng();
                       if (name === 'Hue/Color Cycle' || name === 'HSL Rainbow' || name === 'Neon Grad') {
                           v = v + srcAppetite() * (0.30 + 0.45 * rng() - v) * 0.55;
@@ -7872,11 +7913,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               applyMasterFilters();
           }
 
-          // Wire up both button instances (rightRack + init screen)
-          ['zeroAllBtn', 'zeroAllInitBtn'].forEach((id) => {
-              const btn = $(id);
-              if (btn) btn.addEventListener('click', zeroAllEffects);
-          });
+          if ($('zeroAllBtn')) $('zeroAllBtn').addEventListener('click', zeroAllEffects);
 
           if ($('autoGlitchBtn')) {
               $('autoGlitchBtn').addEventListener('click', () => {
@@ -7948,6 +7985,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
            *  18. Playback UI + init screen                                      *
            * ------------------------------------------------------------------ */
           function activatePlaybackUi(mode) {
+              if (!document.body.classList.contains('welcome-dismissed')) return;
+              sourceScreen.hidden = true;
+              playbackControls.forEach((id) => { const el = $(id); if (el) el.inert = false; });
               document.body.classList.add('playback-on');
               document.body.classList.remove('local-audio', 'local-video');
               if (mode === 'local-audio') document.body.classList.add('local-audio');
@@ -8126,7 +8166,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       if (btn) btn.textContent = 'Continual Randomization: ON';
                       for (let i = 0; i < profileNames.length; i++) {
                           const name = profileNames[i];
-                          if (sliderLocks[name]) continue;
+                          if (automationHeld(name)) continue;
                           const profile = blendProfiles[name];
                           const v = profile ? randRange(profile.ambient) : 0.05 + Math.random() * 0.12;
                           effectAlphas[name] = v;
@@ -8590,7 +8630,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   const n = profileNames[i];
                   const to = presetTravel.toA[n];
                   if (to === undefined) continue;
-                  if (sliderLocks[n] && !presetLockKeys.has(n)) continue;
+                  if (isManualLight(n) || (sliderLocks[n] && !presetLockKeys.has(n))) continue;
                   const v = presetTravel.fromA[n] + (to - presetTravel.fromA[n]) * k;
                   effectAlphas[n] = v;
                   randomTargets[n] = to;
@@ -8632,7 +8672,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const travelTo = {};
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (held(name)) continue;
+                  if (isManualLight(name) || held(name)) continue;
                   const v = s.alphas && s.alphas[name] !== undefined ? s.alphas[name] : 0;
                   travelTo[name] = v;
                   randomTargets[name] = v;
@@ -8734,7 +8774,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       if (isContinuallyRandomizing) {
                           for (let i = 0; i < profileNames.length; i++) {
                               const name = profileNames[i];
-                              if (sliderLocks[name]) continue;
+                              if (automationHeld(name)) continue;
                               if ((effectAlphas[name] || 0) < PARKED_EPSILON) {
                                   const profile = blendProfiles[name];
                                   const v = profile ? randRange(profile.ambient) : 0.05 + Math.random() * 0.12;
@@ -9353,7 +9393,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               // 1. Per-effect stuck-high guard
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  if (sliderLocks[name]) { stuckHighTimer[name] = 0; continue; }
+                  if (automationHeld(name)) { stuckHighTimer[name] = 0; continue; }
                   if (name === 'B&W Invert' && bwSweepActive) { stuckHighTimer[name] = 0; continue; }
                   // Aesthetic-burst managed effects: give them a very long pass
                   if (aestheticBurstLocked && aestheticBurstLocked.has(name)) { stuckHighTimer[name] = 0; continue; }
@@ -9382,7 +9422,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               for (let p = 0; p < WASHOUT_PAIRS.length; p++) {
                   const [a, b, sumTrigger, holdMs] = WASHOUT_PAIRS[p];
                   const key = a + '|' + b;
-                  if (sliderLocks[a] && sliderLocks[b]) { washoutPairTimer[key] = 0; continue; }
+                  if (automationHeld(a) && automationHeld(b)) { washoutPairTimer[key] = 0; continue; }
                   if (bwSweepActive && (a === 'B&W Invert' || b === 'B&W Invert')) { washoutPairTimer[key] = 0; continue; }
                   /* v11: warp-blend pairs are no longer skipped while AI Warp is
                      active — they get a 2.5x hold window instead, so B&W/Flash/Strobe/
@@ -9402,16 +9442,16 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       washoutPairTimer[key] = (washoutPairTimer[key] || 0) + dtMs;
                       if (washoutPairTimer[key] > effectiveHold) {
                           // Pull the weaker unlocked effect back to ambient
-                          const suppA = !sliderLocks[a] && aVal <= bVal;
+                          const suppA = !automationHeld(a) && aVal <= bVal;
                           const pullTarget = (nm) => {
                               const pr = blendProfiles[nm];
                               return pr ? clamp01(randRange(pr.ambient) * R16.ambientK()) : 0.04;
                           }; /* R1.7: energy sets the floor */
-                          if (suppA && !sliderLocks[a]) {
+                          if (suppA && !automationHeld(a)) {
                               randomTargets[a] = pullTarget(a);
                               effectAlphas[a] = easeExp(aVal, randomTargets[a], dt, 1.0);
                               if (sliderElements[a]) sliderElements[a].value = effectAlphas[a].toFixed(3);
-                          } else if (!sliderLocks[b]) {
+                          } else if (!automationHeld(b)) {
                               randomTargets[b] = pullTarget(b);
                               effectAlphas[b] = easeExp(bVal, randomTargets[b], dt, 1.0);
                               if (sliderElements[b]) sliderElements[b].value = effectAlphas[b].toFixed(3);
@@ -9601,7 +9641,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const g = AESTHETIC_GROUPS[k];
                       /* R2 SOFT-EYE: groups that voice Flash / Strobe wait for a crescendo */
                       if (!GlitchEngine.softGroupAllowed(g.effects, softK())) return false;
-                      return g.effects.some((n) => !sliderLocks[n] &&
+                      return g.effects.some((n) => !automationHeld(n) &&
                           (isAutoGlitching || !crParked[n] || (effectAlphas[n] || 0) >= PARKED_EFFECT_EPSILON));
                   });
                   if (!available.length) {
@@ -9623,7 +9663,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   // Lock in this group's effects and assign peak targets (0-100)
                   aestheticBurstLocked = new Set();
                   group.effects.forEach((name) => {
-                      if (sliderLocks[name]) return;
+                      if (automationHeld(name)) return;
                       if (!isAutoGlitching && crParked[name] &&
                           (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                       const [pMin, pMax] = group.peakRange;
@@ -9642,7 +9682,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   // Gently suppress conflicting effects (don't zero — just pull back)
                   if (group.suppress) {
                       group.suppress.forEach((name) => {
-                          if (sliderLocks[name]) return;
+                          if (automationHeld(name)) return;
                           if (!isAutoGlitching && crParked[name] &&
                               (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                           const profile = blendProfiles[name];
@@ -9663,7 +9703,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (aestheticBurstGroupKey) {
                       const group = AESTHETIC_GROUPS[aestheticBurstGroupKey];
                       group.effects.forEach((name) => {
-                          if (sliderLocks[name]) return;
+                          if (automationHeld(name)) return;
                           if (!isAutoGlitching && crParked[name] &&
                               (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                           const [dMin, dMax] = group.dipRange || [0.02, 0.15];
@@ -9681,7 +9721,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const group = AESTHETIC_GROUPS[aestheticBurstGroupKey];
                       const allEffects = (group.effects || []).concat(group.suppress || []);
                       allEffects.forEach((name) => {
-                          if (sliderLocks[name]) return;
+                          if (automationHeld(name)) return;
                           const profile = blendProfiles[name];
                           randomTargets[name] = profile
                               ? randRange(profile.ambient)
@@ -9901,6 +9941,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const dtMs = now - lastFrameTime;
               const dt = Math.min(0.05, dtMs * 0.001);
               lastFrameTime = now;
+              if (!document.body.classList.contains('playback-on')) {
+                  noteFrameCadence(dtMs);
+                  return;
+              }
               customTime += dt * 1000;
               frameCount++;
 
@@ -9981,78 +10025,31 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
            *  confirmation. Never idle-triggered, never touches the clipboard.   *
            * ------------------------------------------------------------------ */
           (function installEasterEgg() {
-              const hiddenUrl = 'https://www.youtube.com/watch?v=DmStNF35o1w';
               /* Hidden user snapshot from the projector app, restored as saved
                  (including automation) through the LAB effect-name mapping. */
               const GHOST_OF_ME = Object.freeze({"name":"GHOST / OF ME","settings":{"version":3,"masterOpacity":0.33,"effects":{"ASCII":0.26,"B&W Invert":1,"Cyber Rain":1,"Data Bands":0.7514000000357629,"Data Bomb":0.4104499999880806,"Flash":0.2410999997705262,"Font Burn":0.4958999998420481,"Gemini Bomb":0.6959500000625881,"HSL Rainbow":0.6052500001639146,"Hue/Color Cycle":1,"Neon Grad":0.3301500000804669,"Orbit HUD":0.17034999988973326,"Prism Rift":0.572949999988082,"R3 Data Bomb":0.39250000002980406,"R3 Gemini Bomb":0.49835000003874536,"R3 Ghost Spectrum":0.4439999999403973,"R3 Ink Glyphs":0.47480000010132933,"R3 Matrix ASCII":0.660549999877812,"R3 Matrix Chord":0.22625000002980267,"R3 Neon Grad":0.3669499999284767,"R3 Scanlines":0.4869000000804658,"R3 Tech Artist":0.9487999999821211,"R3 V-Sync":0.6183499998152283,"Scanlines":0.46410000000894275,"Signal Tear":1,"Strobe":0.4390000001043095,"VHS Glitch":0.15880000004172684},"isAutoGlitching":true,"isContinuallyRandomizing":true,"isAiWarpActive":true,"sliderLocks":{"global":true,"ASCII":true,"B&W Invert":true,"Cyber Rain":true,"Data Bands":false,"Data Bomb":false,"Flash":false,"Font Burn":false,"Gemini Bomb":false,"HSL Rainbow":false,"Hue/Color Cycle":true,"Neon Grad":false,"Orbit HUD":false,"Prism Rift":false,"R3 Data Bomb":false,"R3 Gemini Bomb":false,"R3 Ghost Spectrum":false,"R3 Ink Glyphs":false,"R3 Matrix ASCII":false,"R3 Matrix Chord":false,"R3 Neon Grad":false,"R3 Scanlines":false,"R3 Tech Artist":false,"R3 V-Sync":false,"Scanlines":false,"Signal Tear":true,"Strobe":false,"VHS Glitch":false},"glyphBank":"All scripts","randomSeed":0.494,"customTime":21312531.21593429}});
-              const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
               let ghostSettings = null;
               let running = false;
-
-              const flashText = async (msg, color, shadowColor, duration) => {
-                  const warnings = [];
-                  for (let i = 0; i < 10; i++) {
-                      const warning = document.createElement('div');
-                      warning.textContent = msg;
-                      warning.style.cssText = 'position:fixed;top:' + (Math.random() * 90) + 'vh;left:' +
-                          (Math.random() * 90) + 'vw;font-size:' + (Math.random() * 10 + 5) +
-                          'vw;color:' + color + ';z-index:9999;text-shadow:0 0 20px ' + shadowColor +
-                          ';pointer-events:none;transition:opacity 0.1s ease-in-out;opacity:1;';
-                      document.body.appendChild(warning);
-                      warnings.push(warning);
-                  }
-                  const fonts = ['Courier New', 'monospace', 'Arial Black', 'Impact', 'Georgia',
-                      'Times New Roman', 'Verdana'
-                  ];
-                  let elapsed = 0;
-                  const fontInterval = setInterval(() => {
-                      warnings.forEach((w) => { w.style.fontFamily = fonts[(Math.random() * fonts
-                          .length) | 0]; });
-                      elapsed += 50;
-                      if (elapsed >= duration) clearInterval(fontInterval);
-                  }, 50);
-                  await sleep(duration);
-                  warnings.forEach((w) => { w.style.opacity = '0'; });
-                  await sleep(100);
-                  warnings.forEach((w) => { if (w.parentNode) w.parentNode.removeChild(w); });
-              };
-
-              const reveal = async () => {
-                  await flashText('DATA..', 'crimson', 'red', 400);
-                  const bang = document.createElement('div');
-                  bang.textContent = '!';
-                  bang.style.cssText =
-                      'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30vw;color:lime;z-index:9999;text-shadow:0 0 20px green;pointer-events:none;transition:opacity 0.5s ease-in-out;opacity:1;';
-                  document.body.appendChild(bang);
-                  await sleep(1500);
-                  await flashText('DATA..', 'crimson', 'red', 400);
-                  bang.style.opacity = '0';
-                  await sleep(500);
-                  bang.remove();
-              };
 
               document.addEventListener('keydown', (e) => {
                   if (!e.ctrlKey || !e.altKey || e.shiftKey || e.metaKey || e.repeat) return;
                   if (String(e.key).toLowerCase() !== 'g') return;
+                  if (!document.body.classList.contains('playback-on')) return;
                   e.preventDefault();
                   if (running) return;
-                  if (!window.confirm('GHOST / OF ME enables flash, strobe and continual randomization. Load this flashing preset?')) return;
+                  if (!window.confirm('GHOST / OF ME enables intense effects and continual randomization. Flash and Strobe keep your manual levels. Load it?')) return;
                   running = true;
                   try {
                       if (!ghostSettings) ghostSettings = mapLabSnapshot(GHOST_OF_ME.settings);
                       applySettings(ghostSettings);
                       setCurrentPresetDisplay('LOADED: ' + GHOST_OF_ME.name + ' [HIDDEN]');
-                      if (ytInput && !document.body.classList.contains('playback-on')) {
-                          ytInput.value = hiddenUrl;
-                          try { ytInput.focus(); ytInput.select(); } catch (err) {}
-                      }
-                      showNotificationMessage('GHOST / OF ME loaded \u00b7 flashing and continual randomization are enabled.', 4200);
+                      showNotificationMessage('GHOST / OF ME loaded \u00b7 Flash and Strobe keep your manual levels.', 4200);
                   } catch (err) {
                       running = false;
                       showNotificationMessage('GHOST / OF ME could not be loaded: ' + err.message, 5000);
                       return;
                   }
-                  reveal().catch(() => {}).finally(() => { running = false; });
+                  running = false;
               });
           })();
 

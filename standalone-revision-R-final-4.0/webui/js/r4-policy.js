@@ -6,8 +6,12 @@
     const PLAYLIST_ID = /^[A-Za-z0-9_-]{1,128}$/;
     const YOUTUBE_HOSTS = Object.freeze(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com',
         'youtu.be', 'www.youtu.be']);
-    const LOCAL_AUDIO_EXT = /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|wma|aif|aiff|ac3|amr)$/;
-    const LOCAL_VIDEO_EXT = /\.(mp4|m4v|webm|mov|mkv|avi|wmv|asf|mpg|mpeg|ts|m2ts|mts|3gp|3g2|ogv)$/;
+    const mediaExtensions = Object.freeze({
+        audio: Object.freeze('mp3 m4a aac wav ogg oga opus flac wma aif aiff ac3 amr'.split(' ')),
+        video: Object.freeze('mp4 m4v webm mov mkv avi wmv asf mpg mpeg ts m2ts mts 3gp 3g2 ogv'.split(' '))
+    });
+    const LOCAL_AUDIO_EXT = new RegExp('\\.(' + mediaExtensions.audio.join('|') + ')$');
+    const LOCAL_VIDEO_EXT = new RegExp('\\.(' + mediaExtensions.video.join('|') + ')$');
     const MAX_USER_PRESETS = 500;
     const MAX_PRESET_NAME_CHARS = 80;
     const MAX_PRESET_EFFECTS = 128;
@@ -149,6 +153,7 @@
     }
 
     const policy = Object.freeze({
+        mediaExtensions,
         MAX_USER_PRESETS,
         MAX_PRESET_NAME_CHARS,
         MAX_PRESET_EFFECTS,

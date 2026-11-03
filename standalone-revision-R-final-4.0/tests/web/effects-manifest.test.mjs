@@ -100,7 +100,7 @@ test('the 250 LAB snapshots are unique, deep-frozen, flash-free and map onto reg
     }
 });
 
-test('the GHOST / OF ME easter egg uses registered voices and stays behind a flashing confirmation', () => {
+test('the GHOST / OF ME easter egg stays behind confirmation without automatically enabling Flash/Strobe', () => {
     const literal = /const GHOST_OF_ME = Object\.freeze\((\{.*\})\);/.exec(player);
     assert.ok(literal, 'GHOST_OF_ME literal not found');
     const preset = JSON.parse(literal[1]);
@@ -109,5 +109,6 @@ test('the GHOST / OF ME easter egg uses registered voices and stays behind a fla
     for (const name of Object.keys(preset.settings.sliderLocks)) {
         assert.ok(name === 'global' || profileNames.includes(name), name);
     }
-    assert.match(player, /window\.confirm\('GHOST \/ OF ME enables flash, strobe and continual randomization\./);
+    assert.match(player, /window\.confirm\('GHOST \/ OF ME enables intense effects and continual randomization\. Flash and Strobe keep your manual levels\./);
+    assert.doesNotMatch(player, /const flashText =|const reveal =/);
 });

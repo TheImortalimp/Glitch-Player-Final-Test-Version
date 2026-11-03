@@ -4,7 +4,7 @@ import { runInSandbox } from './harness.mjs';
 
 const HASH = 'a'.repeat(64);
 
-function loadBridge({ native = true, throwOnPost = false } = {}) {
+function loadBridge({ native = true, throwOnPost = false, document } = {}) {
     const posted = [];
     const listeners = [];
     const timers = new Map();
@@ -25,6 +25,7 @@ function loadBridge({ native = true, throwOnPost = false } = {}) {
     const window = native ? { chrome: { webview } } : {};
     runInSandbox('js/host-bridge.js', {
         window,
+        document,
         File,
         Blob,
         URL,
@@ -48,6 +49,25 @@ test('GlitchHost is frozen', () => {
     const { host } = loadBridge();
     assert.ok(Object.isFrozen(host));
     assert.equal(host.isNativeHost, true);
+});
+
+test('native window state is strictly validated before updating shield and fullscreen controls', () => {
+    const elements = new Map(), classes = new Set();
+    const document = {
+        body: { classList: { toggle(name, enabled) { if (enabled) classes.add(name); else classes.delete(name); } } },
+        getElementById(id) { if (!elements.has(id)) elements.set(id, {}); return elements.get(id); },
+        querySelectorAll() { return []; }
+    };
+    const bridge = loadBridge({ document });
+    assert.equal(elements.get('windowControls').hidden, false);
+    for (const bad of ['window:state|full,on,extra', 'window:state|other,on', 'window:state|full,ON']) bridge.deliver(bad);
+    assert.equal(classes.size, 0);
+    bridge.deliver('window:state|full,on');
+    assert.ok(classes.has('native-fullscreen'));
+    assert.equal(elements.get('windowShield').textContent, 'SHIELD: ON');
+    bridge.deliver('window:state|window,off');
+    assert.equal(classes.size, 0);
+    assert.equal(elements.get('windowShield').textContent, 'SHIELD: OFF');
 });
 
 test('outside the Windows host, conversion falls back to a blob URL and nothing is posted', async () => {

@@ -7,8 +7,11 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 38,910,081 bytes |
-| SHA-256 | `d0960d9694964d05fef2c475c5294b71c690953dcc6e6922fba5df5cf102426f` |
+| Size | 44,674,417 bytes |
+| SHA-256 | `0632d75531aa0b3b9c80cae870d9da157387cfc836c400acfd5cdae81b9ca1fb` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,091,974 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `20e6e0b6b0bcbb6ece861c220b11c1ceabe9dd2a945156baace27782c21ba7b1` |
+| Runtime | 244 files, 144,686,693 bytes, extracted to the per-user cache named by the CAB hash |
 | Signed | No |
 | Built | 2026-11-03 |
 
@@ -16,23 +19,56 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs both suites and stops if either fails. Both passed for the build above:
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **169 tests total**.
 
-- **83 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the Freeze Frame request IDs and the display refresh-rate message.
-- **63 Node web tests** (`tests\web`), covering:
+- **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
+- **72 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
   - The host guards: cursor guard wiring and page script, the deny-all permission handler, keeping playback out of Windows media controls, and the refresh-rate push.
   - Freeze Frame: the host-side capture and Save dialog, the hidden HUD while capturing, and the S key rules.
   - User locks against presets, the preset glide and Auto Glitch.
+  - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
+  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, reduced-motion gleam, native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
-The cursor guard host-guard tests were checked against deliberately broken copies of the code. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed.
+- **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 244 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
+
+The Release host also built with zero warnings and errors. The CAB launcher is compiled with warnings treated as errors.
+
+The cursor guard host-guard tests were checked against deliberately broken copies of the code in the earlier release work. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed.
 
 ## Verified on this machine
 
 **Final installer above**
+
+- Silent upgrade over the intermediate CAB installation exits 0. The installed layout is eight files: launcher, CAB, their hashes, notices/licenses and uninstaller. Its CAB hash matches the table above. The Start-menu shortcut and uninstall icon point to the installed [R] launcher.
+- The launcher starts the player from the matching verified runtime cache. Exactly one main player window is present.
+- Native UI Automation confirms the logo's complete media lists, the intermediate YouTube/local picker without the effects HUD, and the HUD appearing after playback. A generated silent WAV opens through the native picker; YouTube also reaches playback.
+- F11 enters fullscreen and Esc restores the window with WebView2 focused. Fullscreen originally failed in the embedded view; the WinForms WebView2 key event now routes the fixed window shortcuts to the host without enabling browser shortcuts. Alt+Enter in/out also passed on the corrected Release host immediately before packaging.
+- Native window/client bounds match, with no caption/border style. Maximize/restore and minimize work; hiding/showing the HUD also hides/restores the floating native controls.
+- Launcher `--refresh` reaches the existing window, asks for confirmation, and No retains the session while Yes returns to the logo and removes the playback HUD. Playback can then start again without a second main window.
+- Visible taskbar Refresh was checked with real mouse input. The auto-hide taskbar exists only on DISPLAY1, so the window was moved there first.
+  - Right-clicking the "Glitch Player R4" taskbar button, which shows the [R] icon, opens its Jump List with Tasks → Refresh.
+  - Clicking Refresh starts the installed launcher with `--refresh`. That process was observed, and the Jump List store records the same target and argument.
+  - The "Refresh Glitch Player" confirmation appears, owned by the player window, with No focused by default.
+  - No kept YouTube playing with the HUD. Yes returned to the logo with its full media lists and no HUD, in the same single player process, with the launcher still waiting. A third pass answered No again.
+- At 150% display scaling in the 1280x800 window, the logo's Choose Media button sits below the fold and is reached by scrolling.
+- WATCH / SOURCE displays the expected YouTube URL in a default-browser confirmation. Declining keeps the app on its own document.
+- The app and waiting launcher exit normally with code 0. No `host.log` was created.
+- Silent uninstall exits 0 and removes the installed folder, shortcut and uninstall entry. User data is retained.
+
+**Intermediate CAB builds and integrated-browser checks during this change**
+
+- Clean silent install, launcher startup and YouTube playback; confirming the source outlink hands it to Windows without navigating the app.
+- A USER test preset survives Refresh and is subsequently removed through its own Delete control; other presets are untouched.
+- Real mouse dragging moves the borderless window (-100,+50); invisible-corner resizing changes its dimensions (+80,+60).
+- The full bracketed [R] icon was rendered and visually inspected. The generated ICO contains nine sizes, 16 through 256 pixels.
+- Browser viewport checks at 480x320, 1000x800 and 1280x900 keep the logo reachable, without horizontal overflow or startup whole-app filtering.
+- Flash/Strobe stay at 0/0 through Auto Glitch and Randomize. Manual levels 0.12/0.08 survive automation and AUTO preset cycling; ZERO ALL returns them to 0/0. The test page was hidden during these checks to avoid displaying flashing effects.
+
+**Previous pre-CAB installer** (38,910,081 bytes, SHA-256 `d0960d9694964d05fef2c475c5294b71c690953dcc6e6922fba5df5cf102426f`; 83 host / 63 web tests)
 
 - Silent install (`/S`) exits 0 and installs 248 files under `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, with the uninstall entry.
 - The app starts, and the welcome screen and ENTER PLAYER work. The preset selector, file input, YouTube input and Start button are present (checked with UI Automation).
@@ -93,10 +129,10 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 
 - Code signing (not done), and SmartScreen behaviour on another machine.
 - The interactive (non-silent) installer and uninstaller pages, and the uninstaller's "delete data" path.
-- Fullscreen (F11, Alt+Enter, Esc), Ctrl+Alt+G, the capture shield button, window drag and resize, other DPI scales, and moving the window between displays while playing.
+- Ctrl+Alt+G, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
 - The registry layer of the cursor guard against a non-system pointer scheme.
 - Refusal of WebView2 registry policy overrides, and the Defender watchdog warnings.
-- The full local-media and preset flows on the final installer. These were verified only on the earlier builds listed above.
+- Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on this final CAB installer. Its local WAV/YouTube startup and window/Refresh checks are listed separately.
 - The governor's step-up limits (45% of the frame period, 400 frames, doubling up to 64 times after a relapse, retrying sooner below 70% of the earlier work) were chosen by reasoning and simulation, and checked only on this machine. The GPU-bound case was only simulated; it uses main-thread drawing time as a stand-in for the load.
 - A remaining ambiguity: if a 60 Hz board never shows a single 60 Hz frame for a display setup (overloaded from the start) and a 30 Hz display is attached, the governor still takes 30 fps as that display's pacing.
 - Windows 10, Windows N editions, other GPUs and refresh rates, and long sessions.
