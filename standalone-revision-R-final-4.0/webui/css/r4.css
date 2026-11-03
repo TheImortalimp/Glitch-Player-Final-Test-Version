@@ -16,7 +16,18 @@ body:not(.playback-on) #rev3-mark {
     display: none !important;
 }
 
-#windowDrag { position: fixed; inset: 0 0 auto; height: 32px; z-index: 21000; app-region: drag; }
+/* Native host: reserve a window bar so the window controls never cover the HUD's top row. */
+:root { --r4-bar: 0px; }
+body:has(> #windowControls:not([hidden])) { --r4-bar: 36px; }
+body:has(> #windowControls:not([hidden])) :is(#wired-btn, #nowPlayingHud, #rightRack, #sliderContainer,
+    #rev3-mark, #preset-toggle-btn, #preset-dropdown-container, .notification) {
+    translate: 0 var(--r4-bar);
+}
+#sliderContainer { max-height: calc(100dvh - 136px - var(--r4-bar)); }
+@media (max-width: 768px) { #sliderContainer { max-height: calc(100dvh - 108px - var(--r4-bar)); } }
+@media (max-height: 760px) { #sliderContainer { max-height: calc(100dvh - 110px - var(--r4-bar)); } }
+
+#windowDrag { position: fixed; inset: 0 0 auto; height: var(--r4-bar); z-index: 21000; app-region: drag; }
 .welcomeMark, #sourceHeading { app-region: drag; }
 #windowControls { position: fixed; top: 6px; right: 8px; z-index: 22000; display: flex; gap: 4px; app-region: no-drag; }
 #windowControls button {
@@ -66,7 +77,6 @@ body.ui-hidden #windowControls { visibility: hidden; }
 
 #sourceScreen > #ytInput,
 #sourceScreen > #startBtn,
-#sourceScreen > .suggested,
 #sourceScreen > #openFileWrap {
     position: relative;
     inset: auto;
@@ -85,11 +95,103 @@ body.ui-hidden #windowControls { visibility: hidden; }
 }
 
 #sourceScreen > #ytInput, #sourceScreen > #startBtn { padding: 12px; }
-#sourceScreen > .suggested { padding: 10px 12px; color: #acccd0; border: 1px solid #284149; border-radius: 6px; }
-#sourceScreen > .suggested:focus-visible { outline: 2px solid #f2d27e; outline-offset: 2px; }
 #sourceScreen > #openFileWrap { order: -1; margin-bottom: 6px; }
 #sourceScreen > #sourceHeading { order: -3; }
 #sourceScreen > #sourceHint { order: -2; }
+
+/* YouTube link tree: named cards in a responsive grid, never absolutely positioned. */
+#sourceScreen > #ytLinkTreeHeading {
+    position: static;
+    flex-shrink: 0;
+    width: min(660px, 100%);
+    box-sizing: border-box;
+    margin: 10px 0 0;
+    padding: 0 0 6px;
+    border-bottom: 1px solid #284149;
+    color: #7af7ff;
+    font: 700 0.72rem/1.4 'Courier New', monospace;
+    letter-spacing: 0.24em;
+    text-align: left;
+}
+
+#ytLinkTree {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    grid-auto-rows: 1fr;
+    gap: 10px;
+    flex-shrink: 0;
+    width: min(660px, 100%);
+}
+
+#ytLinkTree > .ytLink {
+    --link-accent: #7af7ff;
+    position: relative;
+    inset: auto;
+    transform: none;
+    z-index: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: auto;
+    min-width: 0;
+    min-height: 62px;
+    margin: 0;
+    padding: 10px 12px 10px 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    opacity: 1 !important;
+    color: #eaf4ff !important;
+    -webkit-text-fill-color: currentcolor;
+    background: rgba(7, 4, 20, 0.72) !important;
+    border: 1px solid #284149 !important;
+    border-left: 3px solid var(--link-accent) !important;
+    border-radius: 6px;
+    font-size: 1rem;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-align: left;
+    white-space: normal;
+    text-shadow: none;
+    filter: none;
+    animation: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    cursor: pointer;
+}
+
+#ytLinkTree > #suggestedVideo, #ytLinkTree > #suggestedVideo2 { --link-accent: #ffcc66; }
+#ytLinkTree > #suggestedPlaylist, #ytLinkTree > #suggestedDarksynth { --link-accent: #ff5570; }
+#ytLinkTree > #suggestedMoonlight { --link-accent: #eaf4ff; }
+#ytLinkTree > #suggestedFractals { --link-accent: #9dffc4; }
+#ytLinkTree > #suggestedNightCity { --link-accent: #dc143c; }
+#ytLinkTree > #Defcon1Video { --link-accent: #ff2bd6; }
+
+#ytLinkTree > .ytLink:hover,
+#ytLinkTree > .ytLink:focus-visible {
+    background: rgba(18, 30, 44, 0.92) !important;
+    border-color: #bba475 !important;
+    border-left-color: var(--link-accent) !important;
+}
+
+#ytLinkTree > .ytLink:focus-visible { outline: 2px solid #f2d27e; outline-offset: 2px; }
+
+#ytLinkTree .ytLinkName {
+    color: #eaf4ff;
+    font: 400 1.02rem/1.15 Impact, 'Arial Black', 'Franklin Gothic Heavy', sans-serif;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 8px rgba(122, 247, 255, 0.35);
+    overflow-wrap: anywhere;
+}
+
+#ytLinkTree > .ytLink:hover .ytLinkName,
+#ytLinkTree > .ytLink:focus-visible .ytLinkName { color: #fff3cc; }
+
+#ytLinkTree .ytLinkMeta {
+    color: #8fb3ba;
+    font: 0.72rem/1.35 'Courier New', monospace;
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
+}
 
 /* UI chrome stays steady; only explicitly chosen media/effects may flash. */
 .wired-button, #ghostProtocolBtn, #vsyncScanBtn, #preset-toggle-btn,

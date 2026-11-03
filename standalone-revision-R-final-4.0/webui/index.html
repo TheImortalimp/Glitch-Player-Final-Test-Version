@@ -46,7 +46,7 @@
         </div>
     </section>
     <div id="moon-veil" aria-hidden="true"></div>
-    <div id="rev3-mark" aria-hidden="true">REVISION 3 &nbsp;//&nbsp; HARD-LIGHT · MOONLIGHT</div>
+    <div id="rev3-mark" aria-hidden="true">REVISION 4 &nbsp;//&nbsp; HARD LIGHT &nbsp;//&nbsp; MOONLIGHT</div>
     <div id="effects-wrapper">
         <img id="localArt" alt="Album art">
         <video id="video" playsinline></video>
@@ -111,16 +111,19 @@
     <p id="sourceHint">YouTube link tree or local audio/video. Effects controls open after playback starts.</p>
     <input id="ytInput" type="text" aria-label="YouTube video or playlist" placeholder="Paste YouTube URL or 11-character video ID" autocomplete="off" spellcheck="false">
     <button id="startBtn">Start and Play</button>
-    <h2 id="suggestedVideo" class="suggested">SUGGESTED VIDEO : https://www.youtube.com/watch?v=gopYmb38DgM</h2>
-    <h2 id="suggestedVideo3" class="suggested">SUGGESTED LINK : https://www.youtube.com/watch?v=uvSXL6ypLlw</h2>
-    <h2 id="suggestedVideo2" class="suggested">SUGGESTED *.* : https://www.youtube.com/watch?v=8o6bdTOhIyE</h2>
-    <h2 id="suggestedYoutube" class="suggested">SUGGESTED YOUTUBE : https://www.youtube.com/watch?v=QsUmvGkXhnk</h2>
-    <h2 id="suggestedPlaylist" class="suggested">SUGGESTED PLAYLIST : https://www.youtube.com/watch?v=RgFaK6ZQifE&amp;list=RDEMWUbu7UjvrEYUSE4m8ATOcw&amp;start_radio=1</h2>
-    <h2 id="suggestedMoonlight" class="suggested">MOONLIGHT</h2>
-    <h2 id="suggestedFractals" class="suggested">§§3+ Hours of Trippy Fractals§§</h2>
-    <h2 id="suggestedNightCity" class="suggested">Night City Walk ✧ Cyberpunk Neon Rain Ambience | Dreamy Synthwave Vibes | Sleep ✧ Chill ✧ Relax</h2>
-    <h2 id="suggestedDarksynth" class="suggested" title="Harpazz Mix — Checkmate [extreme slowed] · @HarpazzOfficial">DARKSYNTH RADIO</h2>
-    <h2 id="Defcon1Video">DEFCON 1</h2>
+    <h2 id="ytLinkTreeHeading">YOUTUBE LINK TREE</h2>
+    <div id="ytLinkTree" role="group" aria-labelledby="ytLinkTreeHeading">
+        <button type="button" id="suggestedVideo" class="suggested ytLink" title="Terminal 1987 Never Closed — 24/7 Synthwave Dev Stream"><span class="ytLinkName">TERMINAL 1987</span><span class="ytLinkMeta">Devs FM · synthwave dev stream</span></button>
+        <button type="button" id="suggestedVideo3" class="suggested ytLink" title="The Glitch Mob - Revisions (Full Album Visual)"><span class="ytLinkName">REVISIONS</span><span class="ytLinkMeta">The Glitch Mob · full album visual</span></button>
+        <button type="button" id="suggestedVideo2" class="suggested ytLink" title="Cyberpunk Coding Mix - Utopia98 GhostNet.exe [v0]"><span class="ytLinkName">GHOSTNET.EXE</span><span class="ytLinkMeta">Devs FM · cyberpunk coding mix</span></button>
+        <button type="button" id="suggestedYoutube" class="suggested ytLink" title="ABROXIS - GLITCH SET @ Hypnotized Popup"><span class="ytLinkName">GLITCH SET</span><span class="ytLinkMeta">ABROXIS · live at Hypnotized Popup</span></button>
+        <button type="button" id="suggestedPlaylist" class="suggested ytLink" title="Sewerslvt artist radio playlist (loops)"><span class="ytLinkName">SEWERSLVT RADIO</span><span class="ytLinkMeta">Sewerslvt · artist radio playlist</span></button>
+        <button type="button" id="suggestedMoonlight" class="suggested ytLink" title="Apelislin - Moonlight Glass radio playlist (loops)"><span class="ytLinkName">MOONLIGHT</span><span class="ytLinkMeta">Apelislin · Moonlight Glass radio playlist</span></button>
+        <button type="button" id="suggestedFractals" class="suggested ytLink" title="Trippy Everything - Trippy Fractal Artwork, 4K VJ loop, no audio"><span class="ytLinkName">TRIPPY FRACTALS</span><span class="ytLinkMeta">Trippy Everything · 4K VJ loop, no audio</span></button>
+        <button type="button" id="suggestedNightCity" class="suggested ytLink" title="Night City Walk ✧ Cyberpunk Neon Rain Ambience | Dreamy Synthwave Vibes"><span class="ytLinkName">NIGHT CITY WALK</span><span class="ytLinkMeta">Epix Ambience · neon rain synthwave ambience</span></button>
+        <button type="button" id="suggestedDarksynth" class="suggested ytLink" title="Harpazz - Checkmate [extreme slowed] radio playlist (loops)"><span class="ytLinkName">DARKSYNTH RADIO</span><span class="ytLinkMeta">Harpazz · Checkmate [extreme slowed] radio playlist</span></button>
+        <button type="button" id="Defcon1Video" class="suggested ytLink" title="Titan Slayer - Defcon One"><span class="ytLinkName">DEFCON 1</span><span class="ytLinkMeta">Titan Slayer · Defcon One</span></button>
+    </div>
     <div id="openFileWrap">
         <span id="openFileBtn">Open Local Media</span>
         <input type="file" id="fileInput" accept="audio/*,video/*,.mkv,.avi,.wmv,.asf,.wma,.mov,.flac,.opus,.aac,.amr,.ts,.m2ts,.mts,.mpg,.mpeg,.3gp,.3g2,.aiff,.aif,.ac3,.m4v,.m4a,.mp3,.mp4,.wav,.ogg,.oga,.ogv,.webm" title="Select a local audio or video file">

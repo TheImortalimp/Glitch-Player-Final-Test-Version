@@ -7,11 +7,11 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,674,417 bytes |
-| SHA-256 | `0632d75531aa0b3b9c80cae870d9da157387cfc836c400acfd5cdae81b9ca1fb` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,091,974 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `20e6e0b6b0bcbb6ece861c220b11c1ceabe9dd2a945156baace27782c21ba7b1` |
-| Runtime | 244 files, 144,686,693 bytes, extracted to the per-user cache named by the CAB hash |
+| Size | 44,704,353 bytes |
+| SHA-256 | `6a8a818cece26feed6e62bd2f0c1b53ea1d888d4831ae273094abcce2de271c3` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,114,212 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `bdb86ae9a5355993527dd39482a84d62a4aaba43f2ce25b3e26c5dde88c6cd12` |
+| Runtime | 244 files, 144,691,668 bytes, extracted to the per-user cache named by the CAB hash |
 | Signed | No |
 | Built | 2026-11-03 |
 
@@ -19,10 +19,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **169 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **170 tests total**.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
-- **72 Node web tests** (`tests\web`), covering:
+- **73 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
@@ -30,6 +30,7 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
   - Freeze Frame: the host-side capture and Save dialog, the hidden HUD while capturing, and the S key rules.
   - User locks against presets, the preset glide and Auto Glitch.
   - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
+  - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, and the native window bar that moves the HUD's top row below the floating window controls.
   - Manual-only Flash/Strobe across presets and automation, suspended startup effects, reduced-motion gleam, native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
@@ -41,9 +42,21 @@ The cursor guard host-guard tests were checked against deliberately broken copie
 
 ## Verified on this machine
 
-**Final installer above**
+**Current installer above (window bar, named link tree, REVISION 4 mark)**
 
-- Silent upgrade over the intermediate CAB installation exits 0. The installed layout is eight files: launcher, CAB, their hashes, notices/licenses and uninstaller. Its CAB hash matches the table above. The Start-menu shortcut and uninstall icon point to the installed [R] launcher.
+This build changes only `webui\index.html`, `webui\css\r4.css` and a web test from the previous installer (`0632d755…`); the host and launcher code are unchanged.
+
+- Silent install exits 0, and the launcher starts the player from the `bdb86ae9…` runtime cache.
+- Choose Media shows the ten named link-tree cards (TERMINAL 1987 … DEFCON 1) in two even columns below the URL box, with no overlap. The window was 1280x800 at 100% scale.
+- With YouTube playing, the floating controls (SHIELD … X) occupy y 6–31 in the window. Auto Glitch starts at y 48 and Show Presets at y 36, below the 36 px drag bar.
+- Real mouse clicks 4 px below the top edge of Auto Glitch toggled it ON and back OFF. Show Presets opened and closed on repeated real clicks.
+- The floating X closed the app. The player and launcher exited, and no `host.log` was created.
+- Silent uninstall exits 0 and removes the installed folder, uninstall entry and Start-menu entry. User data is retained.
+- In the browser preview, the link tree has no overlaps or horizontal overflow at 1280x800 (two columns) or 480 px wide (one column). Night City Walk's text is visible. With native mode simulated, the window controls don't intersect the HUD's top row at 1280, 800 or 480 px wide.
+
+**Previous installer (`0632d755…`)**
+
+- Silent upgrade over the intermediate CAB installation exits 0. The installed layout is eight files: launcher, CAB, their hashes, notices/licenses and uninstaller. Its CAB hash matched that build (`20e6e0b6…`). The Start-menu shortcut and uninstall icon point to the installed [R] launcher.
 - The launcher starts the player from the matching verified runtime cache. Exactly one main player window is present.
 - Native UI Automation confirms the logo's complete media lists, the intermediate YouTube/local picker without the effects HUD, and the HUD appearing after playback. A generated silent WAV opens through the native picker; YouTube also reaches playback.
 - F11 enters fullscreen and Esc restores the window with WebView2 focused. Fullscreen originally failed in the embedded view; the WinForms WebView2 key event now routes the fixed window shortcuts to the host without enabling browser shortcuts. Alt+Enter in/out also passed on the corrected Release host immediately before packaging.
@@ -132,7 +145,8 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 - Ctrl+Alt+G, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
 - The registry layer of the cursor guard against a non-system pointer scheme.
 - Refusal of WebView2 registry policy overrides, and the Defender watchdog warnings.
-- Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on this final CAB installer. Its local WAV/YouTube startup and window/Refresh checks are listed separately.
+- Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on the two CAB installers. Their local WAV/YouTube startup, window, Refresh and window-bar checks are listed separately.
+- The window bar and named link tree on the native host at 150% scale, in fullscreen and with the HUD hidden. The current installer was checked only windowed at 100% scale. The local file picker and the remaining link cards were not started on it.
 - The governor's step-up limits (45% of the frame period, 400 frames, doubling up to 64 times after a relapse, retrying sooner below 70% of the earlier work) were chosen by reasoning and simulation, and checked only on this machine. The GPU-bound case was only simulated; it uses main-thread drawing time as a stand-in for the load.
 - A remaining ambiguity: if a 60 Hz board never shows a single 60 Hz frame for a display setup (overloaded from the start) and a 30 Hz display is attached, the governor still takes 30 fps as that display's pacing.
 - Windows 10, Windows N editions, other GPUs and refresh rates, and long sessions.

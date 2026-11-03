@@ -8,11 +8,11 @@ The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATU
 
 ## Starting and controlling the window
 
-The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the YouTube link tree and local file picker, not the effects HUD. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
+The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the local file picker and the YouTube link tree, not the effects HUD. The link tree is a grid of named buttons (for example TERMINAL 1987, REVISIONS, MOONLIGHT, DEFCON 1), each with an artist/channel line and the full title as a tooltip. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
 
 Effects automation and whole-app filters wait until playback. The logo has a slow, localized gleam rather than a full-panel flash; reduced-motion disables it. Rapid decorative UI flicker is disabled.
 
-The window has no native/custom title strip or visible border. Drag the empty top area, logo or source heading; resize at the invisible edges and corners. Floating controls provide shield, refresh, fullscreen, minimize, maximize/restore and close. The full **[R]** icon is embedded in the player, launcher, installer and uninstaller.
+The window has no native/custom title strip or visible border. Drag the empty top area, logo or source heading; resize at the invisible edges and corners. Floating controls provide shield, refresh, fullscreen, minimize, maximize/restore and close. They sit in a 36 px top bar of their own, so the HUD's top row (Auto Glitch, Show Presets, Now Playing and the faint REVISION 4 // HARD LIGHT // MOONLIGHT mark) starts below them. The full **[R]** icon is embedded in the player, launcher, installer and uninstaller.
 
 Right-click the running app's Windows taskbar icon for **Refresh** (also available in the floating controls). It asks before stopping media and returning to the logo; No is the default. Saved USER presets remain; unsaved levels reset, including manual Flash/Strobe levels. WATCH / SOURCE and author links ask before opening in the Windows default browser, never in the app.
 

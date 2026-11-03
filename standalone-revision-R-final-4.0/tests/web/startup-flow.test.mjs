@@ -150,3 +150,22 @@ test('fullscreen keys reach the native host with WebView2 focused without enabli
     assert.match(main, /keyData == Keys\.Escape && fullScreen/);
     assert.match(main, /BeginInvoke\(\(\) =>\s*\{\s*if \(toggle\) ToggleFullScreen\(\);\s*else ExitFullScreen\(\);/);
 });
+
+test('the YouTube link tree is named buttons in one grid, and the native window bar clears the HUD', () => {
+    const css = readWeb('css/r4.css');
+    const map = player.slice(player.indexOf('const SUGGESTED = ['), player.indexOf('];', player.indexOf('const SUGGESTED = [')));
+    const ids = [...map.matchAll(/\['([A-Za-z0-9]+)', 'https:\/\/www\.youtube\.com\//g)].map((m) => m[1]);
+    assert.equal(ids.length, 10);
+    const tree = /<div id="ytLinkTree"[^>]*>([\s\S]*?)\n\s*<\/div>/.exec(html)[1];
+    for (const id of ids) {
+        const card = new RegExp(`<button type="button" id="${id}" class="suggested ytLink" title="[^"]+">\\s*<span class="ytLinkName">([^<]+)</span>\\s*<span class="ytLinkMeta">[^<]+</span>\\s*</button>`).exec(tree);
+        assert.ok(card, id);
+        assert.match(card[1], /^[A-Z0-9 .]+$/, id);
+    }
+    assert.equal((tree.match(/<button /g) || []).length, ids.length);
+    assert.doesNotMatch(tree, /https?:/);
+    assert.match(html, /id="rev3-mark"[^>]*>REVISION 4 &nbsp;\/\/&nbsp; HARD LIGHT &nbsp;\/\/&nbsp; MOONLIGHT</);
+    assert.match(css, /body:has\(> #windowControls:not\(\[hidden\]\)\) \{ --r4-bar: 36px; \}/);
+    assert.match(css, /:is\(#wired-btn, #nowPlayingHud, #rightRack, #sliderContainer,\s+#rev3-mark, #preset-toggle-btn, #preset-dropdown-container, \.notification\)\s*\{\s*translate: 0 var\(--r4-bar\);/);
+    assert.match(css, /#windowDrag \{[^}]*height: var\(--r4-bar\);/);
+});
