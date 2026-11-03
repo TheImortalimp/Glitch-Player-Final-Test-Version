@@ -920,6 +920,7 @@
               if (ytFrame) ytFrame.style.display = 'block';
               showNotificationMessage('Loading YouTube. Effects controls open when playback starts.', 5000);
               ensureOverlayStack();
+              return true;
           }
 
           let activeLoopVideoId = null;
@@ -8158,8 +8159,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const go = (e) => {
                   if (e) { e.preventDefault();
                       e.stopPropagation(); }
-                  if (isHttpOrigin()) startPlayback(FADE_WHITE_URL, true);
-                  else activatePlaybackUi('canvas');
+                  // The HUD still waits for confirmed playback; randomization is only armed once loading starts.
+                  if (!startPlayback(FADE_WHITE_URL, true)) return;
                   if (!isContinuallyRandomizing) {
                       isContinuallyRandomizing = true;
                       const btn = $('continualRandomizeBtn');

@@ -7,11 +7,11 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,704,353 bytes |
-| SHA-256 | `6a8a818cece26feed6e62bd2f0c1b53ea1d888d4831ae273094abcce2de271c3` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,114,212 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `bdb86ae9a5355993527dd39482a84d62a4aaba43f2ce25b3e26c5dde88c6cd12` |
-| Runtime | 244 files, 144,691,668 bytes, extracted to the per-user cache named by the CAB hash |
+| Size | 44,705,544 bytes |
+| SHA-256 | `c850b357316fff89749a7e8cb29a2800befaf2c604213452d0e5b66817a70f61` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes) plus `payload.cab` (44,119,902 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `c59ba2afc3b659d74a926cc5d205875e00d91c3aef4c8a86fcb8d5b63cd6d437` |
+| Runtime | 244 files, 144,692,541 bytes, extracted to the per-user cache named by the CAB hash |
 | Signed | No |
 | Built | 2026-11-03 |
 
@@ -19,10 +19,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **170 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **171 tests total**.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
-- **73 Node web tests** (`tests\web`), covering:
+- **74 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
@@ -30,8 +30,8 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
   - Freeze Frame: the host-side capture and Save dialog, the hidden HUD while capturing, and the S key rules.
   - User locks against presets, the preset glide and Auto Glitch.
   - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
-  - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, and the native window bar that moves the HUD's top row below the floating window controls.
-  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, reduced-motion gleam, native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
+  - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text, including the restored 3.0 WHITE 2 BLACK 2 WHITE fade link, which waits for YouTube playback like the others and arms Continual Randomization only once loading starts. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, the native window bar that moves the HUD's top row below the floating window controls, and the logo/source screens' scrollbars starting below that bar.
+  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen (off with reduced motion), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
 - **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 244 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
@@ -42,7 +42,19 @@ The cursor guard host-guard tests were checked against deliberately broken copie
 
 ## Verified on this machine
 
-**Current installer above (window bar, named link tree, REVISION 4 mark)**
+**Current installer above (restored fade link, logo gleam, scrollbars below the window bar)**
+
+This build changes only `webui\index.html`, `webui\js\glitch-player.js`, `webui\css\welcome-screen.css`, `webui\css\r4.css` and a web test from the previous installer (`6a8a818c…`); the host and launcher code are unchanged.
+
+- Silent install exits 0, and the launcher starts the player from the `c59ba2af…` runtime cache. The window was 1280x800 on the 100%-scale display.
+- The logo screen shows the full-screen diagonal gold scan line again, and the light sheen sweeps across the whole panel. In bursts of fourteen screenshots about 0.5 s apart, the panel brightens once or twice per burst, matching the 6 s sheen cycle (checked on this installer and the previous intermediate build).
+- On an intermediate build of this change, at 150% scale, the floating X covered the top of the logo screen's scrollbar. On this installer, the logo and source screens' scrollbars start below the floating controls.
+- Choose Media (real click) shows eleven named cards, with WHITE 2 BLACK 2 WHITE between NIGHT CITY WALK and DARKSYNTH RADIO and its tooltip "WHITE TO BLACK TO WHITE (fade) — loops with Continual Randomization".
+- A real click on WHITE 2 BLACK 2 WHITE played River Lyle's "WHITE TO BLACK TO WHITE (fade)" (`kCP2xZvhJk0`; Now Playing: 0:03 / 0:45, PLAYING, LOOP ON). The HUD opened about 3 s after the click, once playback was confirmed. Flash stayed at 0, and Continual Randomization showed ON. The floating controls didn't cover Auto Glitch.
+- The floating X closed the app with no `host.log`. Silent uninstall exits 0 and removes the installed folder. As before, the per-user runtime cache under `%LOCALAPPDATA%\Glitch-Player-R4\runtime` is kept.
+- In the browser preview, the logo's gold scan line is `position: fixed`, so the 150%-wide rotated line adds no scrollbars. The link tree has eleven 76 px cards with no overlaps, clipping or horizontal overflow at 1280x800, and 62 px cards in one column at 480 px wide. With native mode simulated, both start screens' scroll tracks begin at y 36, below the controls (bottom y 30). The preview browser itself can't decode that YouTube video, so playback there was checked natively only.
+
+**Previous installer (`6a8a818c…`; window bar, named link tree, REVISION 4 mark)**
 
 This build changes only `webui\index.html`, `webui\css\r4.css` and a web test from the previous installer (`0632d755…`); the host and launcher code are unchanged.
 
@@ -146,7 +158,7 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 - The registry layer of the cursor guard against a non-system pointer scheme.
 - Refusal of WebView2 registry policy overrides, and the Defender watchdog warnings.
 - Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on the two CAB installers. Their local WAV/YouTube startup, window, Refresh and window-bar checks are listed separately.
-- The window bar and named link tree on the native host at 150% scale, in fullscreen and with the HUD hidden. The current installer was checked only windowed at 100% scale. The local file picker and the remaining link cards were not started on it.
+- The window bar, named link tree, restored fade link and logo gleam on the native host at 150% scale, in fullscreen and with the HUD hidden. The current installer was checked only windowed at 100% scale (the scrollbar overlap was seen at 150% on an intermediate build, and its fix was checked natively at 100% and in the browser). The local file picker and the remaining link cards were not started on it.
 - The governor's step-up limits (45% of the frame period, 400 frames, doubling up to 64 times after a relapse, retrying sooner below 70% of the earlier work) were chosen by reasoning and simulation, and checked only on this machine. The GPU-bound case was only simulated; it uses main-thread drawing time as a stand-in for the load.
 - A remaining ambiguity: if a 60 Hz board never shows a single 60 Hz frame for a display setup (overloaded from the start) and a 30 Hz display is attached, the governor still takes 30 fps as that display's pacing.
 - Windows 10, Windows N editions, other GPUs and refresh rates, and long sessions.

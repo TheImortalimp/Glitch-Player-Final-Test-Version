@@ -28,6 +28,12 @@ body:has(> #windowControls:not([hidden])) :is(#wired-btn, #nowPlayingHud, #right
 @media (max-height: 760px) { #sliderContainer { max-height: calc(100dvh - 110px - var(--r4-bar)); } }
 
 #windowDrag { position: fixed; inset: 0 0 auto; height: var(--r4-bar); z-index: 21000; app-region: drag; }
+/* Scrollbars start below the window bar; the background still paints under the transparent border. */
+body:has(> #windowControls:not([hidden])) :is(#welcomeScreen, #sourceScreen) {
+    border-top: var(--r4-bar) solid transparent;
+    background-origin: border-box;
+}
+body:has(> #windowControls:not([hidden])) #sourceScreen { padding-top: calc(52px - var(--r4-bar)); }
 .welcomeMark, #sourceHeading { app-region: drag; }
 #windowControls { position: fixed; top: 6px; right: 8px; z-index: 22000; display: flex; gap: 4px; app-region: no-drag; }
 #windowControls button {
@@ -164,6 +170,7 @@ body.ui-hidden #windowControls { visibility: hidden; }
 #ytLinkTree > #suggestedMoonlight { --link-accent: #eaf4ff; }
 #ytLinkTree > #suggestedFractals { --link-accent: #9dffc4; }
 #ytLinkTree > #suggestedNightCity { --link-accent: #dc143c; }
+#ytLinkTree > #testCanvas { --link-accent: #f5f6fa; }
 #ytLinkTree > #Defcon1Video { --link-accent: #ff2bd6; }
 
 #ytLinkTree > .ytLink:hover,

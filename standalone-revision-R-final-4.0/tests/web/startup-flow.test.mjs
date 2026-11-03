@@ -53,7 +53,17 @@ test('logo entry opens source selection, not the HUD; startup effect controls ar
     assert.equal(elements.get('sliderContainer').inert, true);
     assert.ok(classes.has('welcome-dismissed'));
     assert.ok(!classes.has('playback-on'));
-    assert.doesNotMatch(html, /id="testCanvas"/);
+});
+
+test('the restored Fade W2B2W link waits for YouTube playback before the HUD or randomization', () => {
+    assert.match(html, /<button type="button" id="testCanvas" class="suggested ytLink"/);
+    assert.match(player, /const FADE_WHITE_URL = 'https:\/\/www\.youtube\.com\/watch\?v=kCP2xZvhJk0';/);
+    const start = player.indexOf('(function bindTestCanvas()');
+    const bind = player.slice(start, player.indexOf('})();', start));
+    assert.match(bind, /if \(!startPlayback\(FADE_WHITE_URL, true\)\) return;/);
+    assert.doesNotMatch(bind, /activatePlaybackUi\(/);
+    assert.match(bind, /if \(automationHeld\(name\)\) continue;/);
+    assert.match(fn('startPlayback'), /ensureOverlayStack\(\);\s*return true;\s*\}$/);
 });
 
 test('YouTube opens the HUD on confirmed playing, not on link submission or stale player events', () => {
@@ -79,9 +89,11 @@ test('YouTube opens the HUD on confirmed playing, not on link submission or stal
 test('effects work and whole-app filters wait until media starts, while display cadence still warms up', () => {
     assert.match(fn('frame'), /if \(!document\.body\.classList\.contains\('playback-on'\)\) \{\s*noteFrameCadence\(dtMs\);\s*return;/);
     assert.match(fn('applyMasterFilters'), /if \(!document\.body\.classList\.contains\('playback-on'\)\) \{\s*document\.documentElement\.style\.filter = '';/);
-    assert.match(readWeb('css/welcome-screen.css'), /@media \(prefers-reduced-motion: reduce\)/);
-    assert.match(readWeb('css/welcome-screen.css'), /animation: logo-gleam 10s/);
-    assert.doesNotMatch(readWeb('css/welcome-screen.css'), /panel-sheen|gold-scan/);
+    const welcome = readWeb('css/welcome-screen.css');
+    assert.match(welcome, /#welcomeScreen::before \{\s*position: fixed;[^}]*width: 150%;[^}]*animation: gold-scan 7s ease-in-out infinite;/);
+    assert.match(welcome, /\.welcomePanel::before \{[^}]*animation: panel-sheen 6s ease-in-out infinite;/);
+    assert.match(welcome, /@media \(prefers-reduced-motion: reduce\) \{\s*#welcomeScreen::before,\s*\.welcomePanel::before \{ animation: none; \}/);
+    assert.doesNotMatch(welcome, /logo-gleam/);
 });
 
 test('local source readiness waits for actual playback and reports decoding / play failures', async () => {
@@ -156,6 +168,7 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
     const map = player.slice(player.indexOf('const SUGGESTED = ['), player.indexOf('];', player.indexOf('const SUGGESTED = [')));
     const ids = [...map.matchAll(/\['([A-Za-z0-9]+)', 'https:\/\/www\.youtube\.com\//g)].map((m) => m[1]);
     assert.equal(ids.length, 10);
+    ids.push('testCanvas');
     const tree = /<div id="ytLinkTree"[^>]*>([\s\S]*?)\n\s*<\/div>/.exec(html)[1];
     for (const id of ids) {
         const card = new RegExp(`<button type="button" id="${id}" class="suggested ytLink" title="[^"]+">\\s*<span class="ytLinkName">([^<]+)</span>\\s*<span class="ytLinkMeta">[^<]+</span>\\s*</button>`).exec(tree);
@@ -168,4 +181,5 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
     assert.match(css, /body:has\(> #windowControls:not\(\[hidden\]\)\) \{ --r4-bar: 36px; \}/);
     assert.match(css, /:is\(#wired-btn, #nowPlayingHud, #rightRack, #sliderContainer,\s+#rev3-mark, #preset-toggle-btn, #preset-dropdown-container, \.notification\)\s*\{\s*translate: 0 var\(--r4-bar\);/);
     assert.match(css, /#windowDrag \{[^}]*height: var\(--r4-bar\);/);
+    assert.match(css, /body:has\(> #windowControls:not\(\[hidden\]\)\) :is\(#welcomeScreen, #sourceScreen\) \{\s*border-top: var\(--r4-bar\) solid transparent;\s*background-origin: border-box;\s*\}/);
 });

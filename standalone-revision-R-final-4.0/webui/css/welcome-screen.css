@@ -20,12 +20,15 @@
 }
 
 #welcomeScreen::before {
-  width: 100%;
-  top: 24%;
+  position: fixed;
+  top: 50%;
+  left: -25%;
+  width: 150%;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 222, 130, 0.7), transparent);
   box-shadow: 0 0 28px rgba(255, 195, 72, 0.55);
-  opacity: 0.18;
+  transform: rotate(-18deg) translateY(-18vh);
+  animation: gold-scan 7s ease-in-out infinite;
 }
 
 #welcomeScreen::after {
@@ -56,21 +59,17 @@
   text-align: center;
 }
 
-.welcomeMark::after {
+.welcomePanel::before {
   position: absolute;
-  inset: -20% -50%;
+  inset: 0;
   content: '';
-  background: linear-gradient(110deg, transparent 40%, rgba(255, 248, 211, 0.24) 49%, transparent 58%);
-  transform: translateX(-110%);
-  animation: logo-gleam 10s ease-in-out infinite;
-  mix-blend-mode: screen;
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 248, 211, 0.16) 38%, transparent 49%);
+  transform: translateX(-120%);
+  animation: panel-sheen 6s ease-in-out infinite;
   pointer-events: none;
 }
 
 .welcomeMark {
-  position: relative;
-  overflow: hidden;
-  padding: 8px 12px;
   flex-shrink: 0;
   color: #fff2bd;
   font-family: Georgia, 'Times New Roman', serif;
@@ -119,10 +118,14 @@
 .welcomeStatus { color: #9e8c65; font-size: 0.58rem; }
 .statusDot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #dca72f; box-shadow: 0 0 10px #f5c85f; }
 
-@keyframes logo-gleam {
-  0%, 70% { transform: translateX(-110%); opacity: 0; }
-  76% { opacity: 1; }
-  94%, 100% { transform: translateX(110%); opacity: 0; }
+@keyframes panel-sheen {
+  0%, 35% { transform: translateX(-120%); }
+  65%, 100% { transform: translateX(120%); }
+}
+
+@keyframes gold-scan {
+  0%, 100% { opacity: 0; }
+  30%, 70% { opacity: 0.8; }
 }
 
 @media (max-width: 560px) {
@@ -132,5 +135,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .welcomeMark::after { animation: none; opacity: 0; }
+  #welcomeScreen::before,
+  .welcomePanel::before { animation: none; }
 }
