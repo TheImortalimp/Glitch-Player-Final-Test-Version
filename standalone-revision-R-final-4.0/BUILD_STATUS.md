@@ -8,7 +8,26 @@ This file records what was actually built and tested, and what hasn't been teste
 (96 xUnit host tests, 175 Node web tests - new: the untied-voices and safe-B&W guards - and 1 CAB integration test).
 The build's **Defender guard** scanned the installer and working package: no threats.
 
-## Current build (4.2.4, installer flow redone)
+## Current build (4.2.4, silent update 2 - R3 ASCII)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.2.4-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,696,735 bytes |
+| SHA-256 | `30056151623d8a6a4203100a59d55790053e743aa28c4f37f05052bf63a67e07` |
+| CAB SHA-256 | `9093f045ef67a10e432f9bbb80d6b982f48a9bc16daab15a09a3a663d5771b29` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.2.4` (replaced asset, same name) |
+| Signed | No |
+| Built | 2026-11-04 |
+
+This silent update carries the redone installer flow (no truncated titles, install-folder page, Defender guard
+rails) and reworks only the R3 ASCII voice: the two burst types are totally separated (one face at a time), the
+soothing small stacks lead and the wild 006 scatter only strikes at 90-100% of the slider, stack placement is
+lane-kept against doubled rows, and the voice's peak lifts to [0.18, 0.72]. **276 tests total**
+(96 host, 179 web - new: `r3-ascii-rotor.test.mjs` - 1 CAB integration), Defender guard clean.
+
+## Previous current build (4.2.4, installer flow redone)
 
 | Item | Value |
 | --- | --- |

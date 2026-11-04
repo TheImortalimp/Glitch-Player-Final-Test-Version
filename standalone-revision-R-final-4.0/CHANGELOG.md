@@ -31,6 +31,31 @@ The `RELEASE_4.2.4` installer asset was replaced by a build with a redone instal
 - **Flow redone:** welcome (what the installer does and the flow ahead) -> installer notices -> licence -> install-folder page (new; explains normalisation and that your data lives elsewhere) -> install -> finish (run / desktop-shortcut options, signing and photosensitivity reminders).
 - **Defender guard rails in the installer:** after copying everything (launcher, CAB, notices, uninstaller), Setup locates `MpCmdRun.exe` (stock path or the newest Defender Platform folder) and runs a custom scan over the installed folder. Any reported threat rolls the install back (guarded by the own-folder rule) and aborts Setup; a machine without Defender gets a logged notice. Naming and registry entries now carry `Final Confluence 4.2.4`.
 
+### Silent update 2 - 2026-11-04 (replacement build, version stays 4.2.4) - R3 ASCII sussed out
+
+The `RELEASE_4.2.4` installer asset was replaced again, same name; only the R3 ASCII voice changed.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.2.4-x64-setup.exe`, 44,696,735 bytes |
+| SHA-256 | `30056151623d8a6a4203100a59d55790053e743aa28c4f37f05052bf63a67e07` |
+| CAB payload SHA-256 | `9093f045ef67a10e432f9bbb80d6b982f48a9bc16daab15a09a3a663d5771b29` |
+| Signed | No. Windows SmartScreen may warn. |
+
+- **The two burst types are totally separated.** The R3 ASCII style rotor's faces no longer crossfade on screen:
+  each face owns its own half of the rotor weight, so a frame never mixes the small matrix stacks with the 006
+  full-grid scatter ("split bursts of different types").
+- **The soothing small ASCII leads.** The voice now opens and resets on the small-stack face, which dwells ~5.2-10 s
+  with gentle 0.22 s eases, while the wilder 006 scatter only strikes for ~1.2-2.4 s.
+- **Split along the slider too:** below 90% the voice stays entirely on the soothing small stacks; only at
+  90-100% may the rotor strike the wilder, flurrier 006 scatter, whose glyphs grow larger the deeper the slider
+  sits in that band.
+- **No double table rows:** stack placement is lane-kept - a spot that would double another stack's rows is
+  re-rolled (up to six tries).
+- **Better effects:** the R3 ASCII blend profile peak lifts from [0.14, 0.60] to [0.18, 0.72] and its rate from
+  0.12 to 0.14, so randomization gives the voice more presence.
+- Tests: 179 web tests pass (new: `r3-ascii-rotor.test.mjs`).
+
 ## 4.1.3 - 2026-11-04 (GitHub release `RELEASE_4.1.3`) - Strands
 
 - **Effect cancellation.** A slider dragged to zero now CANCELS its effect, and ZERO ALL cancels every effect: a cancelled voice can never be started by any automation - not by Continual Randomization, not by Auto Glitch's unpark, not by an aesthetic burst (in any phase). Only the user wakes it: raising its slider, applying a preset, Randomize All, or picking a tuned voice pair. The lights are not latched - their confirmation-gated system already owns their stopping rules.

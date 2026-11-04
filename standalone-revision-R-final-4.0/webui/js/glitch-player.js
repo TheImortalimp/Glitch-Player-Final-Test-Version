@@ -4995,7 +4995,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               'R3 Matrix ASCII':{ ambient: [0.02, 0.08], peak: [0.14, 0.60], rate: 0.12 },
               'R3 Matrix Chord':{ ambient: [0.02, 0.08], peak: [0.14, 0.58], rate: 0.12 },
               'R3 HSL Rainbow': { ambient: [0.01, 0.07], peak: [0.12, 0.55], rate: 0.12 },
-              'R3 ASCII':       { ambient: [0.02, 0.08], peak: [0.14, 0.60], rate: 0.12 },
+              'R3 ASCII':       { ambient: [0.02, 0.08], peak: [0.18, 0.72], rate: 0.14 },
               'R3 Font Burn':   { ambient: [0.01, 0.07], peak: [0.12, 0.55], rate: 0.11 },
               'R3 Data Bands':  { ambient: [0.01, 0.07], peak: [0.12, 0.55], rate: 0.11 },
               'R3 VHS Glitch':  { ambient: [0.01, 0.07], peak: [0.12, 0.55], rate: 0.11 },

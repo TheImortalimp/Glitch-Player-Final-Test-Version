@@ -1147,27 +1147,44 @@
             }
 
             function glitchASCIIArtOverlayFactory(getStrength, isPersistent) {
-                /* R1.3 STYLE ROTOR (user request): this voice rotates HEAVILY
-                   between two souls — the final-006 full-grid rainbow
-                   'difference' scatter ('006', the DOMINANT face) and the
-                   R1.2 random-appearing matrix stacks + shimmer veil ('ENS')
-                   — crossfaded ~0.4s; 006 dwells ~3.2-6.8s, ENS strikes
-                   ~1.2-2.7s (≈70/30, leaning hard to final-006). R1.2 kept:
-                   ENS stack frequency is slider-governed. */
+                /* R1.3 STYLE ROTOR (user request), retuned in 4.2.4: the voice
+                   rotates between two souls that are TOTALLY separated — the
+                   small, soothing R1.2 matrix stacks + shimmer veil ('ENS',
+                   now the DOMINANT face, with smooth phosphor transitions)
+                   and the final-006 full-grid rainbow 'difference' scatter
+                   ('006'), which only strikes briefly. ENS dwells ~5.2-10s,
+                   006 strikes ~1.2-2.4s (≈80/20, leaning to the calm face);
+                   the rotor weight eases gently and each face owns its own
+                   half of it, so the two burst types never paint together.
+                   R1.2 kept: ENS stack frequency is slider-governed. */
                 const stacks = [];
                 const MAX_STACKS = 36;
                 const chSet = atlas.chars || window.__ASCII_CHARS || ['0', '1'];
                 let spawnAccum = 0;
                 let lastT = null;
-                let rotStyle006 = true;   // '006' scatter vs 'ENS' stacks
+                let rotStyle006 = false;  // soothing ENS stacks vs '006' scatter
                 let rotUntil = 0;         // style-flip timestamp (customTime)
-                let rotW = 1;             // eased 006 weight 0..1
+                let rotW = 0;             // eased 006 weight 0..1
                 const spawnStack = (w, h, glyphPx, baseHue, life) => {
                     const depth = 2 + ((Math.random() * 5) | 0); // 2-6 trail glyphs
+                    /* 4.2.4: stacks keep their own lane — a few placement tries
+                       reject spots that would double another stack's rows. */
+                    let sx = Math.random() * w, sy = Math.random() * h;
+                    for (let tries = 0; tries < 6; tries++) {
+                        let clear = true;
+                        for (let j = 0; j < stacks.length; j++) {
+                            const o = stacks[j];
+                            if (Math.abs(o.x - sx) < glyphPx * 1.3 &&
+                                Math.abs(o.y - sy) < o.size * (o.glyphs.length + 1)) { clear = false; break; }
+                        }
+                        if (clear) break;
+                        sx = Math.random() * w;
+                        sy = Math.random() * h;
+                    }
                     const st = {
-                        x: Math.random() * w,                        // uniform-random:
-                        y: Math.random() * h,                        // may overlap, may
-                        hue: (baseHue + (Math.random() * 26 - 13) + 360) % 360, // sit far apart
+                        x: sx,                                       // lane-kept:
+                        y: sy,                                       // overlaps are
+                        hue: (baseHue + (Math.random() * 26 - 13) + 360) % 360, // re-rolled away
                         size: glyphPx * (0.75 + Math.random() * 0.55),
                         born: customTime,
                         life: life,
@@ -1186,9 +1203,9 @@
                     if (s <= 0) {
                         stacks.length = 0;
                         lastT = null;
-                        rotStyle006 = true;   // R1.3: every activation opens
-                        rotUntil = 0;         // on the dominant 006 face
-                        rotW = 1;
+                        rotStyle006 = false;  // 4.2.4: every activation opens
+                        rotUntil = 0;         // on the soothing ENS face
+                        rotW = 0;
                         return;
                     }
                     const w = mainCanvas.width,
@@ -1211,15 +1228,24 @@
                     const timed = (progress !== undefined);
                     /* matrix green: the chord root pulled toward phosphor 120° */
                     const baseHue = fxLerpHue(fxTone(0), 120, 0.55);
-                    /* R1.3 style rotor: flip the face on a clock, then ease
-                       the weight over ~0.4s. Entering ENS seeds a 3-stack
-                       flurry so the ensemble face announces its return. */
-                    if (!rotUntil) rotUntil = now + 3200 + Math.random() * 3600;
+                    /* 4.2.4 SLIDER SPLIT + style rotor: the two types are also
+                       split along the slider — below 90% the voice stays on the
+                       soothing small stacks; only at 90-100% may the rotor
+                       strike the wilder, flurrier, larger 006 scatter, which
+                       grows with how deep the slider sits in that band. The
+                       soothing face dwells long; the weight eases gently so
+                       each face arrives and leaves smoothly inside its half. */
+                    const wildK = clamp01((s - 0.9) / 0.1);
+                    if (wildK <= 0 && rotStyle006) {
+                        rotStyle006 = false;
+                        rotUntil = now + 5200 + Math.random() * 4800;
+                    }
+                    if (!rotUntil) rotUntil = now + 5200 + Math.random() * 4800;
                     if (now >= rotUntil) {
-                        rotStyle006 = !rotStyle006;
+                        rotStyle006 = wildK > 0 && !rotStyle006;
                         rotUntil = now + (rotStyle006 ?
-                            3200 + Math.random() * 3600 :
-                            1200 + Math.random() * 1500);
+                            1200 + Math.random() * 1200 :
+                            5200 + Math.random() * 4800);
                         if (!rotStyle006) {
                             for (let i = 0; i < 3 && stacks.length < MAX_STACKS; i++) {
                                 spawnStack(w, h, glyphPx, baseHue, 800 + Math.random() * 900);
@@ -1227,14 +1253,20 @@
                         }
                     }
                     rotW += ((rotStyle006 ? 1 : 0) - rotW) *
-                        Math.min(1, dt / 0.09);
+                        Math.min(1, dt / 0.22);
+                    /* 4.2.4 ONE FACE AT A TIME: the two souls no longer crossfade
+                       on screen together — each face owns its half of the rotor
+                       weight and fades inside it, so a frame never mixes split
+                       bursts of different types. */
+                    const w006 = Math.max(0, 2 * rotW - 1);
+                    const ensW = Math.max(0, 1 - 2 * rotW);
                     /* STYLE '006' (dominant) — the final-006 full-grid rainbow
                        scatter: ONE fresh random hue per frame, 'difference'
                        blend, 50% cell density, every cell re-rolling its
                        glyph — the whole multi-alphabet field shimmering
                        per-frame. Spacing keeps the 006 formula 10+(1−s)·20,
                        budget-capped by asciiCells. */
-                    if (rotW > 0.02) {
+                    if (w006 > 0.02) {
                         const sp006 = Math.max(10 + (1 - s) * 20,
                             Math.sqrt((w * h) / renderBudget.asciiCells));
                         /* R1.4: the scatter's rainbow is source-keyed — a
@@ -1242,8 +1274,9 @@
                            spectrum; a grey one lets the full wheel fly */
                         const scatterHue = (videoPalette.hue +
                             (Math.random() - 0.5) * 360 * srcSpreadK() + 360) % 360;
-                        const scatterA = Math.min(1, 0.8 * s) * rotW;
-                        const scatterPx = sp006 + (Math.random() - 0.5) * s * 1.5;
+                        const scatterA = Math.min(1, 0.8 * s) * w006;
+                        const scatterPx = (sp006 + (Math.random() - 0.5) * s * 1.5) *
+                            (1 + 0.6 * wildK); /* 4.2.4: larger glyphs deeper in the band */
                         if (paintGlyphScatter) {
                             /* 4.0: the same field from cached glyph sheets, one blend */
                             paintGlyphScatter(gctx, w, h, Math.max(4, scatterPx), chSet,
@@ -1269,7 +1302,7 @@
                        ~0.6 stacks/s at a whisper up to ~9/s at full, gently
                        breathing with the ensemble but always slider-governed */
                     let rate = (0.6 + 8.4 * s) * (0.65 + 0.35 * FX_ENS.breath) *
-                        (0.7 + 0.3 * fxGate('ASCII')) * (1 - rotW) * /* R1.3 ENS weight */
+                        (0.7 + 0.3 * fxGate('ASCII')) * ensW * /* 4.2.4: ENS face only */
                         (0.85 + 0.30 * srcEnergyK()); /* R1.5: source energy feeds the rain */
                     if (timed) {
                         rate *= (1 + 2.2 * envArc(progress));
@@ -1309,7 +1342,7 @@
                                 /* the head: bright, blooming, re-rolling its
                                    character while fresh — matrix shimmer */
                                 if (decay > 0.5) gph.ch = chSet[(Math.random() * chSet.length) | 0];
-                                const a = (1 - rotW) *
+                                const a = ensW *
                                     Math.min(0.55, master * (0.25 + 0.75 * decay));
                                 if (a > 0.015) {
                                     gctx.shadowColor = fxHsla(st.hue, 100, 62, 1);
@@ -1320,7 +1353,7 @@
                                 }
                             } else {
                                 /* trail glyphs: dimmer, decaying faster */
-                                const a = (1 - rotW) * master * 0.5 * kFade *
+                                const a = ensW * master * 0.5 * kFade *
                                     (1 - k * 0.10) * (0.4 + 0.6 * decay);
                                 if (a > 0.015) {
                                     gctx.fillStyle = fxHsla(st.hue, 54, 56, a);
