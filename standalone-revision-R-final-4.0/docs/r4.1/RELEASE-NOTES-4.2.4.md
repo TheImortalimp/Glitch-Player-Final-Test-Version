@@ -19,15 +19,13 @@ See CHANGELOG.md and README.md for details.
 > **Photosensitivity warning:** effects can produce flashing and high-contrast flicker.
 
 ## Download notes
-The **Windows installer** `Glitch-Player-R4-4.2.4-x64-setup.exe` (44,696,735 bytes, silent update 2) was built
+The **Windows installer** `Glitch-Player-R4-4.2.4-x64-setup.exe` (44,707,295 bytes, silent update 3) was built
 natively on Windows 11 x64 with `build.cmd`; the build's own Defender guard scanned it clean. It is **unsigned**,
 so SmartScreen may warn.
 
-Silent update 2 reworks the **R3 ASCII voice**: the two burst types are totally separated (never on screen
-together), the soothing small stacks lead, the wilder larger 006 scatter only strikes at 90-100% of the slider,
-stack placement is lane-kept against doubled rows, and the voice's randomization peak lifts to [0.18, 0.72].
-The build also carries the redone installer flow: no truncated titles, a new install-folder page, Final Confluence
-naming, and **Defender guard rails** - Setup scans the installed folder with `MpCmdRun.exe` and rolls the install
-back on any reported threat.
+Silent update 3 fixes the **EAR**: a full listen on both sources (the canvas ear is never starved, YouTube's
+picture speaks for its audio at full strength, the local Web Audio tap re-arms on every play), a **hide/show
+button** for the audio and canvas levels monitor, and **persistent EAR / auto SOFT-EYE settings**. It carries the
+sussed-out R3 ASCII voice and the redone installer flow with Defender guard rails.
 
-Installer SHA-256: `30056151623d8a6a4203100a59d55790053e743aa28c4f37f05052bf63a67e07`
+Installer SHA-256: `0b18cc42bf1ea1ad3c610fd4e7587f19fc3d48725c6501daf6be37253d2559cc`

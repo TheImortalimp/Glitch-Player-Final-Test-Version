@@ -31,6 +31,29 @@ The `RELEASE_4.2.4` installer asset was replaced by a build with a redone instal
 - **Flow redone:** welcome (what the installer does and the flow ahead) -> installer notices -> licence -> install-folder page (new; explains normalisation and that your data lives elsewhere) -> install -> finish (run / desktop-shortcut options, signing and photosensitivity reminders).
 - **Defender guard rails in the installer:** after copying everything (launcher, CAB, notices, uninstaller), Setup locates `MpCmdRun.exe` (stock path or the newest Defender Platform folder) and runs a custom scan over the installed folder. Any reported threat rolls the install back (guarded by the own-folder rule) and aborts Setup; a machine without Defender gets a logged notice. Naming and registry entries now carry `Final Confluence 4.2.4`.
 
+### Silent update 3 - 2026-11-04 (replacement build, version stays 4.2.4) - EAR, canvas and SOFT-EYE settings
+
+The `RELEASE_4.2.4` installer asset was replaced again, same name; the EAR, its levels monitor and the SOFT-EYE
+settings changed.
+
+- **Full listen on both sources.** The canvas ear is never starved: even in AUDIO mode with no local track playing,
+  the picture keeps the ear alive. YouTube audio cannot be tapped (cross-origin iframe), so on YouTube the picture
+  now speaks for its audio at full strength (energy x1.25, motion x1.3). Local media keeps the true Web Audio tap,
+  which re-arms on every local play, and a suspended audio context is resumed whenever local media is playing - the
+  listen can never be silently muted.
+- **The levels monitor can be clicked away.** The audio and canvas levels monitor (EAR HUD) gains a hide button; a
+  small "EAR" tab brings it back. The choice survives restarts.
+- **EAR and auto SOFT-EYE settings persist.** The EAR mode (AUTO / AUDIO / CANVAS) and the SOFT-EYE on/off choice
+  are saved and restored across sessions.
+- Tests: 183 web tests pass (new: `ear-hud.test.mjs`).
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.2.4-x64-setup.exe`, 44,707,295 bytes |
+| SHA-256 | `0b18cc42bf1ea1ad3c610fd4e7587f19fc3d48725c6501daf6be37253d2559cc` |
+| CAB payload SHA-256 | `dc6cdcbe22d22515039fb7b56677506eaafa360047737cce51c0e6bb95241e58` |
+| Signed | No. Windows SmartScreen may warn. |
+
 ### Silent update 2 - 2026-11-04 (replacement build, version stays 4.2.4) - R3 ASCII sussed out
 
 The `RELEASE_4.2.4` installer asset was replaced again, same name; only the R3 ASCII voice changed.

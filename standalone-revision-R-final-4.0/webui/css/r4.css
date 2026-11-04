@@ -9,6 +9,7 @@
 body:not(.playback-on) #ghostBtnRack,
 body:not(.playback-on) #ui-toggle-tab,
 body:not(.playback-on) #earHud,
+body:not(.playback-on) #earHudShow,
 body:not(.playback-on) #preset-dropdown-container,
 body:not(.playback-on) #wired-btn,
 body:not(.playback-on) #moon-veil,

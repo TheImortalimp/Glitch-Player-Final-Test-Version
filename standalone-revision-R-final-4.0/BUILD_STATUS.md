@@ -8,7 +8,26 @@ This file records what was actually built and tested, and what hasn't been teste
 (96 xUnit host tests, 175 Node web tests - new: the untied-voices and safe-B&W guards - and 1 CAB integration test).
 The build's **Defender guard** scanned the installer and working package: no threats.
 
-## Current build (4.2.4, silent update 2 - R3 ASCII)
+## Current build (4.2.4, silent update 3 - EAR, canvas and SOFT-EYE settings)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.2.4-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,707,295 bytes |
+| SHA-256 | `0b18cc42bf1ea1ad3c610fd4e7587f19fc3d48725c6501daf6be37253d2559cc` |
+| CAB SHA-256 | `dc6cdcbe22d22515039fb7b56677506eaafa360047737cce51c0e6bb95241e58` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.2.4` (replaced asset, same name) |
+| Signed | No |
+| Built | 2026-11-04 |
+
+This silent update fixes the EAR for a full listen on both sources (the canvas ear is never starved; YouTube's
+picture speaks for its audio at full strength; the local tap re-arms on every play and a suspended context is
+resumed), gives the audio/canvas levels monitor a hide/show button, and persists the EAR mode and the auto
+SOFT-EYE setting across sessions. **280 tests total** (96 host, 183 web - new: `ear-hud.test.mjs` - 1 CAB
+integration), Defender guard clean.
+
+## Previous build (4.2.4, silent update 2 - R3 ASCII)
 
 | Item | Value |
 | --- | --- |

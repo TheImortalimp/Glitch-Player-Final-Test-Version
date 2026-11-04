@@ -1589,6 +1589,11 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               const mode = SOFT.earMode || 'auto';
               let haveAudio = false;
               const el = SOFT.tapped;
+              /* 4.2.4 FIX EAR: a suspended context can never silence the listen —
+                 while local media plays, keep asking it to resume. */
+              if (SOFT.ctx && SOFT.ctx.state === 'suspended' && el && !el.paused) {
+                  SOFT.ctx.resume().catch(() => {});
+              }
               if (SOFT.analyser && el && !el.paused && !el.ended && el.readyState >= 2) {
                   try {
                       SOFT.analyser.getByteFrequencyData(SOFT.freq);
@@ -1614,7 +1619,15 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               }
               if (SOFT.earVis) {
                   if (allowCanvas || !wantAudio) {
-                      SOFT.earVis.feedVisual(videoPalette.energy, videoPalette.motion, dt);
+                      /* 4.2.4 FULL LISTEN: the canvas ear is never starved — even
+                         in AUDIO mode with no local track, the picture keeps the
+                         ear alive. YouTube audio cannot be tapped (cross-origin
+                         iframe), so on YouTube the picture speaks for its audio
+                         with a small full-listen boost. */
+                      const yt = nowPlaying && nowPlaying.kind === 'youtube';
+                      SOFT.earVis.feedVisual(
+                          Math.min(1, videoPalette.energy * (yt ? 1.25 : 1)),
+                          Math.min(1, videoPalette.motion * (yt ? 1.3 : 1)), dt);
                   } else {
                       softDecayEar(SOFT.earVis.state, dt, 0.85);
                   }
@@ -8366,6 +8379,10 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           /* R2 SOFT-EYE toggle — click: calm engine ON/OFF (OFF = legacy R1
              pacing). Shift+click: call a crescendo right now (if the gap allows). */
           if ($('softEyeBtn')) {
+              /* 4.2.4: the SOFT-EYE auto setting survives restarts */
+              try {
+                  if (localStorage.getItem('glitch-soft-eye-on') === '0') SOFT.enabled = false;
+              } catch (e) {}
               $('softEyeBtn').addEventListener('click', (e) => {
                   if (!SOFT.ok) { showNotificationMessage('SOFT-EYE needs glitch-engine.js 2.0', 2400); return; }
                   if (e.shiftKey) {
@@ -8376,6 +8393,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       return;
                   }
                   SOFT.enabled = !SOFT.enabled;
+                  try { localStorage.setItem('glitch-soft-eye-on', SOFT.enabled ? '1' : '0'); } catch (err) {}
                   showNotificationMessage(SOFT.enabled ?
                       'SOFT-EYE ON — calm board, occasional crescendos (ear + canvas timed)' :
                       'SOFT-EYE OFF — legacy R1 pacing (wild all the time)', 2800);
@@ -8630,6 +8648,11 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               const btn = document.getElementById('earBtn');
               const modes = ['auto', 'audio', 'canvas'];
               const labels = { auto: 'EAR: AUTO', audio: 'EAR: AUDIO', canvas: 'EAR: CANVAS' };
+              /* 4.2.4: the ear setting survives restarts */
+              try {
+                  const saved = localStorage.getItem('glitch-ear-mode');
+                  if (modes.includes(saved)) SOFT.earMode = saved;
+              } catch (e) {}
               SOFT.earMode = SOFT.earMode || 'auto';
               const paint = () => {
                   if (!btn) return;
@@ -8648,11 +8671,43 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       e.stopPropagation();
                       const i = modes.indexOf(SOFT.earMode);
                       SOFT.earMode = modes[(i < 0 ? 0 : i + 1) % modes.length];
+                      try { localStorage.setItem('glitch-ear-mode', SOFT.earMode); } catch (err) {}
                       paint();
                   });
               }
               SOFT.paintEar = paint;
               paint();
+          })();
+
+          /* 4.2.4 FIX EAR: the tap re-arms on every local play, so a swapped
+             element or a suspended context can never mute the full listen. */
+          (function bindEarRetap() {
+              [typeof video !== 'undefined' ? video : null,
+               typeof localAudio !== 'undefined' ? localAudio : null].forEach((el) => {
+                  if (!el || typeof el.addEventListener !== 'function') return;
+                  el.addEventListener('play', () => {
+                      softEnsureAudio(el);
+                  });
+              });
+          })();
+
+          /* 4.2.4: the audio and canvas levels monitor can be clicked away and
+             brought back; the choice survives restarts. */
+          (function bindEarHudToggle() {
+              const hud = document.getElementById('earHud');
+              const show = document.getElementById('earHudShow');
+              const hide = document.getElementById('earHudHide');
+              if (!hud || !show || !hide) return;
+              const apply = (open) => {
+                  hud.hidden = !open;
+                  show.hidden = open;
+                  try { localStorage.setItem('glitch-ear-hud-open', open ? '1' : '0'); } catch (e) {}
+              };
+              hide.addEventListener('click', (e) => { e.stopPropagation(); apply(false); });
+              show.addEventListener('click', (e) => { e.stopPropagation(); apply(true); });
+              let open = true;
+              try { open = localStorage.getItem('glitch-ear-hud-open') !== '0'; } catch (e) {}
+              apply(open);
           })();
 
           /* FREEZE FRAME (S or the rack button): hide every control layer, let the

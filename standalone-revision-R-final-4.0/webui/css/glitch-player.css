@@ -1497,6 +1497,53 @@ body.hard-light #earHud {
 #earHud.is-audio {
     border-color: #9dffc4
 }
+/* 4.2.4: the levels monitor can be clicked away and brought back */
+.ear-hud-hide {
+    pointer-events: auto;
+    background: none;
+    border: 1px solid rgba(122, 247, 255, .4);
+    color: var(--r3-cyan, #7af7ff);
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 1;
+    padding: 1px 5px;
+    border-radius: 4px;
+    cursor: pointer
+}
+.ear-hud-hide:hover,
+.ear-hud-hide:focus-visible {
+    color: #fff;
+    border-color: #fff
+}
+#earHudShow {
+    position: absolute;
+    left: 12px;
+    bottom: 58px;
+    z-index: 3200;
+    display: none;
+    pointer-events: auto;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: .1em;
+    color: var(--r3-cyan, #7af7ff);
+    background: rgba(0, 10, 18, .84);
+    border: 1px solid var(--r3-cyan, #7af7ff);
+    border-radius: 8px;
+    padding: 4px 8px;
+    box-shadow: 0 0 10px rgba(122, 247, 255, .25)
+}
+body.playback-on #earHudShow {
+    display: inline-block
+}
+body.ui-hidden #earHudShow {
+    bottom: 12px
+}
+#earHudShow:hover,
+#earHudShow:focus-visible {
+    color: #fff;
+    border-color: #fff
+}
 .ear-hud-head {
     display: flex;
     justify-content: space-between;
