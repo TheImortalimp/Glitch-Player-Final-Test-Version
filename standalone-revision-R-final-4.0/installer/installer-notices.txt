@@ -69,4 +69,5 @@ Installer notices - please read before continuing.
    The Unlicense) by the same author. Bundled components keep their own
    licenses: the .NET runtime (MIT) and the Microsoft WebView2 SDK. Their
    full license texts are in the CAB/extracted runtime's "licenses" folder; see
-   THIRD-PARTY-NOTICES.txt.
+   THIRD-PARTY-NOTICES.txt. The glyph tables are derived from Unicode data
+   used under the Unicode License v3, reproduced in THIRD-PARTY-NOTICES.txt.

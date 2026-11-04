@@ -102,8 +102,12 @@ test('HSL Rainbow is more saturated and B&W inversion eases through the mid-leve
 
 test('the 250 LAB snapshots are unique, deep-frozen, flash-free and map onto registered voices', () => {
     const window = {};
-    runInSandbox('js/glyph-library.js', { window, document: { getElementById: () => null } });
+    runInSandbox('js/glyph-tables.js', { window });
+    runInSandbox('js/glyph-library.js', { window, console, document: { getElementById: () => null } });
+    assert.equal(window.SignalGlyphs.integrity.ok, true);
+    const tableNames = new Set([...window.SignalGlyphs.names, 'Engine realms (Revision 3)', 'All scripts']);
     const bank = window.GlitchMachinePresets;
+    for (const preset of bank) assert.ok(tableNames.has(preset.settings.glyphBank), preset.id + ' glyph table');
     assert.equal(bank.length, 250);
     assert.ok(deepFrozen(bank));
     assert.equal(new Set(bank.map((p) => p.id)).size, 250);

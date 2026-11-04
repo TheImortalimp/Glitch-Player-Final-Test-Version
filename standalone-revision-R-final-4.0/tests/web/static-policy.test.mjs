@@ -6,8 +6,8 @@ import { WEBUI, readWeb, webScripts } from './harness.mjs';
 
 const html = readWeb('index.html');
 const scripts = webScripts();
-const SCRIPT_ORDER = ['glitch-engine.js', 'glyph-library.js', 'r3-factories.js', 'r3-ghost-vsync.js',
-    'r4-policy.js', 'host-bridge.js', 'yt-embed.js', 'glitch-player.js'];
+const SCRIPT_ORDER = ['glitch-engine.js', 'glyph-tables.js', 'glyph-library.js', 'landing-backdrop.js', 'r3-factories.js',
+    'r3-ghost-vsync.js', 'r4-policy.js', 'host-bridge.js', 'yt-embed.js', 'glitch-player.js'];
 
 function csp() {
     const meta = [...html.matchAll(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/gi)];

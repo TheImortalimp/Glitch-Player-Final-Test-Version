@@ -90,9 +90,25 @@ test('effects work and whole-app filters wait until media starts, while display 
     assert.match(fn('frame'), /if \(!document\.body\.classList\.contains\('playback-on'\)\) \{\s*noteFrameCadence\(dtMs\);\s*return;/);
     assert.match(fn('applyMasterFilters'), /if \(!document\.body\.classList\.contains\('playback-on'\)\) \{\s*document\.documentElement\.style\.filter = '';/);
     const welcome = readWeb('css/welcome-screen.css');
+    const overlay = /#welcomeScreen \{[^}]*?background: ([^;]+);/.exec(welcome);
+    assert.ok(overlay, 'welcome overlay background');
+    assert.doesNotMatch(overlay[1], /transparent/, 'the overlay over the live backdrop never fades to fully transparent');
+    assert.match(overlay[1], /radial-gradient\(circle at 50% 28%, rgba\(255, 211, 101, 0\.14\), rgba\(255, 211, 101, 0\.03\) 34%\)/);
     assert.match(welcome, /#welcomeScreen::before \{\s*position: fixed;[^}]*width: 150%;[^}]*animation: gold-scan 7s ease-in-out infinite;/);
     assert.match(welcome, /\.welcomePanel::before \{[^}]*animation: panel-sheen 6s ease-in-out infinite;/);
-    assert.match(welcome, /@media \(prefers-reduced-motion: reduce\) \{\s*#welcomeScreen::before,\s*\.welcomePanel::before \{ animation: none; \}\s*\.welcomeMark::after \{ animation: none; opacity: 0; \}/);
+    assert.match(welcome, /@media \(prefers-reduced-motion: reduce\) \{\s*#welcomeScreen::before,\s*\.welcomePanel,\s*\.welcomePanel::before,\s*\.welcomePanel::after,\s*\.welcomeGlints::before,\s*\.welcomeGlints::after,\s*\.welcomeGlints i,\s*\.welcomeGhostLink \{ animation: none; \}\s*\.welcomeMark::after \{ animation: none; opacity: 0; \}/);
+    /* landing gold card: silver sheen, turning rim, glints, prism and interval tint */
+    assert.match(welcome, /\.welcomePanel::after \{[^}]*animation: panel-silver 9s ease-in-out infinite;/);
+    assert.match(welcome, /\.welcomeGlints \{[^}]*z-index: -1;[^}]*pointer-events: none;/, 'glints sit under the text');
+    assert.match(welcome, /\.welcomeGlints::after \{[^}]*conic-gradient\(from var\(--rim\)[^}]*mask-composite: exclude;[^}]*animation: rim-turn 14s linear infinite;/);
+    assert.match(welcome, /\.welcomeGlints::before \{[^}]*opacity: 0;[^}]*animation: prism-drift 16s/, 'the prism is invisible without motion');
+    assert.match(welcome, /\.welcomeGlints i \{[^}]*opacity: 0;[^}]*animation: glint 6\.4s/, 'glints are invisible without motion');
+    const tint = /@keyframes card-tint \{([^@]*?)\n\}/.exec(welcome);
+    assert.ok(tint, 'card-tint keyframes');
+    assert.doesNotMatch(tint[1], /invert|brightness|opacity/, 'the interval tint never inverts or flashes');
+    assert.match(tint[1], /0%, 82% \{ filter: hue-rotate\(0deg\) grayscale\(0\); \}/);
+    assert.match(tint[1], /98%, 100% \{ filter: hue-rotate\(360deg\) grayscale\(0\); \}/);
+    assert.match(welcome, /\.welcomePanel \{[^}]*animation: card-tint 30s linear -18s infinite;/);
     assert.match(welcome, /\.welcomeMark \{\s*position: relative;\s*flex-shrink: 0;/);
     assert.doesNotMatch(welcome, /\.welcomeMark \{[^}]*overflow/);
     assert.match(welcome, /\.welcomeMark::after \{[^}]*hsl\(42 100% 62% \/ 0\.36\)[^}]*mask-image: radial-gradient\(farthest-side, #000 62%, transparent\);[^}]*animation: logo-gleam 10s ease-in-out infinite, gleam-hue 24s linear infinite;[^}]*pointer-events: none;/);
@@ -192,4 +208,15 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
     assert.match(css, /#ytLinkTree > #testCanvas::after \{[^}]*animation: link-gleam 8s ease-in-out infinite, gleam-hue 24s linear infinite;[^}]*pointer-events: none;/);
     assert.deepEqual([...new Set(css.match(/#ytLinkTree > [^{]*::after/g))], ['#ytLinkTree > #testCanvas::after']);
     assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{ animation: none !important;[^}]*\}\s*#ytLinkTree > #testCanvas::after \{ opacity: 0; \}/);
+    /* landing backdrop behind the screens, gone once playback starts; interval tint on the link cards */
+    assert.match(html, /<div id="landingBackdrop" aria-hidden="true"><canvas><\/canvas><\/div>\s*<section id="welcomeScreen"/);
+    assert.match(css, /#landingBackdrop \{[^}]*position: fixed;[^}]*z-index: 9999;[^}]*pointer-events: none;/);
+    assert.match(css, /body\.playback-on #landingBackdrop \{ display: none; \}/);
+    assert.match(css, /body:not\(\.playback-on\) \.notification \{ z-index: 20500; \}/);
+    assert.match(css, /#ytLinkTree > \.ytLink:not\(#ghostLink\) \{ animation: card-tint 26s linear -18\.3s infinite; \}/);
+    assert.match(css, /#ytLinkTree > \.ytLink:not\(#ghostLink\):is\(:hover, :focus-visible\) \{ animation: none; \}/);
+    assert.match(css, /html\.ghost-egg-armed #sourceScreen,\s*html\.ghost-egg-armed \.welcomePanel \{ animation: ghost-egg-armed 24s linear infinite; \}/);
+    const landing = /<button id="welcomeGhostLink" type="button" class="welcomeGhostLink" title="[^"]+" hidden><span class="welcomeGhostName">MISSING LINK<\/span><span class="welcomeGhostMeta">[^<]+<\/span><\/button>/.exec(html);
+    assert.ok(landing, 'hidden landing MISSING LINK card');
+    assert.ok(html.indexOf('class="welcomeActions"') < landing.index && landing.index < html.indexOf('</section>'), 'inside the gold card actions');
 });

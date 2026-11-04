@@ -7,12 +7,12 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,666,857 bytes |
-| SHA-256 | `8c5ba4cc8b98732f5caadff27b1677ff80fffd399b3874643dda30a1b4b51b0b` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `5658b061a131dcdb8039de44cac487a9b48437c915b7c3e88bfd5b09077982b6`) plus `payload.cab` (44,098,846 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `9f09ebe4114497d94c4815252410fc5e67da638d474930da0f6f17cd80c5e5ba` |
-| Runtime | 244 files, 144,738,648 bytes, extracted to the per-user cache named by the CAB hash |
-| Asset target | Existing GitHub release `RELEASE_4.0` (installer and checksum filenames unchanged) |
+| Size | 44,706,785 bytes |
+| SHA-256 | `1782632d97d6bf15e21176c06119b9faa467dea06ba48e6e99ee653ac89aee26` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,728 bytes, SHA-256 `d1d87bbae5f0415258f0030b6f30446eadc85463e3cde583ded2fbe086092380`) plus `payload.cab` (44,065,208 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `eed80772daff747ebf88f1e79e00c8976a9a7da89ef4e1905d6a7e3e0303b6ec` |
+| Runtime | 246 files, 143,549,234 bytes, extracted to the per-user cache named by the CAB hash |
+| Asset target | Existing GitHub release `RELEASE_4.0`, marked as the final revised release (installer and checksum filenames unchanged) |
 | Signed | No |
 | Built | 2026-11-04 |
 
@@ -20,10 +20,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **210 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **229 tests total**.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
-- **113 Node web tests** (`tests\web`), covering:
+- **132 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
@@ -39,7 +39,12 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
     - the card and a typed link (including `youtu.be` and playlist forms) load GHOST before the track;
     - movement turns on only after confirmation;
     - a failed apply blocks the track without retrying;
-    - a chord during playback loads GHOST and switches to the track.
+    - a chord during playback loads GHOST and switches to the track;
+    - on the logo screen the chord reveals the MISSING LINK card inside the gold card without leaving the logo screen, and if that card's track can't start the link tree opens on its card;
+    - a card, another source or a failed GHOST load started while the show is still running is not overridden when the show ends (no re-arming, focus move or replaced notice);
+    - the chord follows the physical G key, and inside a text field only a typed g counts.
+  - Glyph tables (`glyph-tables.test.mjs`): the generated file is exactly what the generator renders from the pinned Unicode 15.1.0 and CP437 data, every table is well formed, and the startup guard drops a table whose checksum, ranges or code points are wrong (or that is missing) while the rest keep working.
+  - The landing backdrop (`landing-backdrop.test.mjs`): the five GHOST PROTOCOL profiles, calm dim drawing, the end of the backdrop at playback, pausing while hidden, one still frame with reduced motion, the crimson armed state and its fallback alphabet.
   - Glyph routing (`glyph-routing.test.mjs`):
     - picks by code point, including astral characters;
     - the rotation offsets and wraparound;
@@ -49,14 +54,44 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
     - the real Revision 3 runners: R3 ASCII follows table changes made after the R3 engine was created, and returns to its own glyphs on Engine realms;
     - the main ASCII voice refreshes its glyph set on every painted frame;
     - the Revision 3 verbatim block is unchanged.
-  - Suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
+  - Suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), the final gold card's silver sheen, rim, glints, prism and brief hue/B&W tint (never inverting), the link-card tint wave, the logo-screen glow's alpha floor, native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
-- **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 244 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
+- **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 246 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
 
 The Release host also built with zero warnings and errors. The CAB launcher is compiled with warnings treated as errors.
 
 The cursor guard host-guard tests were checked against deliberately broken copies of the code in the earlier release work. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed. For the GHOST tests, three temporary breaks each made them fail: removing the confirmation gate, removing the failure block, and loading GHOST on a chord before playback. The file was then restored byte for byte. Likewise, removing the R3 ASCII refresh or the main ASCII per-frame refresh made the glyph tests fail, and both files were restored byte for byte.
+
+## Checks on the final revised build (2026-11-04, `1782632d…`)
+
+- `build.cmd` passed 96 host tests, 132 web tests and 1 CAB integration test. The CAB contains 246 runtime files. The package and installer are unsigned.
+- `node tools\build-glyph-tables.mjs --check` downloaded the pinned Unicode 15.1.0 and CP437 references again and reported that the committed tables match them.
+- An independent code review of the change set found one bug, now fixed. The landing MISSING LINK card is clickable while the GHOST show is still running. If you started it then, the end of the show armed the egg again, moved focus to the link-tree card and replaced the "GHOST // OF ME loaded · … automatic ON" notice with "MISSING LINK revealed". The end of the show now does nothing if a source was started or GHOST was loaded meanwhile. A new web test failed before the fix and passes after it.
+- Smoke test in the VS Code integrated-browser static preview of this change set, before the glow and review fixes. There were no app console or page errors.
+  - The glyph guard accepted all 125 tables (127,648 code points), and the menu had 127 options.
+  - The backdrop ran behind the logo card; the card ran its tint and rim animations.
+  - Ctrl+Alt+G on the logo screen, confirmed: the DATA.. / "!" show played above the card. Then the MISSING LINK card appeared inside the gold card and was focused, the notice appeared, the link was filled in, the logo screen stayed open and the backdrop read GHOST // OF ME // ARMED.
+  - Clicking that card after the show left the logo screen, loaded GHOST with its notice and showed the source screen. The preview can't decode YouTube, so the track didn't play.
+  - The link tree stayed a two-column grid with no overlap, with the backdrop behind it.
+  - A generated local WAV started playback; the backdrop was hidden and its canvas released.
+  - With reduced motion emulated, the backdrop showed one still frame and the card animations were off.
+- White specks, found natively on an earlier build of this change set (`a536d861…`). Its captures, and a real screen capture, showed a static arc of white specks near the window controls.
+  - On a Debug build of the host, hiding the backdrop canvas or removing the logo screen's gold radial glow removed the arc. Changing the canvas opacity or size, or hiding the drag region, did not.
+  - A DevTools screenshot of the same page showed no specks, so the arc comes from native composition where the glow fades to alpha 0 over the live canvas.
+  - A 0.03 alpha floor on the glow removed the specks, also in the armed state, and the link tree was clean.
+  - The next build (`255688e4…`, the glow fix without the review fix) was installed silently. Its native capture at 1280x800 and 150% scale showed the logo screen with no specks.
+- Native checks on this build:
+  - A silent install over the previous build exited 0. The installed launcher and `payload.cab` match the build.
+  - The launcher started the player from the `eed80772…` runtime cache. The window opened at 1280x800 on the 100%-scale display. A native capture showed the logo screen with the backdrop, gold card and window controls, and no specks.
+  - With the app in the foreground, Ctrl+Alt+G showed WebView2's photosensitivity confirmation. After Enter, the "!" show played over the card and the backdrop.
+  - At 5.5 s the logo screen was armed: the MISSING LINK card was focused inside the gold card, the "MISSING LINK revealed · start it to load GHOST // OF ME." notice was shown, and the backdrop read GHOST // OF ME // ARMED.
+  - The window closed normally, the player and launcher exited, and no `host.log` was written.
+- Not verified:
+  - The MISSING LINK YouTube track playing with GHOST in the native app. It was deliberately not started, to avoid prolonged strobe and audio.
+  - Clicking the card during the show natively; the web test covers it.
+  - Uninstalling this build.
+  - Code signing; the files are unsigned.
 
 ## Checks on the silent update 2 build (2026-11-04, `8c5ba4cc…`)
 
@@ -202,16 +237,16 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 
 ## Not verified yet
 
-The silent update 2 build (`8c5ba4cc…`) and the 2026-11-04 build before it were not installed or tested in the native WinForms host. Checks listed below may refer to earlier installers.
+The final revised build (`1782632d…`) was silently installed and launched in the native host, and Ctrl+Alt+G was checked natively on it; see the checks above. The silent update 2 build (`8c5ba4cc…`) and the 2026-11-04 build before it were not installed or tested in the native WinForms host. Checks listed below may refer to earlier installers.
 
 - Code signing (not done), and SmartScreen behaviour on another machine.
-- The interactive (non-silent) installer and uninstaller pages, and the uninstaller's "delete data" path.
-- Ctrl+Alt+G in the native host, the GHOST track actually playing on YouTube, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
+- The interactive (non-silent) installer and uninstaller pages, and the uninstaller's "delete data" path. Uninstalling the final revised build was not run.
+- The GHOST track actually playing on YouTube in the native host, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
 - Rotated rare-script glyph tables in the native WebView2 fonts (some may draw as empty boxes).
 - The registry layer of the cursor guard against a non-system pointer scheme.
 - Refusal of WebView2 registry policy overrides, and the Defender watchdog warnings.
 - Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on the two CAB installers. Their local WAV/YouTube startup, window, Refresh and window-bar checks are listed separately.
-- The window bar, named link tree, restored fade link and logo gleam on the native host at 150% scale, in fullscreen and with the HUD hidden. The current installer was checked only windowed at 100% scale (the scrollbar overlap was seen at 150% on an intermediate build, and its fix was checked natively at 100% and in the browser). The local file picker and the remaining link cards were not started on it.
+- The window bar, named link tree, restored fade link and logo gleam on the native host in fullscreen and with the HUD hidden. The installer that introduced them was checked only windowed at 100% scale (the scrollbar overlap was seen at 150% on an intermediate build, and its fix was checked natively at 100% and in the browser); the final revised change set's logo screen was captured windowed at 150% (`255688e4…`) and 100% (`1782632d…`). The local file picker and the remaining link cards were not started natively.
 - The governor's step-up limits (45% of the frame period, 400 frames, doubling up to 64 times after a relapse, retrying sooner below 70% of the earlier work) were chosen by reasoning and simulation, and checked only on this machine. The GPU-bound case was only simulated; it uses main-thread drawing time as a stand-in for the load.
 - A remaining ambiguity: if a 60 Hz board never shows a single 60 Hz frame for a display setup (overloaded from the start) and a 30 Hz display is attached, the governor still takes 30 fps as that display's pacing.
 - Windows 10, Windows N editions, other GPUs and refresh rates, and long sessions.

@@ -9,7 +9,10 @@
   padding: 40px 0;
   overflow: auto;
   color: #f8f1df;
-  background: radial-gradient(circle at 50% 28%, rgba(255, 211, 101, 0.14), transparent 34%), linear-gradient(145deg, #050505 0%, #17120a 48%, #030303 100%);
+  /* translucent, so the landing backdrop (landing-backdrop.js) shows behind the card.
+     The glow keeps a small alpha floor: a fade to fully transparent leaves an arc of
+     white specks when the native WebView2 composites it over the live backdrop. */
+  background: radial-gradient(circle at 50% 28%, rgba(255, 211, 101, 0.14), rgba(255, 211, 101, 0.03) 34%), linear-gradient(145deg, rgba(5, 5, 5, 0.48) 0%, rgba(23, 18, 10, 0.38) 48%, rgba(3, 3, 3, 0.5) 100%);
 }
 
 #welcomeScreen::before,
@@ -52,22 +55,103 @@
   flex-shrink: 0;
   padding: clamp(22px, 4vw, 36px) clamp(22px, 5vw, 44px);
   overflow: hidden;
-  border: 1px solid rgba(255, 217, 117, 0.72);
+  border: 0;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(40, 29, 12, 0.94), rgba(8, 8, 7, 0.96) 58%, rgba(47, 31, 8, 0.92));
-  box-shadow: 0 0 0 1px rgba(255, 235, 169, 0.08), 0 0 70px rgba(255, 179, 32, 0.14), 0 28px 90px rgba(0, 0, 0, 0.76);
+  box-shadow: 0 0 0 1px rgba(255, 235, 169, 0.08), 0 0 70px rgba(255, 179, 32, 0.18), 0 28px 90px rgba(0, 0, 0, 0.76);
   text-align: center;
+  /* first interval tint about 6 s after the card appears */
+  animation: card-tint 30s linear -18s infinite;
 }
 
 .welcomePanel::before {
   position: absolute;
   inset: 0;
   content: '';
-  background: linear-gradient(115deg, transparent 18%, rgba(255, 248, 211, 0.16) 38%, transparent 49%);
+  background: linear-gradient(115deg, transparent 18%, rgba(255, 206, 92, 0.12) 31%, rgba(255, 248, 211, 0.3) 39%, rgba(255, 206, 92, 0.12) 46%, transparent 55%);
   transform: translateX(-120%);
   animation: panel-sheen 6s ease-in-out infinite;
   pointer-events: none;
 }
+
+/* Silver sheen: crosses the other way, on its own 9 s timing. */
+.welcomePanel::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(245deg, transparent 22%, rgba(214, 224, 240, 0.1) 35%, rgba(250, 252, 255, 0.26) 42%, rgba(214, 224, 240, 0.1) 49%, transparent 60%);
+  transform: translateX(120%);
+  animation: panel-silver 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Under the text: a turning gold-and-silver rim, a slow prismatic
+   refraction band and eight small twinkling glints. */
+@property --rim {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.welcomeGlints {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.welcomeGlints::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  padding: 1.5px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--rim), #b8801c, #ffe8a0 8%, #f4f6ff 13%, #aeb4c0 19%, #d4a038 30%, #fff3c4 41%, #a97418 54%, #dfe4ee 66%, #ffffff 71%, #c99a3a 83%, #b8801c);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: rim-turn 14s linear infinite;
+}
+
+.welcomeGlints::before {
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -60%;
+  width: 60%;
+  content: '';
+  background: linear-gradient(90deg, transparent, hsl(0 100% 72% / 0.09), hsl(45 100% 70% / 0.11), hsl(120 100% 70% / 0.08), hsl(195 100% 72% / 0.11), hsl(275 100% 74% / 0.09), transparent);
+  opacity: 0;
+  transform: rotate(18deg);
+  animation: prism-drift 16s ease-in-out infinite;
+}
+
+.welcomeGlints i {
+  --glint: 255, 238, 176;
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  opacity: 0;
+  background:
+    radial-gradient(circle, #fff 0 1px, rgba(var(--glint), 0.85) 1.6px, transparent 4px),
+    linear-gradient(90deg, transparent, rgba(var(--glint), 0.9), transparent) center / 100% 1px no-repeat,
+    linear-gradient(transparent, rgba(var(--glint), 0.9), transparent) center / 1px 100% no-repeat;
+  animation: glint 6.4s ease-in-out infinite;
+}
+
+.welcomeGlints i:nth-child(even) { --glint: 236, 242, 255; animation-duration: 7.6s; }
+.welcomeGlints i:nth-child(1) { top: 8%; left: 12%; animation-delay: -0.6s; }
+.welcomeGlints i:nth-child(2) { top: 14%; left: 84%; animation-delay: -2.1s; }
+.welcomeGlints i:nth-child(3) { top: 31%; left: 6%; animation-delay: -3.7s; }
+.welcomeGlints i:nth-child(4) { top: 22%; left: 63%; animation-delay: -5.2s; }
+.welcomeGlints i:nth-child(5) { top: 58%; left: 93%; animation-delay: -1.4s; }
+.welcomeGlints i:nth-child(6) { top: 74%; left: 9%; animation-delay: -4.4s; }
+.welcomeGlints i:nth-child(7) { top: 91%; left: 71%; animation-delay: -2.9s; }
+.welcomeGlints i:nth-child(8) { top: 86%; left: 31%; animation-delay: -6.1s; }
 
 /* The 4.0 logo gleam on top of the 3.0 scan and sheen; its tint drifts round the colour wheel.
    It sweeps via background-position inside a soft mask, so the logo's glow is never clipped. */
@@ -132,9 +216,68 @@
 .welcomeStatus { color: #9e8c65; font-size: 0.58rem; }
 .statusDot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #dca72f; box-shadow: 0 0 10px #f5c85f; }
 
+/* MISSING LINK on the landing page: the GHOST // OF ME egg reveals it here
+   (Ctrl+Alt+G); starting it opens the link tree and loads GHOST. */
+.welcomeGhostLink {
+  position: relative;
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  box-sizing: border-box;
+  margin: 2px 0 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(220, 20, 60, 0.75);
+  border-left: 3px solid #dc143c;
+  border-radius: 6px;
+  color: #ffd9e0;
+  background: rgba(30, 4, 10, 0.86);
+  box-shadow: 0 0 18px rgba(220, 20, 60, 0.32);
+  cursor: pointer;
+  animation: gleam-hue 12s linear infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.welcomeGhostName { color: #ff4d6d; font: 400 1.05rem/1.15 Impact, 'Arial Black', 'Franklin Gothic Heavy', sans-serif; letter-spacing: 0.12em; text-shadow: 0 0 10px rgba(220, 20, 60, 0.6); }
+.welcomeGhostMeta { color: #d9a3ad; font: 0.66rem/1.35 'Courier New', monospace; letter-spacing: 0.02em; }
+.welcomeGhostLink:hover,
+.welcomeGhostLink:focus-visible { transform: translateY(-2px); outline: 2px solid #f2d27e; outline-offset: 2px; box-shadow: 0 0 26px rgba(220, 20, 60, 0.55); }
+
 @keyframes panel-sheen {
   0%, 35% { transform: translateX(-120%); }
   65%, 100% { transform: translateX(120%); }
+}
+
+@keyframes panel-silver {
+  0%, 48% { transform: translateX(120%); }
+  78%, 100% { transform: translateX(-120%); }
+}
+
+@keyframes rim-turn {
+  to { --rim: 360deg; }
+}
+
+@keyframes prism-drift {
+  0%, 22% { opacity: 0; transform: rotate(18deg) translateX(0); }
+  34%, 66% { opacity: 1; }
+  78%, 100% { opacity: 0; transform: rotate(18deg) translateX(330%); }
+}
+
+/* A small, gradual twinkle (about 1 s in every 6-8 s per glint). */
+@keyframes glint {
+  0%, 74%, 100% { opacity: 0; transform: scale(0.2) rotate(0deg); }
+  82% { opacity: 1; transform: scale(1) rotate(45deg); }
+  90% { opacity: 0; transform: scale(0.3) rotate(90deg); }
+}
+
+/* Interval tint for the cards (also the link tree in r4.css): long idle, one
+   smooth 2.4 s hue turn, then a brief black-and-white fade in and out.
+   hue-rotate(360deg) equals no tint, so the loop never jumps. No inversion. */
+@keyframes card-tint {
+  0%, 82% { filter: hue-rotate(0deg) grayscale(0); }
+  90% { filter: hue-rotate(360deg) grayscale(0); }
+  94% { filter: hue-rotate(360deg) grayscale(1); }
+  98%, 100% { filter: hue-rotate(360deg) grayscale(0); }
 }
 
 @keyframes gold-scan {
@@ -162,6 +305,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   #welcomeScreen::before,
-  .welcomePanel::before { animation: none; }
+  .welcomePanel,
+  .welcomePanel::before,
+  .welcomePanel::after,
+  .welcomeGlints::before,
+  .welcomeGlints::after,
+  .welcomeGlints i,
+  .welcomeGhostLink { animation: none; }
   .welcomeMark::after { animation: none; opacity: 0; }
 }

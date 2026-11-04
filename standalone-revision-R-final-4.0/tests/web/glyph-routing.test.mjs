@@ -34,11 +34,12 @@ function glyphSandbox() {
         },
         'glyph-info': { textContent: '', title: '' },
     };
-    const sandbox = { document: { getElementById: (id) => elements[id] || null, createElement: () => ({}) } };
+    const sandbox = { console, document: { getElementById: (id) => elements[id] || null, createElement: () => ({}) } };
     sandbox.window = sandbox;
     vm.createContext(sandbox);
     vm.runInContext(readWeb('js/glitch-engine.js'), sandbox, { filename: 'js/glitch-engine.js' });
     const original = { pickGlyph: sandbox.GlitchEngine.pickGlyph, glyphBank: sandbox.GlitchEngine.glyphBank };
+    vm.runInContext(readWeb('js/glyph-tables.js'), sandbox, { filename: 'js/glyph-tables.js' });
     vm.runInContext(readWeb('js/glyph-library.js'), sandbox, { filename: 'js/glyph-library.js' });
     return { sandbox, G: sandbox.SignalGlyphs, E: sandbox.GlitchEngine, original, elements };
 }
@@ -160,10 +161,11 @@ test('the glyph select and info line show the selection and the sub-voice rotati
     assert.equal(G.current, G.names[0]);
     assert.match(info.textContent, /^[\d,.\s]+ code points \u00b7 main ASCII \u00b7 sub-voices rotate$/);
     const lines = info.title.split('\n');
-    assert.equal(lines.length, VOICES.length);
+    assert.equal(lines.length, VOICES.length + 1);
     assert.equal(lines[0], 'Main ASCII: ' + G.names[0]);
     assert.equal(lines[1], 'Cyber Rain: ' + G.names[1]);
     assert.equal(lines[8], 'R3 Data Bomb: ' + G.names[8]);
+    assert.match(lines[9], /^Unicode 15\.1\.0 tables: verified \(125 tables, 127\D?648 code points\)$/);
     G.set(ALL);
     assert.equal(select.value, ALL);
     assert.match(info.textContent, /every voice mixes 125 tables$/);

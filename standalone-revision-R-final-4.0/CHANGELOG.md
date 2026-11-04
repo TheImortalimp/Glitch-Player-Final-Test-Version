@@ -13,6 +13,29 @@ First published build of Revision R Final 4.0, a newly coded, hardened Windows p
 
 > **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. In the original 4.0.0 build, Flash and Strobe started at zero and were manual-only; the silent update below adds an optional, confirmation-gated automatic mode. This is not a photosensitivity-safe mode.
 
+## Final revised release — 2026-11-04 (version remains 4.0.0)
+
+The final revised build of 4.0. It replaces the installer and checksum assets of the existing `RELEASE_4.0` release; the version and release tag remain unchanged.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.0.0-x64-setup.exe`, 44,706,785 bytes |
+| SHA-256 | `1782632d97d6bf15e21176c06119b9faa467dea06ba48e6e99ee653ac89aee26` |
+| CAB payload | 44,065,208 bytes |
+| CAB SHA-256 | `eed80772daff747ebf88f1e79e00c8976a9a7da89ef4e1905d6a7e3e0303b6ec` |
+
+- **Gold card:** the logo screen's gold card gains a silver sheen, a slowly turning gold-and-silver rim, eight soft sparkle glints and a drifting prism refraction band. About every 30 s the card briefly turns once round the colour wheel and fades through black-and-white. The link-tree cards do the same in a slow wave (every 26 s) and hold still while hovered or focused. The tints never invert or flash, and reduced motion stops them.
+- **GHOST PROTOCOL backdrop:** a calm, display-only glyph rain (`landing-backdrop.js`) runs behind the logo card and the link tree. It uses the guarded glyph tables, one glyph voice per column, cycles through the engine's DIA, SPECTRUM, CRT, PLASMA and LED hues, and adds an RGB split and a slow scan bar. It doesn't touch the effects board. It pauses while the window is hidden, stops for good once playback starts, and draws one still frame with reduced motion. The logo-screen overlay is more translucent so the backdrop shows through.
+- **GHOST egg on the logo screen:** Ctrl+Alt+G now plays its DATA.. / "!" show where it is pressed, including on the logo screen and the link tree; previously it jumped to the link tree. Before playback, the MISSING LINK card appears inside the gold card on the logo screen (and at the end of the link tree), and the backdrop turns crimson and reads GHOST // OF ME // ARMED. Starting the card loads GHOST before its track; if the track can't start, the link tree stays open on its card. A card, another source or a failed GHOST load started while the show is still running is respected: the end of the show no longer re-arms the egg, moves focus or replaces the GHOST notice.
+- **Ghost key:** Ctrl+Alt+G follows the physical G key, so it works on any keyboard layout. Inside a text field it counts only when the key types a g, so AltGr characters can still be typed.
+- **Glyph tables rebuilt and guarded:**
+  - `tools\build-glyph-tables.mjs` regenerates `webui\js\glyph-tables.js` from the Unicode Character Database 15.1.0 and the IBMGRAPH/CP437 mappings, each pinned by size and SHA-256. The result is identical to the projector's 125 tables and 127,648 code points.
+  - `node tools\build-glyph-tables.mjs --check` downloads the references again and fails on any difference.
+  - At startup every table is validated (name, ranges, forbidden code points, count and checksum) and frozen. A failing table is left out with a logged warning.
+  - The Unicode License v3 is included in THIRD-PARTY-NOTICES.
+- **White specks fixed:** in the native app (seen at 150% scale on an NVIDIA GPU), the logo screen's gold glow faded to fully transparent over the live backdrop and left a static arc of white specks near the window controls. The glow now keeps a small alpha floor; the specks are gone and the glow looks the same.
+- Tests: `build.cmd` passed 96 host tests, 132 web tests and 1 CAB integration test; the CAB contains 246 runtime files. New web tests cover the generated glyph tables and their guard, the landing backdrop, and the logo-screen egg flow, including the physical-key rule and a card started during the show. An independent code review found that last bug, which was fixed before this build. The installed build was checked natively: the logo screen, Ctrl+Alt+G with its confirmation, the "!" show and the armed MISSING LINK card. See BUILD_STATUS.md.
+
 ## Silent update 2 — 2026-11-04 (version remains 4.0.0)
 
 Replacement build for the existing `RELEASE_4.0` installer and checksum assets; the version and release tag remain unchanged.

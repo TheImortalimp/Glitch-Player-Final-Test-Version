@@ -24,8 +24,10 @@
         <i data-resize="top"></i><i data-resize="bottom"></i><i data-resize="left"></i><i data-resize="right"></i>
         <i data-resize="top-left"></i><i data-resize="top-right"></i><i data-resize="bottom-left"></i><i data-resize="bottom-right"></i>
     </div>
+    <div id="landingBackdrop" aria-hidden="true"><canvas></canvas></div>
     <section id="welcomeScreen" role="dialog" aria-modal="true" aria-label="Glitch Canvas initialization">
         <div class="welcomePanel">
+            <div class="welcomeGlints" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
             <div class="welcomeMark" aria-hidden="true"><span>[</span>R<span>]</span></div>
             <p class="welcomeKicker">STANDALONE REVISION R FINAL 4.0</p>
             <h1>Glitch Canvas Initialization</h1>
@@ -41,6 +43,7 @@
             <div class="welcomeActions">
                 <button id="welcomeEnterBtn" type="button">Choose Media</button>
                 <a class="welcomeSiteLink" href="https://www.imortalimp.nl" target="_blank" rel="noopener noreferrer">imortalimp.nl</a>
+                <button id="welcomeGhostLink" type="button" class="welcomeGhostLink" title="neuronist - MEGAMIX VOL.7 (the 3.0 hidden track, revealed by Ctrl+Alt+G; starting it loads GHOST // OF ME)" hidden><span class="welcomeGhostName">MISSING LINK</span><span class="welcomeGhostMeta">neuronist · MEGAMIX VOL.7 · GHOST // OF ME</span></button>
             </div>
             <p class="welcomeStatus"><span class="statusDot" aria-hidden="true"></span> LOCAL APP HOST READY</p>
         </div>
@@ -175,7 +178,9 @@
     </svg>
 
     <script src="js/glitch-engine.js"></script>
+    <script src="js/glyph-tables.js"></script>
     <script src="js/glyph-library.js"></script>
+    <script src="js/landing-backdrop.js"></script>
     <script src="js/r3-factories.js"></script>
     <script src="js/r3-ghost-vsync.js"></script>
     <script src="js/r4-policy.js"></script>

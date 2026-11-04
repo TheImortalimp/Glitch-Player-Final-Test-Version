@@ -10392,9 +10392,10 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
            *  GHOST loads before the MISSING LINK track starts (ghostStartHook): *
            *  confirmed during playback, the chord loads it and switches to the  *
            *  track; confirmed before playback, it reveals the MISSING LINK card *
-           *  (the 3.0 hidden track) and loads when that track is started. A     *
-           *  typed or pasted MISSING LINK link loads it too. Flash and Strobe   *
-           *  go through the same capped light path as presets; the automatic    *
+           *  (the 3.0 hidden track) in the gold panel on the landing page and   *
+           *  in the link tree, and loads when that track is started. A typed    *
+           *  or pasted MISSING LINK link loads it too. Flash and Strobe go      *
+           *  through the same capped light path as presets; the automatic       *
            *  switch turns ON only behind this confirmation (or if it is already *
            *  ON). Hand locks hold.                                              *
            * ------------------------------------------------------------------ */
@@ -10406,12 +10407,21 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               const GHOST_FONTS = ['"Courier New", monospace', 'monospace', '"Arial Black", sans-serif',
                   'Impact, sans-serif', 'Georgia, serif', '"Times New Roman", serif', 'Verdana, sans-serif'];
               const ghostLink = $('ghostLink');
+              const welcomeGhostLink = $('welcomeGhostLink');
               let ghostSettings = null;
               let running = false;
               /* set for the session once the GHOST warning is confirmed */
               let ghostConsent = false;
               let ghostAttempts = 0;
               bindSuggestedStart(ghostLink, GHOST_TRACK_URL, false);
+              /* The landing-page copy of the card leaves the welcome screen first,
+                 so the playback UI can take over once the track starts. If the
+                 track cannot start, the link tree stays open on the same card. */
+              if (welcomeGhostLink) welcomeGhostLink.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  if (!document.body.classList.contains('welcome-dismissed') && welcomeEnterBtn) welcomeEnterBtn.click();
+                  if (!startPlayback(GHOST_TRACK_URL, false) && ghostLink) ghostLink.focus();
+              });
 
               function applyGhostNow() {
                   if (!ghostSettings) ghostSettings = mapLabSnapshot(GHOST_OF_ME.settings);
@@ -10520,7 +10530,9 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
 
               document.addEventListener('keydown', (e) => {
                   if (!e.ctrlKey || !e.altKey || e.shiftKey || e.metaKey || e.repeat) return;
-                  if (String(e.key).toLowerCase() !== 'g') return;
+                  /* The physical G key works on any layout; inside a text field only
+                     a typed g counts, so an AltGr character never opens the warning. */
+                  if (String(e.key).toLowerCase() !== 'g' && (e.code !== 'KeyG' || isTypingTarget(e.target))) return;
                   e.preventDefault();
                   if (running) return;
                   if (!window.confirm('GHOST // OF ME - photosensitivity warning: flashing DATA text, strobe, whole-app hue and black-and-white inversion, and continual randomization. GHOST loads when its MISSING LINK track starts (during playback the track starts now), and it turns the Flash & Strobe (automatic) switch ON: Flash is capped at 20% and Strobe at 35%, and both move on their own while the switch is ON. This is not a photosensitivity-safe mode. Continue?')) return;
@@ -10536,17 +10548,29 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                           const notice = applyGhostSafely();
                           if (notice) showNotificationMessage(notice, 5200);
                       }
-                  } else if (ghostLink) {
-                      ghostLink.hidden = false;
-                      ghostLink.style.display = '';
+                  } else {
+                      if (ghostLink) {
+                          ghostLink.hidden = false;
+                          ghostLink.style.display = '';
+                      }
+                      if (welcomeGhostLink) welcomeGhostLink.hidden = false;
                       if (ytInput) ytInput.value = GHOST_TRACK_URL;
                   }
+                  /* The cards can be clicked while the show runs (the egg layer
+                     never blocks input), so the reveal at its end yields to any
+                     source start or GHOST load that happened meanwhile. */
+                  const sourceGeneration = localMediaGeneration;
+                  const showAttempts = ghostAttempts;
                   playGhostShow(() => {
                       running = false;
                       if (playing || document.body.classList.contains('playback-on')) return;
-                      if (!document.body.classList.contains('welcome-dismissed') && welcomeEnterBtn) welcomeEnterBtn.click();
+                      if (localMediaGeneration !== sourceGeneration || ghostAttempts !== showAttempts) return;
                       document.documentElement.classList.add('ghost-egg-armed');
-                      if (ghostLink) ghostLink.focus();
+                      /* The show plays where the chord was pressed: on the landing page
+                         the card waits in the gold panel, otherwise in the link tree. */
+                      const onLanding = !document.body.classList.contains('welcome-dismissed');
+                      const card = onLanding ? welcomeGhostLink : ghostLink;
+                      if (card) card.focus();
                       showNotificationMessage('MISSING LINK revealed \u00b7 start it to load GHOST // OF ME.', 5200);
                   });
               });

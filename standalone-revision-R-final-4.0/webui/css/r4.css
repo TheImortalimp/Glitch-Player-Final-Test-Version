@@ -54,6 +54,26 @@ body:has(> #windowControls:not([hidden])) #sourceScreen { padding-top: calc(52px
 body.native-fullscreen #windowResize, body.native-fullscreen #windowDrag { display: none; }
 body.ui-hidden #windowControls { visibility: hidden; }
 
+/* Landing backdrop: a calm GHOST PROTOCOL glyph field (landing-backdrop.js)
+   behind the translucent welcome and source screens; gone once playback starts. */
+#landingBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;
+    background: #030305;
+    pointer-events: none;
+}
+#landingBackdrop::after {
+    position: absolute;
+    inset: 0;
+    content: '';
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.24) 0 1px, transparent 1px 3px);
+}
+body.playback-on #landingBackdrop { display: none; }
+/* Before playback, notices show above the welcome and source screens. */
+body:not(.playback-on) .notification { z-index: 20500; }
+
 #sourceScreen {
     position: fixed;
     inset: 0;
@@ -65,7 +85,7 @@ body.ui-hidden #windowControls { visibility: hidden; }
     overflow: auto;
     box-sizing: border-box;
     padding: 52px 24px 32px;
-    background: radial-gradient(ellipse at top, #162128, #050708 65%);
+    background: radial-gradient(ellipse at top, rgba(22, 33, 40, 0.74), rgba(5, 7, 8, 0.58) 65%);
 }
 
 #sourceScreen > #sourceHeading,
@@ -200,6 +220,22 @@ body.ui-hidden #windowControls { visibility: hidden; }
 
 #ytLinkTree > .ytLink:focus-visible { outline: 2px solid #f2d27e; outline-offset: 2px; }
 
+/* Interval tint (card-tint in welcome-screen.css): one card after another
+   takes a brief hue turn and black-and-white fade, about 2.4 s apart. It
+   pauses on the card under the pointer or keyboard focus. */
+#ytLinkTree > .ytLink:not(#ghostLink) { animation: card-tint 26s linear -18.3s infinite; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(2) { animation-delay: -15.9s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(3) { animation-delay: -13.5s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(4) { animation-delay: -11.1s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(5) { animation-delay: -8.7s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(6) { animation-delay: -6.3s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(7) { animation-delay: -3.9s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(8) { animation-delay: -1.5s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(9) { animation-delay: 0.9s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(10) { animation-delay: 3.3s; }
+#ytLinkTree > .ytLink:not(#ghostLink):nth-child(11) { animation-delay: 5.7s; }
+#ytLinkTree > .ytLink:not(#ghostLink):is(:hover, :focus-visible) { animation: none; }
+
 #ytLinkTree .ytLinkName {
     color: #eaf4ff;
     font: 400 1.02rem/1.15 Impact, 'Arial Black', 'Franklin Gothic Heavy', sans-serif;
@@ -273,8 +309,10 @@ html.ghost-egg-still { filter: grayscale(1) contrast(1.2) !important; }
     text-shadow: 0 0 40px #00ff00;
     transition: opacity 0.5s linear;
 }
-/* Armed and waiting for a source: a slow, non-flashing hue and gray drift. */
-html.ghost-egg-armed #sourceScreen { animation: ghost-egg-armed 24s linear infinite; }
+/* Armed and waiting for a source: a slow, non-flashing hue and gray drift
+   on the link tree, and on the gold card when armed on the landing page. */
+html.ghost-egg-armed #sourceScreen,
+html.ghost-egg-armed .welcomePanel { animation: ghost-egg-armed 24s linear infinite; }
 @keyframes ghost-egg-armed {
     0%, 100% { filter: hue-rotate(0deg) grayscale(0); }
     25%      { filter: hue-rotate(90deg) grayscale(0.85); }
