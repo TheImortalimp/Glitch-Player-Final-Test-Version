@@ -7678,9 +7678,52 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           function hardCutValue(name, cur, target, now) {
               if (isManualLight(name) || voiceTransition(name) !== 'cut' || !HARD_CUT_MODES.has(randBehavior)) return null;
               if (Math.abs(target - cur) < 0.2 || now - (hardCutAt[name] || 0) < HARD_CUT_MIN_GAP_MS) return null;
-              if (Math.random() > voiceTraits[name].cutOdds * (softWild() ? 2 : 1)) return null;
+              /* R4.1.2: a hard-cutting track cuts more often, a soft one rarely */
+              const cutFreqK = 0.6 + 0.8 * activeTrackTiming().cut;
+              if (Math.random() > voiceTraits[name].cutOdds * cutFreqK * (softWild() ? 2 : 1)) return null;
               hardCutAt[name] = now;
-              return cur + (target - cur) * 0.85;
+              /* R4.1.2 SOFT-TO-HARD CUTS: each cut lands on a spectrum — a soft
+                 cut travels about half way, a hard cut nearly all the way —
+                 biased by the playing track's cut character. */
+              const depth = 0.5 + 0.45 * clamp01(activeTrackTiming().cut + (Math.random() - 0.5) * 0.3);
+              return cur + (target - cur) * depth;
+          }
+          /* R4.1.2 PER-TRACK TIMING — each named link-tree video carries its own
+             transition timing, built from what YouTube already tells the player
+             (the embed's video id and reported duration; no new network surface).
+             pace scales the retarget cadence (>1 = roomier), breath scales the
+             breathing-room odds, and cut (0..1) biases the cut spectrum from
+             soft toward hard. Unknown videos class themselves by duration;
+             local media keeps the defaults. The lights are untouched by all
+             of this: their calmer bounded automation never reads these. */
+          const TRACK_TIMINGS = Object.freeze({
+              'gopYmb38DgM': Object.freeze({ pace: 1.25, breath: 1.25, cut: 0.25 }), // TERMINAL 1987 — calm dev stream
+              'uvSXL6ypLlw': Object.freeze({ pace: 0.95, breath: 0.90, cut: 0.60 }), // REVISIONS — album drive
+              '8o6bdTOhIyE': Object.freeze({ pace: 1.10, breath: 1.10, cut: 0.40 }), // GHOSTNET.EXE — coding mix
+              'QsUmvGkXhnk': Object.freeze({ pace: 0.80, breath: 0.70, cut: 0.80 }), // GLITCH SET — live set, hard
+              'RgFaK6ZQifE': Object.freeze({ pace: 0.85, breath: 0.80, cut: 0.70 }), // SEWERSLVT RADIO — lively
+              'u4TPBkN0vIc': Object.freeze({ pace: 1.30, breath: 1.35, cut: 0.20 }), // TRIPPY FRACTALS — drifting VJ loop
+              'KlcsGjI6Jms': Object.freeze({ pace: 1.40, breath: 1.40, cut: 0.15 }), // NIGHT CITY WALK — ambience, softest
+              'NpSTV8WJATc': Object.freeze({ pace: 1.20, breath: 1.15, cut: 0.45 }), // DARKSYNTH RADIO — slowed, heavy
+              'jmEAP7aGo0o': Object.freeze({ pace: 0.75, breath: 0.65, cut: 0.85 }), // DEFCON 1 — hardest cuts
+              'B1CL4PqHh9k': Object.freeze({ pace: 1.30, breath: 1.30, cut: 0.20 }), // MOONLIGHT — glassy calm
+              'kCP2xZvhJk0': Object.freeze({ pace: 1.15, breath: 1.20, cut: 0.10 }), // WHITE 2 BLACK 2 WHITE — pure glide
+              'DmStNF35o1w': Object.freeze({ pace: 1.00, breath: 1.10, cut: 0.35 })  // GHOST // OF ME — spectral mid
+          });
+          const TRACK_TIMING_DEFAULT = Object.freeze({ pace: 1, breath: 1, cut: 0.5 });
+          const TRACK_TIMING_LONG = Object.freeze({ pace: 1.2, breath: 1.25, cut: 0.35 });
+          const TRACK_TIMING_SHORT = Object.freeze({ pace: 0.85, breath: 0.8, cut: 0.7 });
+          function trackTimingForVideo(id, durationSec) {
+              if (id && TRACK_TIMINGS[id]) return TRACK_TIMINGS[id];
+              /* YouTube's reported duration classes unknown videos: long-form
+                 sits calm, short tracks run livelier. */
+              if (durationSec >= 480) return TRACK_TIMING_LONG;
+              if (durationSec > 0 && durationSec <= 150) return TRACK_TIMING_SHORT;
+              return TRACK_TIMING_DEFAULT;
+          }
+          function activeTrackTiming() {
+              if (!nowPlaying || nowPlaying.kind !== 'youtube') return TRACK_TIMING_DEFAULT;
+              return trackTimingForVideo(nowPlaying.videoId, nowPlaying.duration || 0);
           }
           /* R4.1.1 BREATHING ROOM — silence between transitions. At a retarget a
              voice may begin a rest: it keeps its current level and target and is
@@ -7698,6 +7741,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               const t = voiceTraits[name];
               let odds = BREATH_ODDS * (t && t.kind === 'glide' ? 1.15 : 1);
               if (HARD_CUT_MODES.has(mode) || mode === 'flipBurst' || mode === 'zoomBurst') odds *= 0.5;
+              odds *= activeTrackTiming().breath;   /* R4.1.2: calm tracks breathe more */
               if (Math.random() >= odds) return false;
               voiceBreathUntil[name] = now + BREATH_MS[0] + Math.random() * (BREATH_MS[1] - BREATH_MS[0]);
               return true;
@@ -7941,7 +7985,8 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               nextRetargetAt = now + (cadence[0] + Math.random() * (cadence[1] - cadence[0])) * (isAutoGlitching ?
                   1.25 : 1) * (1.18 - 0.30 * clamp(videoPalette.energy, 0, 1) - 0.12 * srcMotionK()) *
                   GlitchEngine.softCadenceK(softK()) *           /* R2: ~2.3× slower retargets when calm */
-                  (1 - 0.18 * clamp01(SOFT.beat));               /* R2: the ear nudges the next beat */
+                  (1 - 0.18 * clamp01(SOFT.beat)) *              /* R2: the ear nudges the next beat */
+                  activeTrackTiming().pace;                      /* R4.1.2: the track sets the room */
           }
 
           function stepContinualRandomization(now, dt) {

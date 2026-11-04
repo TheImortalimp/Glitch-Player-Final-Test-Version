@@ -4,7 +4,7 @@ rem Release build for Glitch Player standalone-revision-R-final-4.1.
 rem Runs the tests, publishes the self-contained x64 host and compiles the per-user NSIS installer.
 rem Plain cmd on purpose: no PowerShell and no execution-policy changes.
 
-set "VERSION=4.1.1"
+set "VERSION=4.1.2"
 set "ROOT=%~dp0"
 set "ROOT=%ROOT:~0,-1%"
 set "OUT=%ROOT%\out"
@@ -58,6 +58,18 @@ if not defined HASH goto :fail
 set "HASH=%HASH: =%"
 > "%SETUP%.sha256" echo %HASH%  %SETUP_NAME%
 
+echo [build] Microsoft Defender scan
+set "MPCMD=%ProgramFiles%\Windows Defender\MpCmdRun.exe"
+if not exist "%MPCMD%" set "MPCMD="
+if not defined MPCMD for /f "delims=" %%D in ('dir /b /ad /o-n "%ProgramData%\Microsoft\Windows Defender\Platform" 2^>nul') do if not defined MPCMD set "MPCMD=%ProgramData%\Microsoft\Windows Defender\Platform\%%D\MpCmdRun.exe"
+if not defined MPCMD (
+    echo [build] Defender not found - scan skipped.
+) else (
+    "%MPCMD%" -Scan -ScanType 3 -File "%SETUP%" >nul || goto :threat
+    "%MPCMD%" -Scan -ScanType 3 -File "%OUT%\app" >nul || goto :threat
+    echo [build] Defender: no threats in the installer or working package.
+)
+
 popd
 echo [build] Installer: %SETUP%
 echo [build] SHA-256:   %HASH%
@@ -75,6 +87,9 @@ echo [build] The publish output unexpectedly contains FFmpeg files.
 goto :fail
 :symbols
 echo [build] The publish output unexpectedly contains debug symbols.
+goto :fail
+:threat
+echo [build] Microsoft Defender reported a threat in the build output.
 goto :fail
 :fail
 popd

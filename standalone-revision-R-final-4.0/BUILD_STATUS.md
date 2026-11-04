@@ -2,6 +2,26 @@
 
 This file records what was actually built and tested, and what hasn't been tested yet. "Verified" means the check was run and passed on the machine below. The binaries are **not code-signed**.
 
+## 4.1.2 build note (2026-11-04)
+
+**Native Windows build, guarded end to end.** Built on Windows 11 x64 with `build.cmd`: **260 tests total** (96 xUnit
+host tests, 163 Node web tests - new: `track-timing.test.mjs` - and 1 CAB integration test). The build's new
+**Defender guard** scanned the installer and working package itself: no threats.
+
+## Current build (4.1.2)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.1.2-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,670,582 bytes |
+| SHA-256 | `227d72ed712b84c47ba84fc38a6dcdfdb2b80835eddafe7d5a2a4a318238e1d9` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `fb072d93ce7bb29623e882d3b6dafc41f80324afa840cb7809437a2fb5fb60da`) plus `payload.cab` (44,022,814 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `eb72075dcebf12a8e90c133d979f07b27d03af2ed26d861b5b88509e17276ed6` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.1.2` |
+| Signed | No |
+| Built | 2026-11-04 |
+
 ## 4.1.1 build note (2026-11-04)
 
 **Native Windows build, complete and clean.** Built on Windows 11 x64 with `build.cmd` after the manifest and
@@ -9,7 +29,7 @@ glyph-table guards: **255 tests total** (96 xUnit host tests, 158 Node web tests
 and `aesthetic-palette.test.mjs` - and 1 CAB integration test). Microsoft Defender scanned the installer and the
 working package: no threats.
 
-## Current build (4.1.1)
+## Previous build (4.1.1)
 
 | Item | Value |
 | --- | --- |
@@ -65,10 +85,11 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the 4.1.1 build above: **255 tests total**
-(96 xUnit host tests, **158** Node web tests - new in 4.1.1: the breathing-room and aesthetic-palette tests; new in
-4.1.0: the effects-manifest, preset-schema, surfaces and MACHINE-preset definition tests - and 1 CAB integration
-test). The suite content below was written for the 4.0.0 build and still applies.
+`build.cmd` runs all three suites and stops on a failure, then scans the output with Microsoft Defender. All passed
+for the 4.1.2 build above: **260 tests total** (96 xUnit host tests, **163** Node web tests - new in 4.1.2: the
+track-timing tests; in 4.1.1: the breathing-room and aesthetic-palette tests; in 4.1.0: the effects-manifest,
+preset-schema, surfaces and MACHINE-preset definition tests - and 1 CAB integration test). The suite content below
+was written for the 4.0.0 build and still applies.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
 - **132 Node web tests** (`tests\web`), covering:

@@ -15,6 +15,7 @@ function breathSandbox({ traits = {}, lights = new Set() } = {}) {
     vm.runInContext(`
         const HARD_CUT_MODES = new Set(['snap', 'burst', 'flipflop']);
         const voiceTraits = ${JSON.stringify(traits)};
+        function activeTrackTiming() { return { pace: 1, breath: 1, cut: 0.5 }; }
         const lightNames = new Set(${JSON.stringify([...lights])});
         function isManualLight(name) { return lightNames.has(name); }
         let nextRandom = 0;

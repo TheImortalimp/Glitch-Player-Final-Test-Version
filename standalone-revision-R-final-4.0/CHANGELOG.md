@@ -1,5 +1,12 @@
 # Changelog - Standalone Revision R Final 4.1
 
+## 4.1.2 - 2026-11-04 (GitHub release `RELEASE_4.1.2`) - Room & Cut
+
+- **Per-track timing from YouTube info.** Each named link-tree video (all 12 tracks, including the WHITE 2 BLACK 2 WHITE fade link and the GHOST // OF ME MISSING LINK track) carries its own transition timing - retarget pace, breathing-room odds and cut character - built from what the embed already tells the player (video id and reported duration; no new network surface). Unknown videos class themselves by duration: long-form sits calm, short tracks run livelier. Local media keeps the defaults.
+- **Soft-to-hard cuts.** A hard cut no longer always jumps 85% of the way: each cut lands on a spectrum from soft (about half way) to hard (about 95%), biased by the playing track's cut character, and hard-cutting tracks cut more often while soft ones cut rarely. The lights never hard-cut, exactly as before.
+- **Defender guard in the build.** `build.cmd` now ends by scanning the installer and the working package with Microsoft Defender (`MpCmdRun.exe -Scan -ScanType 3`) and fails the build on any reported threat. A machine without Defender skips the scan with a notice.
+- Tests: 163 web tests pass (new: `track-timing.test.mjs`, which checks every link-tree profile, the duration classes and the cut spectrum).
+
 ## 4.1.1 - 2026-11-04 (GitHub release `RELEASE_4.1.1`) - Breathing Room
 
 - **Breathing room between transitions.** At each retarget a voice may begin a rest: it keeps its current level and target and is skipped by retargets until its breath ends (1.1-3.4 s), so each effect's travel gets quiet space around it. Glide voices breathe slightly more often; the wild crescendo modes breathe half as often so showpieces stay lively. Lights (Flash/Strobe) are excluded - their calmer bounded automation from 4.1.0 is untouched, and the caps (20% / 35%) and sub-3 Hz rate are unchanged.
