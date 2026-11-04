@@ -2,6 +2,26 @@
 
 This file records what was actually built and tested, and what hasn't been tested yet. "Verified" means the check was run and passed on the machine below. The binaries are **not code-signed**.
 
+## 4.2.4 build note (2026-11-04)
+
+**The final consolidated build of the 4.x line.** Built on Windows 11 x64 with `build.cmd`: **272 tests total**
+(96 xUnit host tests, 175 Node web tests - new: the untied-voices and safe-B&W guards - and 1 CAB integration test).
+The build's **Defender guard** scanned the installer and working package: no threats.
+
+## Current build (4.2.4)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.2.4-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,669,065 bytes |
+| SHA-256 | `34b5b255a28fcdb5180a344c30c7080dc8d26091ac4929d62f50c46df0b4c8e0` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `de98404478f952b1d6e91b80d1705a43b4eb80a937938f4ebb8ebb7a8c2ce967`) plus `payload.cab` (44,024,830 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `9704b07c6ab837b1a363f815a80128aee1fbf29462b93370d0cca5183662257d` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.2.4` |
+| Signed | No |
+| Built | 2026-11-04 |
+
 ## 4.1.3 build note (2026-11-04)
 
 **Native Windows build, guarded end to end.** Built on Windows 11 x64 with `build.cmd`: **270 tests total** (96 xUnit
@@ -10,7 +30,7 @@ tests and the seeded-deck determination test - and 1 CAB integration test). The 
 online Unicode 15.1.0 / CP437 references and verified byte-identical. The build's **Defender guard** scanned the
 installer and working package: no threats.
 
-## Current build (4.1.3)
+## Previous build (4.1.3)
 
 | Item | Value |
 | --- | --- |
@@ -108,10 +128,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 ## Automated tests
 
 `build.cmd` runs all three suites and stops on a failure, then scans the output with Microsoft Defender. All passed
-for the 4.1.3 build above: **270 tests total** (96 xUnit host tests, **173** Node web tests - new in 4.1.3: the
-effect-cancellation, confluence-guard and seeded-deck tests; in 4.1.2: the track-timing tests; in 4.1.1: the
-breathing-room and aesthetic-palette tests; in 4.1.0: the definition tests - and 1 CAB integration test). The suite
-content below was written for the 4.0.0 build and still applies.
+for the 4.2.4 build above: **272 tests total** (96 xUnit host tests, **175** Node web tests - new in 4.2.4: the
+untied-voices and safe-B&W guards; in 4.1.3: the effect-cancellation, confluence-guard and seeded-deck tests; in
+4.1.2: the track-timing tests; in 4.1.1: the breathing-room and aesthetic-palette tests; in 4.1.0: the definition
+tests - and 1 CAB integration test). The suite content below was written for the 4.0.0 build and still applies.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
 - **132 Node web tests** (`tests\web`), covering:

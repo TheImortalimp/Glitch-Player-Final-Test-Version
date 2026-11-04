@@ -5687,12 +5687,15 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               gctx.restore();
           }
 
-          /* AI WARP activateTunedVoicePair: moving a master wakes its resting,
-             unlocked core voice and R3 twin so the change is visible. */
+          /* AI WARP activateTunedVoicePair: moving a master wakes its resting
+             core voice so the change is visible. R4.2.4 UNTIED: it wakes ONLY
+             the core voice — never its R3 twin. No voice may move another
+             voice's slider or value; only explicit randomization (Randomize
+             All, CR, aesthetic bursts) may form confluence pairs. */
           function activateTunedVoicePair(core) {
               if (fxPairLevel(core) > 0.004) return;
               let woke = false;
-              [[core, 0.35], ['R3 ' + core, 0.20]].forEach((pair) => {
+              [[core, 0.35]].forEach((pair) => {
                   const name = pair[0], v = pair[1];
                   if (automationHeld(name) || !Object.prototype.hasOwnProperty.call(effectAlphas, name)) return;
                   effectAlphas[name] = v;
@@ -6234,8 +6237,10 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           }
 
           function stepBwSweep(now) {
-              // Respect the user: locked slider or no playback → never sweep.
-              if (sliderLocks['B&W Invert'] || !document.body.classList.contains('playback-on')) {
+              // Respect the user: locked slider, cancelled effect or no playback → never sweep.
+              // R4.2.4: a cancelled B&W (slider to zero or ZERO ALL) can never be swept awake.
+              if (sliderLocks['B&W Invert'] || isEffectCancelled('B&W Invert') ||
+                  !document.body.classList.contains('playback-on')) {
                   if (bwSweep.active) bwSweepStandDown(now);
                   else if (now >= bwSweep.nextAt) bwSweepScheduleNext(now);
                   return;
@@ -8200,6 +8205,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           let nextBwAgAt = 0;
           function autoGlitchBwDrive(now) {
               if (!isAutoGlitching || sliderLocks['B&W Invert'] || bwSweepActive) return;
+              if (isEffectCancelled('B&W Invert')) return; /* R4.2.4: cancelled B&W never rail-hops */
               if (aestheticBurstLocked && aestheticBurstLocked.has('B&W Invert')) return;
               if (now < nextBwAgAt) return;
               nextBwAgAt = now + (1600 + Math.random() * 2800) * lerp(2.2, 1, softK()); /* R2: slower rail hops when calm */

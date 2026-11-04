@@ -65,6 +65,18 @@ test('a slider dragged to zero cancels its effect; presets and Randomize All re-
         'a tuned voice pick wakes its pair');
 });
 
+test('voices are untied: a master wakes only its own core voice, never the R3 twin (R4.2.4)', () => {
+    assert.ok(player.includes('[[core, 0.35]].forEach'), 'the tuned wake touches one voice');
+    assert.ok(!player.includes("[[core, 0.35], ['R3 ' + core, 0.20]]"), 'the R3 twin is no longer co-triggered');
+});
+
+test('B&W never starts automatically after ZERO ALL: sweep and rail hops respect cancellation (R4.2.4)', () => {
+    const sweep = player.slice(player.indexOf('function stepBwSweep('), player.indexOf('function autoGlitchUnpark('));
+    assert.ok(sweep.includes("isEffectCancelled('B&W Invert')"), 'the B&W sweep stands down while cancelled');
+    const drive = player.slice(player.indexOf('function autoGlitchBwDrive('), player.indexOf('function autoGlitchStep('));
+    assert.ok(drive.includes("isEffectCancelled('B&W Invert')"), "Auto Glitch's B&W rail hop skips a cancelled B&W");
+});
+
 test('voices separate: each carries join odds and glides travel longer than cuts', () => {
     assert.ok(player.includes('join: 0.6 + Math.random() * 0.3'), 'per-voice separation odds');
     assert.ok(player.includes('if (trait && Math.random() > trait.join) continue;'), 'the retarget loop staggers voices');

@@ -1,5 +1,21 @@
 # Changelog - Standalone Revision R Final 4.1
 
+## 4.2.4 - 2026-11-04 (GitHub release `RELEASE_4.2.4`) - Final Confluence
+
+**The final consolidated release of the Revision R 4.x line**, carrying every update since the r4.2 roadmaps were
+created: 4.1.0 "Definition & Confluence", 4.1.1 "Breathing Room", 4.1.2 "Room & Cut" and 4.1.3 "Strands", plus the
+voice-independence work below.
+
+- **Voices untied.** No voice may move another voice's slider or value anymore. Moving an AI WARP master (B&W, Hue)
+  wakes ONLY its own core voice - never its R3 twin - so ASCII no longer triggers when R3 ASCII is used and every
+  voice can be independently locked, triggered or set 0-100% or off via its own slider. Only explicit randomization
+  (Randomize All, Continual Randomization, aesthetic bursts) may form confluence pairs of voices.
+- **A properly safe ZERO ALL.** B&W Invert can no longer start automatically after ZERO ALL: the autonomous B&W
+  inversion sweep stands down and Auto Glitch's B&W rail hops are skipped while B&W is cancelled - on top of 4.1.3's
+  cancellation latch that already kept CR, the unpark and the aesthetic bursts away. No weird randomness unless you
+  say so.
+- Tests: 175 web tests pass (new: the untied-voices and safe-B&W guards in `effect-cancellation.test.mjs`).
+
 ## 4.1.3 - 2026-11-04 (GitHub release `RELEASE_4.1.3`) - Strands
 
 - **Effect cancellation.** A slider dragged to zero now CANCELS its effect, and ZERO ALL cancels every effect: a cancelled voice can never be started by any automation - not by Continual Randomization, not by Auto Glitch's unpark, not by an aesthetic burst (in any phase). Only the user wakes it: raising its slider, applying a preset, Randomize All, or picking a tuned voice pair. The lights are not latched - their confirmation-gated system already owns their stopping rules.
