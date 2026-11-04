@@ -19,7 +19,11 @@ See CHANGELOG.md and README.md for details.
 > **Photosensitivity warning:** effects can produce flashing and high-contrast flicker.
 
 ## Download notes
-The **Windows installer** `Glitch-Player-R4-4.2.4-x64-setup.exe` (44,669,065 bytes) was built natively on Windows 11
+The **Windows installer** `Glitch-Player-R4-4.2.4-x64-setup.exe` (44,688,622 bytes) was built natively on Windows 11
 x64 with `build.cmd`; the build's own Defender guard scanned it clean. It is **unsigned**, so SmartScreen may warn.
 
-Installer SHA-256: `34b5b255a28fcdb5180a344c30c7080dc8d26091ac4929d62f50c46df0b4c8e0`
+This replacement build also **redoes the installer flow**: no truncated titles, a new install-folder page, naming
+updated to Final Confluence 4.2.4, and **Defender guard rails** - Setup scans the installed folder with
+`MpCmdRun.exe` and rolls the install back on any reported threat.
+
+Installer SHA-256: `2650e9a21ff8e3eaa85248e576de9bc40131ef4881f30b4e3f1ff49ab3532026`

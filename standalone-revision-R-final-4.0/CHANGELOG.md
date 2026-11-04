@@ -16,6 +16,21 @@ voice-independence work below.
   say so.
 - Tests: 175 web tests pass (new: the untied-voices and safe-B&W guards in `effect-cancellation.test.mjs`).
 
+### Installer flow redone - 2026-11-04 (replacement build, version stays 4.2.4)
+
+The `RELEASE_4.2.4` installer asset was replaced by a build with a redone installer flow; the app itself is unchanged.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.2.4-x64-setup.exe`, 44,688,622 bytes |
+| SHA-256 | `2650e9a21ff8e3eaa85248e576de9bc40131ef4881f30b4e3f1ff49ab3532026` |
+| CAB payload SHA-256 | `c3b54a358c3e7e477e051722fc88229141cae5a3be672a2714b06cfdd8dd948c` |
+| Signed | No. Windows SmartScreen may warn. |
+
+- **Cut-off text fixed.** The long revision name no longer truncates: the installer uses a short window caption (`Glitch Player R4 4.2.4`), explicit three-line welcome and finish titles, and short per-page headers, with the full name kept in the version keys.
+- **Flow redone:** welcome (what the installer does and the flow ahead) -> installer notices -> licence -> install-folder page (new; explains normalisation and that your data lives elsewhere) -> install -> finish (run / desktop-shortcut options, signing and photosensitivity reminders).
+- **Defender guard rails in the installer:** after copying everything (launcher, CAB, notices, uninstaller), Setup locates `MpCmdRun.exe` (stock path or the newest Defender Platform folder) and runs a custom scan over the installed folder. Any reported threat rolls the install back (guarded by the own-folder rule) and aborts Setup; a machine without Defender gets a logged notice. Naming and registry entries now carry `Final Confluence 4.2.4`.
+
 ## 4.1.3 - 2026-11-04 (GitHub release `RELEASE_4.1.3`) - Strands
 
 - **Effect cancellation.** A slider dragged to zero now CANCELS its effect, and ZERO ALL cancels every effect: a cancelled voice can never be started by any automation - not by Continual Randomization, not by Auto Glitch's unpark, not by an aesthetic burst (in any phase). Only the user wakes it: raising its slider, applying a preset, Randomize All, or picking a tuned voice pair. The lights are not latched - their confirmation-gated system already owns their stopping rules.

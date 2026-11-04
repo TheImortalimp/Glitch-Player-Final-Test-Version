@@ -116,7 +116,7 @@ Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, Windows .NE
 
 1. Download `Glitch-Player-R4-4.2.4-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.2.4 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.2.4), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
 2. Setup installs for the current account only, into `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, without administrator rights. It adds a Start Menu shortcut but no desktop shortcut.
-3. Setup and the uninstaller refuse to run while the app is open.
+3. Setup and the uninstaller refuse to run while the app is open. At the end of the install, Setup asks Microsoft Defender to scan everything it installed and rolls the install back if a threat is reported.
 
 Your data is kept in `%LOCALAPPDATA%\Glitch-Player-R4`: the WebView2 profile with your presets, `settings.json`, the media cache and key, and size-capped logs. Uninstalling keeps this folder unless you choose to delete it. Export your presets first if you want a backup.
 

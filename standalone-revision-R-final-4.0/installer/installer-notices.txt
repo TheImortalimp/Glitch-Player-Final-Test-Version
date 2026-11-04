@@ -1,4 +1,4 @@
-GLITCH PLAYER - STANDALONE REVISION R FINAL 4.0
+GLITCH PLAYER R4 - STANDALONE REVISION R - FINAL CONFLUENCE (4.2.4)
 Installer notices - please read before continuing.
 
 1. NOT CODE-SIGNED
@@ -7,10 +7,13 @@ Installer notices - please read before continuing.
    downloaded from the official GitHub release, and compare its SHA-256
    checksum with the published value.
 
-2. PER-USER INSTALL, NO ADMINISTRATOR RIGHTS
+2. PER-USER INSTALL, NO ADMINISTRATOR RIGHTS, DEFENDER GUARD
    The app installs only for the current Windows account, into
    %LOCALAPPDATA%\Programs\Glitch-Player-R4, and needs no administrator
-   rights. Setup itself runs no scripts and changes no Windows settings.
+   rights. Setup itself runs no scripts, downloads nothing and changes no
+   Windows settings. At the end of the install, Setup asks Microsoft
+   Defender (MpCmdRun.exe) to scan everything it installed; if Defender
+   reports a threat, Setup removes what it copied and stops.
 
    While the app is running, its cursor guard (from K-Meleon-R) protects
    your account against themed-pointer takeovers. It resets any mouse

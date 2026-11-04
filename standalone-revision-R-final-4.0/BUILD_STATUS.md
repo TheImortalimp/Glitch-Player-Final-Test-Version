@@ -8,19 +8,23 @@ This file records what was actually built and tested, and what hasn't been teste
 (96 xUnit host tests, 175 Node web tests - new: the untied-voices and safe-B&W guards - and 1 CAB integration test).
 The build's **Defender guard** scanned the installer and working package: no threats.
 
-## Current build (4.2.4)
+## Current build (4.2.4, installer flow redone)
 
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.2.4-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,669,065 bytes |
-| SHA-256 | `34b5b255a28fcdb5180a344c30c7080dc8d26091ac4929d62f50c46df0b4c8e0` |
-| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `de98404478f952b1d6e91b80d1705a43b4eb80a937938f4ebb8ebb7a8c2ce967`) plus `payload.cab` (44,024,830 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `9704b07c6ab837b1a363f815a80128aee1fbf29462b93370d0cca5183662257d` |
+| Size | 44,688,622 bytes |
+| SHA-256 | `2650e9a21ff8e3eaa85248e576de9bc40131ef4881f30b4e3f1ff49ab3532026` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `12f7cb1df7685b821e3aeb05979412d8f19c7fb17e698ce7cdad7e0483915dbc`) plus `payload.cab` (44,044,050 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `c3b54a358c3e7e477e051722fc88229141cae5a3be672a2714b06cfdd8dd948c` |
 | Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
-| Asset target | GitHub release `RELEASE_4.2.4` |
+| Asset target | GitHub release `RELEASE_4.2.4` (replaced asset, same name) |
 | Signed | No |
 | Built | 2026-11-04 |
+
+The replacement build redoes the installer flow only: no truncated titles (short caption, three-line welcome/finish
+titles, per-page headers), a new install-folder page, and Defender guard rails - Setup scans the installed folder
+with `MpCmdRun.exe` and rolls back on any reported threat.
 
 ## 4.1.3 build note (2026-11-04)
 

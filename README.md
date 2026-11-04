@@ -7,7 +7,8 @@ since the r4.2 roadmaps were created (4.1.0 through 4.1.3) plus full voice indep
 slider or value, ASCII no longer triggers when R3 ASCII is used, B&W never starts automatically after ZERO ALL, and
 only explicit randomization may form confluence pairs.
 
-- [Download the Windows installer from the RELEASE_4.2.4 release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.2.4) (`Glitch-Player-R4-4.2.4-x64-setup.exe`, 44,669,065 bytes). Its SHA-256 is `34b5b255a28fcdb5180a344c30c7080dc8d26091ac4929d62f50c46df0b4c8e0`; compare it before running setup. It is not code-signed, so Windows SmartScreen may warn.
+- [Download the Windows installer from the RELEASE_4.2.4 release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.2.4) (`Glitch-Player-R4-4.2.4-x64-setup.exe`, 44,688,622 bytes). Its SHA-256 is `2650e9a21ff8e3eaa85248e576de9bc40131ef4881f30b4e3f1ff49ab3532026`; compare it before running setup. It is not code-signed, so Windows SmartScreen may warn.
+- The installer flow is redone: no truncated text, an install-folder page, Final Confluence naming, and **Defender guard rails** — Setup scans everything it installed with `MpCmdRun.exe` and rolls back on any reported threat.
 - The installer was built natively on Windows 11 x64 with `build.cmd`; all 272 tests passed (96 .NET host, 175 web, 1 CAB integration) and the build's own Defender guard scanned it clean.
 - [Read the 4.1 README](standalone-revision-R-final-4.0/README.md) for the merged effects, presets, building and installing. It includes a photosensitivity warning for the flash and strobe effects.
 - [Changelog](standalone-revision-R-final-4.0/CHANGELOG.md), [security and hardening](standalone-revision-R-final-4.0/SECURITY.md), [build status](standalone-revision-R-final-4.0/BUILD_STATUS.md) and [roadmaps beyond 4.1](standalone-revision-R-final-4.0/docs/r4.2-roadmaps/README.md).
