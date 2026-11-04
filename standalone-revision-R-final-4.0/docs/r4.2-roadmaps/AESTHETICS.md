@@ -2,8 +2,10 @@
 
 The 4.x look: gold [R] card with silver sheen, turning gold-and-silver rim, sparkle glints, prism band, GHOST PROTOCOL
 glyph rain, link-tree gleam waves, REVISION 4 // HARD LIGHT // MOONLIGHT. 4.1 loosened the SOFT-EYE engine's
-non-light aesthetic limits (ASCII, Matrix, bombs) and polished the landing card and link tree. This roadmap takes the
-look further without ever touching the light caps.
+non-light aesthetic limits (ASCII, Matrix, bombs) and polished the landing card and link tree. **4.1.1 grew the
+determined beautiful effects palette from 12 to 16 curated aesthetic-burst groups, adding four light-free scenes:
+`prismDrift`, `moonlightVeil`, `glyphRainfall` and `crtDaydream` (validated against the effects manifest by
+`aesthetic-palette.test.mjs`).** This roadmap takes the look further without ever touching the light caps.
 
 ## Principles
 - Lights are safety; everything else is taste. Flash/Strobe caps, sub-3 Hz and confirmation gates never move.

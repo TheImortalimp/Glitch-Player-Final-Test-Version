@@ -1,5 +1,19 @@
 # Changelog - Standalone Revision R Final 4.1
 
+## 4.1.1 - 2026-11-04 (GitHub release `RELEASE_4.1.1`) - Breathing Room
+
+- **Breathing room between transitions.** At each retarget a voice may begin a rest: it keeps its current level and target and is skipped by retargets until its breath ends (1.1-3.4 s), so each effect's travel gets quiet space around it. Glide voices breathe slightly more often; the wild crescendo modes breathe half as often so showpieces stay lively. Lights (Flash/Strobe) are excluded - their calmer bounded automation from 4.1.0 is untouched, and the caps (20% / 35%) and sub-3 Hz rate are unchanged.
+- **The beautiful effects palette grows from 12 to 16 curated aesthetic-burst groups.** The four new groups are light-free and calm by design (peaks <= 90%, holds >= 2 s, rests >= 5 s): `prismDrift` (Prism Rift + Chromatic Echo + Hue/Color Cycle), `moonlightVeil` (R3 Ghost Spectrum + Tape Grain + Scanlines), `glyphRainfall` (Cyber Rain + Matrix Chord + Ink Glyphs) and `crtDaydream` (Rolling Scan + Neon Grad + Tape Grain + Scanlines).
+- Tests: 158 web tests pass (new: `breathing-room.test.mjs` and `aesthetic-palette.test.mjs`, which also validates every palette group against the effects manifest). 255 tests in total with the 96 host tests and the CAB integration test.
+- Build: the NSIS installer was built natively on Windows 11 x64 with `build.cmd`, all 255 tests passing, and scanned clean by Microsoft Defender; see BUILD_STATUS.md.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.1.1-x64-setup.exe`, 44,691,298 bytes |
+| SHA-256 | `0471ffe6e8a3ba74d2e7e67a11ee345ce4a07c0c711c01a6b0622a165b885228` |
+| CAB payload SHA-256 | `6a74551874f5adf26fba564ead1b126d48f2824a63609d8c12da8301a16a6b03` |
+| Signed | No. Windows SmartScreen may warn. |
+
 ## 4.1.0 - 2026-11-04 (GitHub release `RELEASE_4.1`) - Definition & Confluence
 
 - Added machine-checked definitions: `effects.manifest.json`, `presets.schema.json`, `surfaces.manifest.json` and their generators (`tools/build-effects-manifest.mjs`, `tools/build-surfaces-manifest.mjs`, both with `--check`).

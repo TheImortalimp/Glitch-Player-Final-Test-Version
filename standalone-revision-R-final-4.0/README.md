@@ -2,7 +2,7 @@
 
 Revision R Final 4.1 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
 
-This is release **4.1.0 "Definition & Confluence"**, published as the GitHub release [`RELEASE_4.1`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1). It builds on the 4.0 line ([`RELEASE_4.0`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0)). See [What's new in 4.1](#whats-new-in-41).
+This is release **4.1.1 "Breathing Room"**, published as the GitHub release [`RELEASE_4.1.1`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1.1). It builds on 4.1.0 "Definition & Confluence" ([`RELEASE_4.1`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1)) and the 4.0 line ([`RELEASE_4.0`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0)). See [What's new in 4.1](#whats-new-in-41).
 
 > **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are capped at 20% and 35%. Presets can set their saved values within those caps; Randomize does not change them. Optional automatic movement is off by default, session-only and requires confirmation. When enabled it applies on any media, fades in, and eases to zero while local media is paused or ended. The GHOST // OF ME easter egg applies its saved, capped levels when its MISSING LINK track starts (including a typed or pasted link); it enables automatic movement only after its Ctrl+Alt+G confirmation. This is not a photosensitivity-safe mode.
 
@@ -14,6 +14,7 @@ Glitch Player R Final is a hardened Windows glitch-video player by River Lyle Re
 
 ## What's new in 4.1
 
+- **4.1.1 "Breathing Room":** silence between effect transitions - at each retarget a voice may rest for 1.1-3.4 s, holding its level so each transition has room to breathe (lights excluded; wild modes breathe half as often). The curated aesthetic-burst palette grows from 12 to 16 groups with four new light-free scenes: `prismDrift`, `moonlightVeil`, `glyphRainfall` and `crtDaydream`.
 - **Defined once, checked by tests.** `webui/data/effects.manifest.json` (43 voices, with caps, photosensitivity flags and transition character), `presets.schema.json` and `surfaces.manifest.json` (10 surfaces, 12 link-tree cards) describe the effects, presets and screens. `node tools/build-effects-manifest.mjs --check` and `node tools/build-surfaces-manifest.mjs --check` fail when they drift from the code.
 - **Fresh MACHINE presets.** The 80 generated MACHINE presets are no longer frozen and are re-rolled on every start and Refresh. LAB presets stay fixed.
 - **Calmer, non-coincident lights.** Flash (20%) and Strobe (35%) caps are unchanged. Automatic light targets are gentler, the lights rarely peak together, and each light re-rolls its sharpness, ease speed and rest chance (bounded) at every retarget. Lights never hard-cut.
@@ -110,7 +111,7 @@ Keyboard media keys, headset buttons and other apps can't control playback, beca
 
 Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, Windows .NET Framework 4.8 for the small launcher, and the Microsoft Edge WebView2 Runtime (Evergreen). The .NET 10 player runtime is bundled; no separate .NET 10 installation is needed.
 
-1. Download `Glitch-Player-R4-4.1.0-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.1 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
+1. Download `Glitch-Player-R4-4.1.1-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.1.1 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1.1), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
 2. Setup installs for the current account only, into `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, without administrator rights. It adds a Start Menu shortcut but no desktop shortcut.
 3. Setup and the uninstaller refuse to run while the app is open.
 
@@ -148,7 +149,7 @@ build.cmd
 3. Checks that the publish output contains the web UI and license files, and no FFmpeg files or `.pdb` symbols.
 4. Builds `out\app\payload.cab` and compiles the small launcher with pinned CAB and file hashes.
 5. Tests fresh/cached extraction and rejection of changed CABs, modified files, unexpected files and redirected cache entries.
-6. Compiles `out\Glitch-Player-R4-4.1.0-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it. No ZIP is produced.
+6. Compiles `out\Glitch-Player-R4-4.1.1-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it. No ZIP is produced.
 
 To run the tests on their own:
 

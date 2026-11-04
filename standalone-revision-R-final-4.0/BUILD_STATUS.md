@@ -2,6 +2,27 @@
 
 This file records what was actually built and tested, and what hasn't been tested yet. "Verified" means the check was run and passed on the machine below. The binaries are **not code-signed**.
 
+## 4.1.1 build note (2026-11-04)
+
+**Native Windows build, complete and clean.** Built on Windows 11 x64 with `build.cmd` after the manifest and
+glyph-table guards: **255 tests total** (96 xUnit host tests, 158 Node web tests - new: `breathing-room.test.mjs`
+and `aesthetic-palette.test.mjs` - and 1 CAB integration test). Microsoft Defender scanned the installer and the
+working package: no threats.
+
+## Current build (4.1.1)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.1.1-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,691,298 bytes |
+| SHA-256 | `0471ffe6e8a3ba74d2e7e67a11ee345ce4a07c0c711c01a6b0622a165b885228` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `dd1c33869f6a5c9cb86c6276f2e92502a0e7f7574fd8c4a85d0557de857a0339`) plus `payload.cab` (44,055,316 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `6a74551874f5adf26fba564ead1b126d48f2824a63609d8c12da8301a16a6b03` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.1.1` |
+| Signed | No |
+| Built | 2026-11-04 |
+
 ## 4.1.0 build note (2026-11-04)
 
 **Native Windows build complete.** Built on Windows 11 x64 with `build.cmd` (.NET SDK 10.0.403, Node.js 24.19.0, NSIS 3.13): all three suites passed — **245 tests total** (96 xUnit host tests, 148 Node web tests and 1 CAB integration test) — and the NSIS installer was produced and attached to the `RELEASE_4.1` release.
@@ -10,7 +31,7 @@ This file records what was actually built and tested, and what hasn't been teste
 
 An earlier cross-build on Linux (same SDK) produced the untested publish ZIP that was first attached to the release; the native installer below supersedes it for end users.
 
-## Current build (4.1.0)
+## Previous build (4.1.0)
 
 | Item | Value |
 | --- | --- |
@@ -44,7 +65,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the 4.1.0 build above: **245 tests total** (96 xUnit host tests, **148** Node web tests — new in 4.1: the effects-manifest, preset-schema, surfaces and MACHINE-preset definition tests — and 1 CAB integration test). The suite content below was written for the 4.0.0 build and still applies.
+`build.cmd` runs all three suites and stops on a failure. All passed for the 4.1.1 build above: **255 tests total**
+(96 xUnit host tests, **158** Node web tests - new in 4.1.1: the breathing-room and aesthetic-palette tests; new in
+4.1.0: the effects-manifest, preset-schema, surfaces and MACHINE-preset definition tests - and 1 CAB integration
+test). The suite content below was written for the 4.0.0 build and still applies.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
 - **132 Node web tests** (`tests\web`), covering:

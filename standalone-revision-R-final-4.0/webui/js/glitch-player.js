@@ -44,9 +44,10 @@
            linger and peak 0-100%, drift in-between, and burst-peak 50-100%
            (B&W full greyscale-inversion territory) — with temporal guards so
            white-grey-black washout and opacity-mixing never persist.
-         • AESTHETIC BURSTS v11: 10 curated groups with timed 0-100 peaks AND
+         • AESTHETIC BURSTS v11: 16 curated groups with timed 0-100 peaks AND
            timed reductions (dip phase) that fit together, creating variance
-           over time.
+           over time. R4.1.1 adds four light-free groups: prismDrift,
+           moonlightVeil, glyphRainfall and crtDaydream.
          • MACHINE PRESET MEMORY: 40 code-generated presets 'Deepseek-1' …
            'Deepseek-40' built on every page load — 40 definitively distinct
            combinations of levels, styles, locks, toggles and states. The
@@ -7681,6 +7682,26 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               hardCutAt[name] = now;
               return cur + (target - cur) * 0.85;
           }
+          /* R4.1.1 BREATHING ROOM — silence between transitions. At a retarget a
+             voice may begin a rest: it keeps its current level and target and is
+             skipped by retargets until its breath ends, so each effect's travel
+             gets quiet space around it. Glide voices breathe slightly more often;
+             the wild crescendo modes breathe half as often so showpieces stay
+             lively. Lights (Flash/Strobe) are excluded — their calmer bounded
+             automation is untouched. */
+          const BREATH_ODDS = 0.28;
+          const BREATH_MS = Object.freeze([1100, 3400]);
+          const voiceBreathUntil = {};
+          function voiceBreathing(name, now, mode) {
+              if (isManualLight(name)) return false;
+              if (now < (voiceBreathUntil[name] || 0)) return true;
+              const t = voiceTraits[name];
+              let odds = BREATH_ODDS * (t && t.kind === 'glide' ? 1.15 : 1);
+              if (HARD_CUT_MODES.has(mode) || mode === 'flipBurst' || mode === 'zoomBurst') odds *= 0.5;
+              if (Math.random() >= odds) return false;
+              voiceBreathUntil[name] = now + BREATH_MS[0] + Math.random() * (BREATH_MS[1] - BREATH_MS[0]);
+              return true;
+          }
           const PARKED_EPSILON = 0.02;
           /* R1 OLD-SOUL (006 final) — Continual Randomization is a background
              presence, never a takeover:
@@ -7770,6 +7791,9 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       randomTargets[name] = 0;
                       continue;
                   }
+                  /* R4.1.1: a breathing voice sits this retarget out — its level
+                     and target hold still, giving the last transition room. */
+                  if (voiceBreathing(name, now, mode)) continue;
                   const profile = blendProfiles[name];
                   // When AI warp is active, use boosted peak ranges for warp-blend effects
                   const effectiveProfile = (isAiWarpActive && WARP_BLEND_EFFECTS.has(name) && WARP_BLEND_PEAKS[name])
@@ -10090,6 +10114,42 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   dipMs:     [500, 1200],
                   restMs:    [4200, 8200],
                   warpOnly:  true
+              },
+              prismDrift: {
+                  // R4.1.1 — refraction drift: prism + echo over a slow hue walk (no lights)
+                  effects:   ['Prism Rift', 'Chromatic Echo', 'Hue/Color Cycle'],
+                  peakRange: [0.55, 0.90],
+                  holdMs:    [2600, 5200],
+                  dipRange:  [0.04, 0.14],
+                  dipMs:     [600, 1400],
+                  restMs:    [6000, 11000]
+              },
+              moonlightVeil: {
+                  // R4.1.1 — hazy broadcast moonlight: ghost spectrum under tape weather (no lights)
+                  effects:   ['R3 Ghost Spectrum', 'Tape Grain', 'Scanlines'],
+                  peakRange: [0.45, 0.85],
+                  holdMs:    [2800, 5600],
+                  dipRange:  [0.03, 0.12],
+                  dipMs:     [700, 1500],
+                  restMs:    [6500, 12000]
+              },
+              glyphRainfall: {
+                  // R4.1.1 — calm glyph rainfall: rain + chords + ink (no lights)
+                  effects:   ['Cyber Rain', 'Matrix Chord', 'Ink Glyphs'],
+                  peakRange: [0.50, 0.90],
+                  holdMs:    [2600, 5200],
+                  dipRange:  [0.05, 0.16],
+                  dipMs:     [600, 1400],
+                  restMs:    [5500, 10000]
+              },
+              crtDaydream: {
+                  // R4.1.1 — warm CRT daydream: rolling scan over neon and grain (no lights)
+                  effects:   ['Rolling Scan', 'Neon Grad', 'Tape Grain', 'Scanlines'],
+                  peakRange: [0.50, 0.90],
+                  holdMs:    [2400, 5000],
+                  dipRange:  [0.04, 0.15],
+                  dipMs:     [600, 1300],
+                  restMs:    [5500, 10500]
               }
           };
 

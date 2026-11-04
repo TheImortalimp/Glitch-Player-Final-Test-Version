@@ -1,12 +1,17 @@
 # Roadmap - Transition timing
 
 4.1 gave every voice a glide or cut transition character, per-session and in-session re-rolls, per-voice timing
-jitter and a minimum gap between hard cuts. This roadmap turns transition timing into a defined, testable system.
+jitter and a minimum gap between hard cuts. **4.1.1 "Breathing Room" shipped the first phase of this roadmap:
+silence between transitions** - at each retarget a voice may rest (1.1-3.4 s), holding its level and target so each
+effect's travel gets quiet space around it (lights excluded, wild modes breathe half as often; covered by
+`breathing-room.test.mjs`). This roadmap turns the rest of transition timing into a defined, testable system.
 
 ## Where we are
 - Per-voice characters (glide/cut, some swap per session), jitter, hard-cut spacing - implemented in
   `glitch-player.js`, asserted by the automation guards tests.
 - Light retargets have their own calmer system (sharpness, ease speed, rest chance within fixed bounds).
+- **Shipped in 4.1.1:** per-voice breathing rests between transitions (`BREATH_ODDS` / `BREATH_MS` in
+  `glitch-player.js`), guarded by `breathing-room.test.mjs`.
 
 ## Phases
 | Phase | Outcome | Exit criteria |
