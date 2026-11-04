@@ -9,7 +9,16 @@
 - Loosened non-light aesthetic limits in the SOFT-EYE engine (ASCII, Matrix, bombs).
 - Landing card and link tree styling polish.
 - Tests: 148 web tests pass (new: effects, presets schema, surfaces, MACHINE presets).
-- Build: a cross-built, untested, unsigned self-contained win-x64 publish is attached to the release. The NSIS installer must be built on Windows with `build.cmd`; see BUILD_STATUS.md.
+- Build: the NSIS installer was built natively on Windows 11 x64 with `build.cmd`, with all 245 tests passing (96 host, 148 web, 1 CAB integration); see BUILD_STATUS.md.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.1.0-x64-setup.exe`, 44,648,327 bytes |
+| SHA-256 | `5a0aa423d743e083e6d04052ed544ac2d49dee0f0c47e35aeff5dff25b642670` |
+| CAB payload SHA-256 | `91a4cc44825dcfecf2ba7c3b510770bce790c8dc93c61058e3e969e999d17aaf` |
+| Signed | No. Windows SmartScreen may warn. |
+
+A cross-built, untested, unsigned self-contained win-x64 publish ZIP (built on Linux) is also attached to the release for reference; end users should prefer the installer above.
 
 ## 4.0.0 - 2026-11-03 (GitHub release `RELEASE_4.0`)
 

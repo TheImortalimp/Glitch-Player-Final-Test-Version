@@ -4,9 +4,29 @@ This file records what was actually built and tested, and what hasn't been teste
 
 ## 4.1.0 build note (2026-11-04)
 
-Built on Linux with the .NET SDK 10.0.403: `dotnet publish -r win-x64 --self-contained -p:EnableWindowsTargeting=true` succeeded and produced `GlitchPlayerR4.exe`. The 148 Node web tests pass and both manifest `--check` runs are clean. **Not done:** the .NET host tests, running the app, the CAB, the verified launcher and the NSIS installer (all need Windows via `build.cmd`). The 4.1.0 release attaches the cross-built publish ZIP only; it is unsigned and unverified on Windows. The tables below describe the earlier 4.0.0 installer build.
+**Native Windows build complete.** Built on Windows 11 x64 with `build.cmd` (.NET SDK 10.0.403, Node.js 24.19.0, NSIS 3.13): all three suites passed — **245 tests total** (96 xUnit host tests, 148 Node web tests and 1 CAB integration test) — and the NSIS installer was produced and attached to the `RELEASE_4.1` release.
 
-## Current build (4.0.0, previous)
+> **Checkout note:** the repository must be checked out with LF line endings. With `core.autocrlf=true`, the web-test harness fails (`ReferenceError: setDisplayRefresh is not defined`) because its source-slicing markers assume `\n`. Fix: `git config core.autocrlf false`, then re-checkout (`git rm --cached -r . && git reset --hard`).
+
+An earlier cross-build on Linux (same SDK) produced the untested publish ZIP that was first attached to the release; the native installer below supersedes it for end users.
+
+## Current build (4.1.0)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.1.0-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,648,327 bytes |
+| SHA-256 | `5a0aa423d743e083e6d04052ed544ac2d49dee0f0c47e35aeff5dff25b642670` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `83c611c021cd45416cf330e3c5a3ebd90840bf7f62be75fb19e04c8a5ff6b8e6`) plus `payload.cab` (44,004,520 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `91a4cc44825dcfecf2ba7c3b510770bce790c8dc93c61058e3e969e999d17aaf` |
+| Runtime | 249 files, 143,588,895 bytes, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.1` |
+| Signed | No |
+| Built | 2026-11-04 |
+
+Build machine: Windows 11 x64, .NET SDK 10.0.403, WebView2 SDK 1.0.4314.35, Node.js 24.19.0, NSIS 3.13. The installed 4.1.0 build has not yet been run natively; the 4.0.0 build before it was installed and checked on the same machine.
+
+## Previous build (4.0.0)
 
 | Item | Value |
 | --- | --- |
@@ -24,7 +44,7 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **229 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the 4.1.0 build above: **245 tests total** (96 xUnit host tests, **148** Node web tests — new in 4.1: the effects-manifest, preset-schema, surfaces and MACHINE-preset definition tests — and 1 CAB integration test). The suite content below was written for the 4.0.0 build and still applies.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
 - **132 Node web tests** (`tests\web`), covering:
