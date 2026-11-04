@@ -825,6 +825,13 @@
               return ytFrame ? ytFrame.querySelector('iframe') : null;
           }
 
+          /* GHOST // OF ME loads before its track starts whenever the MISSING LINK
+             video is started: the revealed card, Ctrl+Alt+G during playback, or a
+             typed or pasted link. Set by the easter egg; it returns the notice to
+             show, or '' when the preset could not be loaded, which blocks playback. */
+          const GHOST_TRACK_VIDEO_ID = 'DmStNF35o1w';
+          let ghostStartHook = null;
+
           function startPlayback(url, loop = false) {
               if (!isHttpOrigin()) {
                   showNotificationMessage('YouTube needs the app host or a local preview server. Choose a local media file instead.',
@@ -840,6 +847,11 @@
               const target = parseAllowedYouTubeInput(url);
               if (!target) { alert('Please enter a valid YouTube video, playlist URL, or 11-character video ID'); return; }
               const { videoId, playlistId } = target;
+              let ghostNotice = '';
+              if (videoId === GHOST_TRACK_VIDEO_ID && ghostStartHook) {
+                  ghostNotice = ghostStartHook();
+                  if (!ghostNotice) return;
+              }
               ++localMediaGeneration;
               if (cancelLocalAttempt) cancelLocalAttempt();
               if (window.GlitchHost) window.GlitchHost.cancelAllLocalMedia();
@@ -920,7 +932,8 @@
               });
               if (ytWarpShell) ytWarpShell.style.display = 'block';
               if (ytFrame) ytFrame.style.display = 'block';
-              showNotificationMessage('Loading YouTube. Effects controls open when playback starts.', 5000);
+              showNotificationMessage(ghostNotice ? ghostNotice + ' Loading the MISSING LINK track.' :
+                  'Loading YouTube. Effects controls open when playback starts.', ghostNotice ? 6500 : 5000);
               ensureOverlayStack();
               return true;
           }
@@ -1121,7 +1134,7 @@ const javanese = 'ꦀꦄꦅꦆꦇꦈꦉꦊꦋꦌꦍꦎꦏꦐꦑꦒꦓꦔꦕꦖ�
 const symbols = '░▒▓█─│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬━┃┄┅┆┇┈┉┊┋┍┎┏┑┒┓┕┖┗┙┚┛┝┞┟┠┡┢┣┥┦┧┨┩┪┫┭┮┯┰┱┲┳┵┶┷┸┹┺┻┽┾┿╀╁╂╃╄╅╆╇╈╉╊╋╌╍╎╏╭╮╯╰╱╲╳╴╵╶╷╸╹╺╻╼╽╾╿▀▁▂▃▄▅▆▇▉▊▋▌▍▎▏▐▔▕■□◆◇▲△▼▽●○◦★☆←↑→↓↔×÷±≠≈≤≥∞√∑∏∫∂∆';
 const superscript = 'ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜø£Ø×ƒáíóúñÑªº¿®¬½¼¡«»ÁÂÀ©¢¥ãÃ¤ðÐÊËÈıÍÎÏ¦ÌÓßÔÒõÕµþÞÚÛÙýÝ¯´≡±‗¾¶§÷¸°¨·¹³²■•̫͡ʕ͓ʔ❁◡‿♥♠♦♣♪♫☼►◄↕‼▬↨↑↓→←∟↔▲▼≈≠≤≥∑∏∫☮☯✞✡☪☢☣⚕⚖⚗⚙⚛☘☤⚚⚜✠☥♀♂⚢⚣⚤⚥⚦⚧✂✒✉☎✆✇✈☏⛴⛷⛸♨♻⚐⚑⚔⚘⚝⚞⚟✁✃✄☦☧☨☩☫☬☭☸☹☺☻☽☾♡♢♤♧♬♭♮♯⚒✎✏✑✓✔✕✖✗✘✙✚✛✜✝✟□△▶▷▽◀◁◆◇○●◦★☆⚰⚱🗜🛰🛩🕹ᔑʖᓵ↸ᒷ⎓⊣⍑⋮ꖎᒲᑑ∷ᓭℸ⚍⍊⨅';
 const mathoperator = '∀∁∂∃∄∆∇∎−∓∔∕∕∗∗∙√∛∜∝∞∴∵∸∺∿≀⊌⊍⊎⊓⊔⊕⊖⊗⊘⊙⊚⊛⊜⊝⊞⊟⊠⊡⊢⊢⊺⊺⊼⊽⊿⋄⋄⋆⋇⋉⋊⋋⋌⋒⋓⟎⟏⟑⟒⟓⟓⧜⧝⧞⧸⧹⨝⨝⨝⨠⨠⨹⨺⨻⨼⨼⨼⨿⩤⩥⫶⫼⫽⫾⫿≫∦𝕲∭∄∂⋥ ⊶≋⧉ ⨇⩈𝕸 𝛙ℵ⪌⟁ ⟆⦆⌘𝛴⦻⎈';
-const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagari + thai + hangul + hanzi + javanese + symbols + superscript + mathoperator).split('');
+const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic + devanagari + thai + hangul + hanzi + javanese + symbols + superscript + mathoperator);
               const fontPx = 16,
                   cols = 16,
                   pad = 2,
@@ -1286,6 +1299,73 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               tx.fillRect(0, 0, tintAtlas.width, tintAtlas.height);
           }
           maybeRebuildTintedAtlas(true);
+
+          /* Glyph voices take the selected table from SignalGlyphs (rotated per
+             sub-voice, see glyph-library.js); 'Engine realms (Revision 3)' keeps
+             each voice on its original glyphs. */
+          function voiceGlyphSet(voice, fallback) {
+              const G = window.SignalGlyphs;
+              return G && typeof G.setFor === 'function' ? G.setFor(voice, fallback) : fallback;
+          }
+
+          function voiceGlyph(voice, realm, toneIndex) {
+              const G = window.SignalGlyphs;
+              if (G && typeof G.pickFor === 'function') return G.pickFor(voice, Math.random, realm, toneIndex);
+              const E = window.GlitchEngine;
+              return E && E.pickGlyph ? E.pickGlyph(realm, Math.random, toneIndex) : '0';
+          }
+
+          /* Tile atlases for a voice's table: 256 slots sampled evenly across it
+             (small tables repeat), so tile indices stay valid across table
+             changes; redrawn when the table changes and re-tinted with the
+             shared palette key. */
+          const VOICE_ATLAS_SLOTS = 256;
+          const voiceAtlases = new Map();
+
+          function voiceGlyphAtlas(voice) {
+              const G = window.SignalGlyphs;
+              if (!G || typeof G.setFor !== 'function' || G.current === 'Engine realms (Revision 3)') {
+                  return { src: tintAtlas || atlas.canvas, tile: atlas.tile, count: atlas.count };
+              }
+              const set = G.setFor(voice, atlas.chars);
+              let va = voiceAtlases.get(voice);
+              if (!va) {
+                  va = { glyphVersion: null, canvas: document.createElement('canvas'),
+                      tint: document.createElement('canvas'), tintKey: '', count: 0 };
+                  voiceAtlases.set(voice, va);
+              }
+              const cols = 16, tile = atlas.tile, pad = 2;
+              if (va.glyphVersion !== set.glyphVersion) {
+                  const glyphs = [];
+                  for (let i = 0; i < VOICE_ATLAS_SLOTS; i++) {
+                      glyphs.push(set[Math.floor(i * set.length / VOICE_ATLAS_SLOTS)]);
+                  }
+                  const cv = va.canvas;
+                  cv.width = cols * tile;
+                  cv.height = Math.max(1, Math.ceil(glyphs.length / cols)) * tile;
+                  const cx = cv.getContext('2d');
+                  cx.font = 'bold ' + (tile - pad * 2) + 'px "Courier New", monospace';
+                  cx.textBaseline = 'top';
+                  cx.fillStyle = '#fff';
+                  glyphs.forEach((ch, i) => cx.fillText(ch, (i % cols) * tile + pad, Math.floor(i / cols) * tile + pad));
+                  va.count = glyphs.length;
+                  va.glyphVersion = set.glyphVersion;
+                  va.tintKey = '';
+              }
+              if (va.tintKey !== tintAtlasKey) {
+                  va.tintKey = tintAtlasKey;
+                  const tc = va.tint;
+                  tc.width = va.canvas.width;
+                  tc.height = va.canvas.height;
+                  const tx = tc.getContext('2d');
+                  tx.drawImage(va.canvas, 0, 0);
+                  tx.globalCompositeOperation = 'source-in';
+                  tx.fillStyle = 'hsla(' + videoPalette.hue.toFixed(1) + ',' + videoPalette.sat.toFixed(1) + '%,' +
+                      videoPalette.light.toFixed(1) + '%,1)';
+                  tx.fillRect(0, 0, tc.width, tc.height);
+              }
+              return { src: va.tint, tile, count: va.count };
+          }
 
           function stepPalette(now, dt) {
               if (now - videoPalette.lastSampleAt > 420) {
@@ -2259,7 +2339,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                           for (let j = 0; j < trail; j++) {
                               const y = head - j * 18;
                               if (y < 0 || y > h) continue;
-                              const glyph = SignalGlyphs.pick(Math.random);
+                              const glyph = voiceGlyph('Cyber Rain');
                               gctx.fillStyle = j === 0 ?
                                   fxHsla(headHue, 100, 94, 0.7 * s) :
                                   fxHsla(trailHue, 100, 61, s * 0.65 * (1 - j / trail));
@@ -3177,7 +3257,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           function paintScatterField(ctx, w, h, pitch, chSet, color, alpha) {
               const pool = scatterPool;
               let variants = pool.sheets.get(chSet);
-              if (!variants) pool.sheets.set(chSet, variants = []);
+              /* glyph voices refill their array in place when the table changes */
+              if (!variants || variants.glyphVersion !== chSet.glyphVersion) {
+                  variants = [];
+                  variants.glyphVersion = chSet.glyphVersion;
+                  pool.sheets.set(chSet, variants);
+              }
               if (variants.length < SCATTER_VARIANTS) variants.push(buildScatterVariant(chSet));
               if (!pool.field) {
                   pool.field = document.createElement('canvas');
@@ -3225,7 +3310,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                  ENS stack frequency is slider-governed. */
               const stacks = [];
               const MAX_STACKS = 36;
-              const chSet = atlas.chars || window.__ASCII_CHARS || ['0', '1'];
+              const asciiFallback = atlas.chars || window.__ASCII_CHARS || ['0', '1'];
+              const chSet = voiceGlyphSet('ASCII', asciiFallback);
               let spawnAccum = 0;
               let lastT = null;
               let rotStyle006 = true;   // '006' scatter vs 'ENS' stacks
@@ -3260,6 +3346,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       rotW = 1;
                       return;
                   }
+                  // Refills chSet in place after a glyph-table change (no-op otherwise).
+                  voiceGlyphSet('ASCII', asciiFallback);
                   const w = mainCanvas.width,
                       h = mainCanvas.height;
                   if (w < 8 || h < 8) return;
@@ -3394,7 +3482,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const dens = 0.045 + 0.055 * clamp01(FX_ENS.presence['ASCII'] || s) *
                           (0.5 + 0.5 * FX_ENS.breath);
                       const tick = Math.floor(customTime * 0.001 / 1.7); // slow cell clock
-                      const bank = FX_GLYPH_BANK;
+                      /* a chosen table shimmers through the veil too; the
+                         Revision 3 engine realms keep the old-soul bank */
+                      const bank = window.SignalGlyphs &&
+                          window.SignalGlyphs.current !== 'Engine realms (Revision 3)' ? chSet : FX_GLYPH_BANK;
                       for (let c = 0; c < cols; c++) {
                           for (let rr = 0; rr < rows; rr++) {
                               const seed = ((c * 131 + rr * 337 + tick * 911) % 997) / 997;
@@ -3967,8 +4058,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   const w = mainCanvas.width,
                       h = mainCanvas.height;
                   if (w < 8 || h < 8) return;
-                  const tile = atlas.tile;
-                  const src = tintAtlas || atlas.canvas;
+                  const glyphAtlas = voiceGlyphAtlas('Data Bomb');
+                  const tile = glyphAtlas.tile;
+                  const src = glyphAtlas.src;
                   if (!tile || !src) return;
                   const tAll = (performance.now() - born) * 0.001;
                   /* timed: one bell; persistent: the bell repeats on a slow cycle */
@@ -3989,7 +4081,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const x = cx + Math.cos(m.ang + m.spin * tc * 2) * rr;
                       const y = cy + Math.sin(m.ang + m.spin * tc * 2) * rr * 0.85;
                       if (x < 0 || x > w || y < 0 || y > h) continue;
-                      if (m.glyph === 0 || Math.random() < 0.02) m.glyph = (Math.random() * atlas.count) | 0;
+                      if (m.glyph === 0 || m.glyph >= glyphAtlas.count || Math.random() < 0.02) {
+                          m.glyph = (Math.random() * glyphAtlas.count) | 0;
+                      }
                       const fade = 1 - tc * 0.8;                            // diffuses as it expands
                       gctx.globalAlpha = Math.min(0.5, a * fade * m.sz);
                       /* chord-toned tint wash behind each glyph */
@@ -4155,13 +4249,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   warp: isAiWarpActive, bw: bwMasterLevel()
               });
               const spawnStream = (w, h, realm) => {
-                  const E = window.GlitchEngine;
                   const size = 11 + Math.random() * 13;
                   const depth = 8 + ((Math.random() * 16) | 0);
                   const glyphs = [];
                   for (let k = 0; k < depth; k++) {
                       glyphs.push({
-                          ch: (E && E.pickGlyph) ? E.pickGlyph(realm, Math.random, k % 3) : '01'[(Math.random() * 2) | 0],
+                          ch: voiceGlyph('Matrix ASCII', realm, k % 3),
                           delay: k
                       });
                   }
@@ -4219,7 +4312,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                           const cellY = st.y + k * st.size * 0.92;
                           if (cellY < -st.size || cellY > h) continue;
                           if (k === 0 && Math.random() < (realm === 'virtual' ? 0.38 : 0.12)) {
-                              st.glyphs[k].ch = (E && E.pickGlyph) ? E.pickGlyph(realm, Math.random, 0) : st.glyphs[k].ch;
+                              st.glyphs[k].ch = voiceGlyph('Matrix ASCII', realm, 0);
                           }
                           const head = k === 0;
                           const trail = 1 - k / st.glyphs.length;
@@ -4283,7 +4376,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                               x: bandX0 + Math.random() * (w / 3),
                               y: Math.random() * h,
                               v: (realm === 'virtual' ? 74 : 22) * (0.5 + Math.random()),
-                              ch: (E && E.pickGlyph) ? E.pickGlyph(realm, Math.random, tone) : '♪',
+                              ch: voiceGlyph('Matrix Chord', realm, tone),
                               size: 12 + Math.random() * 18
                           });
                       }
@@ -4294,10 +4387,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                           if (d.y > h + 20) {
                               d.y = -20;
                               d.x = bandX0 + Math.random() * (w / 3);
-                              d.ch = (E && E.pickGlyph) ? E.pickGlyph(realm, Math.random, tone) : d.ch;
+                              d.ch = voiceGlyph('Matrix Chord', realm, tone);
                           }
                           if (Math.random() < 0.08) {
-                              d.ch = (E && E.pickGlyph) ? E.pickGlyph(realm, Math.random, tone) : d.ch;
+                              d.ch = voiceGlyph('Matrix Chord', realm, tone);
                           }
                           gctx.font = 'bold ' + d.size.toFixed(0) + 'px "Courier New", monospace';
                           const a = master * (0.32 + 0.55 * (tone === 0 ? 1 : 0.72)) *
@@ -8228,11 +8321,11 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           /* ------------------------------------------------------------------ *
            *  18. Playback UI + init screen                                      *
            * ------------------------------------------------------------------ */
-          /* Set by the GHOST // OF ME egg when it is confirmed before playback;
-             the next confirmed source start applies the snapshot once. */
-          let ghostEggArm = null;
           function activatePlaybackUi(mode) {
               if (!document.body.classList.contains('welcome-dismissed')) return;
+              /* any source start ends the egg's armed highlight; GHOST itself
+                 loads only through the MISSING LINK track (ghostStartHook) */
+              document.documentElement.classList.remove('ghost-egg-armed');
               sourceScreen.hidden = true;
               playbackControls.forEach((id) => { const el = $(id); if (el) el.inert = false; });
               document.body.classList.add('playback-on');
@@ -8251,12 +8344,6 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (fileInput) fileInput.style.display = 'none';
               }
               applyMasterFilters();
-              if (ghostEggArm) {
-                  const arm = ghostEggArm;
-                  ghostEggArm = null;
-                  document.documentElement.classList.remove('ghost-egg-armed');
-                  arm();
-              }
           }
 
           function hidePlaybackPrompts() {
@@ -10302,11 +10389,14 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
            *  Easter egg: GHOST // OF ME + the 3.0 hidden track                 *
            *  Deliberate chord only (Ctrl+Alt+G) behind a photosensitivity       *
            *  confirmation. Never idle-triggered, never touches the clipboard.   *
-           *  Confirmed during playback, GHOST lands at once; confirmed before   *
-           *  playback it reveals the MISSING LINK card (the 3.0 hidden track)   *
-           *  and lands on the next source start. Its Flash and Strobe go        *
-           *  through the same capped light path as presets, and the switch      *
-           *  turns ON with the track; hand locks hold.                          *
+           *  GHOST loads before the MISSING LINK track starts (ghostStartHook): *
+           *  confirmed during playback, the chord loads it and switches to the  *
+           *  track; confirmed before playback, it reveals the MISSING LINK card *
+           *  (the 3.0 hidden track) and loads when that track is started. A     *
+           *  typed or pasted MISSING LINK link loads it too. Flash and Strobe   *
+           *  go through the same capped light path as presets; the automatic    *
+           *  switch turns ON only behind this confirmation (or if it is already *
+           *  ON). Hand locks hold.                                              *
            * ------------------------------------------------------------------ */
           (function installEasterEgg() {
               /* Hidden user snapshot from the projector app, restored as saved
@@ -10318,6 +10408,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const ghostLink = $('ghostLink');
               let ghostSettings = null;
               let running = false;
+              /* set for the session once the GHOST warning is confirmed */
+              let ghostConsent = false;
+              let ghostAttempts = 0;
               bindSuggestedStart(ghostLink, GHOST_TRACK_URL, false);
 
               function applyGhostNow() {
@@ -10328,22 +10421,30 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   /* GHOST lands at once instead of gliding like other presets
                      (+1 ms so float rounding cannot leave the glide active) */
                   if (presetTravel.active) stepPresetTravel(presetTravel.start + presetTravel.dur + 1);
-                  /* the switch turns ON with the track; motion still needs continual randomization */
-                  setLightAutomation(true);
+                  /* The automatic movement turns ON only behind the GHOST warning
+                     (or when already ON); a typed link without it keeps the capped
+                     saved levels still. Motion still needs continual randomization. */
+                  const automate = ghostConsent || lightAutomationOn;
+                  if (automate) setLightAutomation(true);
                   updateContinuousEffectsCache();
                   /* show the saved seed without re-rolling the board */
                   if (randomSeedSlider) randomSeedSlider.value = String(GHOST_OF_ME.settings.randomSeed);
                   const lights = ['Flash', 'Strobe'].map((name) => name + ' ' + Math.round((effectAlphas[name] || 0) * 100) + '%');
                   setCurrentPresetDisplay('LOADED: ' + GHOST_OF_ME.name + ' [HIDDEN]');
-                  showNotificationMessage(GHOST_OF_ME.name + ' loaded \u00b7 ' + lights.join(' \u00b7 ') + '.', 4200);
+                  return GHOST_OF_ME.name + ' loaded \u00b7 ' + lights.join(' \u00b7 ') + (automate ?
+                      ' \u00b7 Flash & Strobe (automatic) ON.' : ' \u00b7 automatic movement OFF (Ctrl+Alt+G turns it on).');
               }
+              /* Returns the loaded notice, or '' after reporting a failure. */
               function applyGhostSafely() {
+                  ghostAttempts++;
                   try {
-                      applyGhostNow();
+                      return applyGhostNow();
                   } catch (err) {
                       showNotificationMessage('GHOST // OF ME could not be loaded: ' + err.message, 5000);
+                      return '';
                   }
               }
+              ghostStartHook = applyGhostSafely;
 
               /* The 3.0 reveal: crimson DATA.. scatter in switching fonts, a lime
                  "!", DATA.. again, then the "!" fades (about 3.2 s), over a whole-app
@@ -10422,14 +10523,22 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (String(e.key).toLowerCase() !== 'g') return;
                   e.preventDefault();
                   if (running) return;
-                  if (!window.confirm('GHOST // OF ME - photosensitivity warning: flashing DATA text, strobe, whole-app hue and black-and-white inversion, and continual randomization. When GHOST loads it also turns the Flash & Strobe (automatic) switch ON: Flash is capped at 20% and Strobe at 35%, and both move on their own while the switch is ON. This is not a photosensitivity-safe mode. Continue?')) return;
+                  if (!window.confirm('GHOST // OF ME - photosensitivity warning: flashing DATA text, strobe, whole-app hue and black-and-white inversion, and continual randomization. GHOST loads when its MISSING LINK track starts (during playback the track starts now), and it turns the Flash & Strobe (automatic) switch ON: Flash is capped at 20% and Strobe at 35%, and both move on their own while the switch is ON. This is not a photosensitivity-safe mode. Continue?')) return;
                   running = true;
+                  ghostConsent = true;
                   const playing = document.body.classList.contains('playback-on');
                   if (playing) {
-                      applyGhostSafely();
-                  } else {
-                      ghostEggArm = applyGhostSafely;
-                      if (ghostLink) ghostLink.hidden = false;
+                      /* load now: the start hook applies GHOST, then the track
+                         replaces the current source. If YouTube is unavailable,
+                         GHOST still lands over the current source. */
+                      const attempts = ghostAttempts;
+                      if (!startPlayback(GHOST_TRACK_URL, false) && ghostAttempts === attempts) {
+                          const notice = applyGhostSafely();
+                          if (notice) showNotificationMessage(notice, 5200);
+                      }
+                  } else if (ghostLink) {
+                      ghostLink.hidden = false;
+                      ghostLink.style.display = '';
                       if (ytInput) ytInput.value = GHOST_TRACK_URL;
                   }
                   playGhostShow(() => {
@@ -10438,7 +10547,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       if (!document.body.classList.contains('welcome-dismissed') && welcomeEnterBtn) welcomeEnterBtn.click();
                       document.documentElement.classList.add('ghost-egg-armed');
                       if (ghostLink) ghostLink.focus();
-                      showNotificationMessage('GHOST // OF ME armed \u00b7 start the MISSING LINK (or any source) to load it.', 5200);
+                      showNotificationMessage('MISSING LINK revealed \u00b7 start it to load GHOST // OF ME.', 5200);
                   });
               });
           })();

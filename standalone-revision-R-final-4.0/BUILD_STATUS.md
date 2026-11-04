@@ -7,11 +7,11 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,675,313 bytes |
-| SHA-256 | `133e132475679b38b08cff44da6bd04a24d1bd1a635d7d27dc0b5661d23dc9d5` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `a61a8579f3abf871a4b371795b85fae2b078d264a849bcb99a657345db6e6771`) plus `payload.cab` (44,092,932 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `df1896684b3992c09d2f06fe36528643a2fa24b6b5eadaeec32344de68af5332` |
-| Runtime | 244 files, 144,726,419 bytes, extracted to the per-user cache named by the CAB hash |
+| Size | 44,666,857 bytes |
+| SHA-256 | `8c5ba4cc8b98732f5caadff27b1677ff80fffd399b3874643dda30a1b4b51b0b` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `5658b061a131dcdb8039de44cac487a9b48437c915b7c3e88bfd5b09077982b6`) plus `payload.cab` (44,098,846 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `9f09ebe4114497d94c4815252410fc5e67da638d474930da0f6f17cd80c5e5ba` |
+| Runtime | 244 files, 144,738,648 bytes, extracted to the per-user cache named by the CAB hash |
 | Asset target | Existing GitHub release `RELEASE_4.0` (installer and checksum filenames unchanged) |
 | Signed | No |
 | Built | 2026-11-04 |
@@ -20,10 +20,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **195 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **210 tests total**.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
-- **98 Node web tests** (`tests\web`), covering:
+- **113 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
@@ -32,7 +32,23 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
   - User locks against presets, the preset glide and Auto Glitch.
   - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
   - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text, including the restored 3.0 WHITE 2 BLACK 2 WHITE fade link, which waits for YouTube playback like the others and arms Continual Randomization only once loading starts. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, the native window bar that moves the HUD's top row below the floating window controls, and the logo/source screens' scrollbars starting below that bar.
-  - Confirmation-gated Flash/Strobe automation and 20%/35% caps, live manual/preset levels while automation is off, local-media pause/end hold, GHOST // OF ME consent, more saturated HSL Rainbow and Hue/Color Cycle, and a softer B&W mid-level ramp.
+  - Confirmation-gated Flash/Strobe automation and 20%/35% caps, live manual/preset levels while automation is off, local-media pause/end hold, more saturated HSL Rainbow and Hue/Color Cycle, and a softer B&W mid-level ramp.
+  - GHOST // OF ME (`ghost-egg.test.mjs`): the real egg code, link handling, playback hook and preset parser run together. The tests check that:
+    - a chord before playback only reveals and highlights the MISSING LINK card;
+    - another source clears the highlight without loading GHOST;
+    - the card and a typed link (including `youtu.be` and playlist forms) load GHOST before the track;
+    - movement turns on only after confirmation;
+    - a failed apply blocks the track without retrying;
+    - a chord during playback loads GHOST and switches to the track.
+  - Glyph routing (`glyph-routing.test.mjs`):
+    - picks by code point, including astral characters;
+    - the rotation offsets and wraparound;
+    - every table and voice yields single glyphs with no whitespace;
+    - the R3 bridge and Engine-realms parity;
+    - the menu and count text;
+    - the real Revision 3 runners: R3 ASCII follows table changes made after the R3 engine was created, and returns to its own glyphs on Engine realms;
+    - the main ASCII voice refreshes its glyph set on every painted frame;
+    - the Revision 3 verbatim block is unchanged.
   - Suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
@@ -40,9 +56,25 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 
 The Release host also built with zero warnings and errors. The CAB launcher is compiled with warnings treated as errors.
 
-The cursor guard host-guard tests were checked against deliberately broken copies of the code in the earlier release work. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed.
+The cursor guard host-guard tests were checked against deliberately broken copies of the code in the earlier release work. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed. For the GHOST tests, three temporary breaks each made them fail: removing the confirmation gate, removing the failure block, and loading GHOST on a chord before playback. The file was then restored byte for byte. Likewise, removing the R3 ASCII refresh or the main ASCII per-frame refresh made the glyph tests fail, and both files were restored byte for byte.
 
-## Checks on the 2026-11-04 build
+## Checks on the silent update 2 build (2026-11-04, `8c5ba4cc…`)
+
+- `build.cmd` passed 96 host tests, 113 web tests and 1 CAB integration test. The CAB contains 244 runtime files. The package and installer are unsigned.
+- An independent code review of the change found one bug, now fixed: main ASCII and R3 ASCII kept the glyph table that was selected when they started, so a later table change didn't reach them until the voice restarted. The GHOST code, the `startPlayback` return value and its callers, the local media generation order, the Data Bomb atlas refresh, code-point handling and the security constraints matched the intended behaviour.
+- The glyph tables were compared with the Glitch Canvas Projector's: identical, 125 tables and 127,648 code points.
+- Eight smoke tests in the VS Code integrated-browser static preview. All passed with no app console or page errors:
+  1. Ctrl+Alt+G before playback: after the confirmation, the MISSING LINK card was revealed, highlighted, focused and its link filled in; GHOST was not loaded.
+  2. Starting that card: GHOST loaded before the track, the automatic switch turned on, the glyph source was All scripts, and the notice appeared.
+  3. A fresh session with `youtu.be/DmStNF35o1w?t=5` pasted: GHOST loaded, the switch stayed off, and the notice said Ctrl+Alt+G turns movement on.
+  4. Local WAV playback with the Katakana table: the count read "96 code points · main ASCII · sub-voices rotate", the hover listed the nine rotated tables, and screenshots showed the main ASCII voice in Katakana with the sub-voices in other scripts.
+  5. Ctrl+Alt+G during local playback: GHOST loaded, the switch turned on, the local audio paused and the YouTube frame was shown.
+  6. The original bug: highlighting the card and then starting a local WAV did not load GHOST, cleared the highlight and left the lights off.
+  7. After the review fix, with only main ASCII at 100% during local playback: switching from Engine realms to Runic changed the running voice from mixed Latin/kana/CJK glyphs to Runic.
+  8. With only R3 ASCII at 100% (R3 engine already running on Engine realms): switching to Runic changed its glyphs to its rotated Mongolian table, while its brightness-ramp sheet kept the Revision 3 characters.
+- The integrated browser can't decode YouTube video, so the MISSING LINK track itself didn't play there. This preview serves the web UI directly; it is not a native WinForms host or installer test. The installer was not installed.
+
+## Checks on the 2026-11-04 build (`133e1324…`)
 
 - `build.cmd` passed 96 host tests, 98 web tests and 1 CAB integration test. The CAB contains 244 runtime files. The package and installer are unsigned.
 - In the VS Code integrated-browser static preview, the initialization screen listed accepted media types and showed the photosensitivity warning. A generated silent WAV opened the playback HUD; the Flash and Strobe slider maxima were 0.2 and 0.35. The switch asked for confirmation, stayed OFF when canceled, turned ON after confirmation while the local file was ended, and switched OFF again.
@@ -170,11 +202,12 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 
 ## Not verified yet
 
-The 2026-11-04 build was not installed or tested in the native WinForms host. Checks listed below may refer to earlier installers.
+The silent update 2 build (`8c5ba4cc…`) and the 2026-11-04 build before it were not installed or tested in the native WinForms host. Checks listed below may refer to earlier installers.
 
 - Code signing (not done), and SmartScreen behaviour on another machine.
 - The interactive (non-silent) installer and uninstaller pages, and the uninstaller's "delete data" path.
-- Ctrl+Alt+G, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
+- Ctrl+Alt+G in the native host, the GHOST track actually playing on YouTube, the capture shield button, native DPI scales other than 100% and 150%, and dragging the window between displays while playing.
+- Rotated rare-script glyph tables in the native WebView2 fonts (some may draw as empty boxes).
 - The registry layer of the cursor guard against a non-system pointer scheme.
 - Refusal of WebView2 registry policy overrides, and the Defender watchdog warnings.
 - Native MP4, converted WMV, preset export/import and saving a Freeze Frame PNG were checked on the earlier builds listed above, not rerun on the two CAB installers. Their local WAV/YouTube startup, window, Refresh and window-bar checks are listed separately.

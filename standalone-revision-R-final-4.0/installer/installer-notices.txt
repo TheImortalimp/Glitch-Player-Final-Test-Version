@@ -55,8 +55,9 @@ Installer notices - please read before continuing.
    saved levels within those limits. Optional automatic movement is off
    by default, session-only and requires confirmation; when enabled it
    applies on any media and eases to zero while local media is paused or
-   ended. The GHOST // OF ME easter egg also asks before applying its
-   capped levels and enabling movement. Other effects and source videos
+   ended. The GHOST // OF ME easter egg applies its capped levels when
+   its MISSING LINK track starts, and enables movement only after its
+   Ctrl+Alt+G confirmation. Other effects and source videos
    can still flash; this is not a photosensitivity-safe mode. Do not use
    these effects if you or anyone watching may be sensitive to flashing
    light.

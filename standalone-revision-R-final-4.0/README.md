@@ -2,7 +2,7 @@
 
 Revision R Final 4.0 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
 
-> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are capped at 20% and 35%. Presets can set their saved values within those caps; Randomize does not change them. Optional automatic movement is off by default, session-only and requires confirmation. When enabled it applies on any media, fades in, and eases to zero while local media is paused or ended. The confirmed GHOST // OF ME easter egg (Ctrl+Alt+G) can apply its saved levels and enable automatic movement. This is not a photosensitivity-safe mode.
+> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are capped at 20% and 35%. Presets can set their saved values within those caps; Randomize does not change them. Optional automatic movement is off by default, session-only and requires confirmation. When enabled it applies on any media, fades in, and eases to zero while local media is paused or ended. The GHOST // OF ME easter egg applies its saved, capped levels when its MISSING LINK track starts (including a typed or pasted link); it enables automatic movement only after its Ctrl+Alt+G confirmation. This is not a photosensitivity-safe mode.
 
 The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, [SECURITY.md](SECURITY.md) for the hardening and [CHANGELOG.md](CHANGELOG.md) for the changes in this release.
 
@@ -37,7 +37,7 @@ HSL Rainbow and Hue/Color Cycle use a more saturated color response. B&W inversi
 
 AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included. Saved Flash/Strobe values in immutable presets remain intact and are applied when loaded, capped at 20% and 35%. Automatic movement remains off unless you confirm the session-only switch; the confirmed GHOST // OF ME easter egg (Ctrl+Alt+G) also enables it.
 
-The printable ASCII and Unicode glyph banks from the projector are included, with their original AI Warp / Revision 3 bank credits.
+The printable ASCII and Unicode glyph banks from the projector are included unchanged (125 tables, 127,648 code points), with their original AI Warp / Revision 3 bank credits. Glyphs are taken by Unicode code point, so astral characters are never split. The glyph-source menu defaults to **Engine realms (Revision 3)**, which keeps every voice on its original glyphs. Choosing a table gives it to the main ASCII voice; the other glyph voices each take their own table, rotated forward from it in this order: Cyber Rain, R3 ASCII, Matrix ASCII, Matrix Chord, R3 Matrix ASCII, R3 Matrix Chord, Data Bomb and R3 Data Bomb. Hover over the count next to the menu to see the current assignment. **All scripts** mixes every table into every voice. Ink Glyphs and Font Burn keep their own alphabets, and the R3 shimmer veil and R3 ASCII brightness ramp keep the Revision 3 glyphs. Some rare-script tables can show as empty boxes where Windows has no font for them.
 
 ## Smooth playback
 
@@ -85,7 +85,7 @@ YouTube links you enter play through the privacy-enhanced embed (`youtube-nocook
 | Esc | Leave fullscreen; close the preset browser |
 | D | Toggle DROP THE MILK? (ignored while typing) |
 | S | Freeze Frame (ignored while typing and on the welcome screen) |
-| Ctrl+Alt+G | Hidden GHOST // OF ME easter egg. Asks for confirmation first. The next source you start then gets the GHOST preset, including its capped Flash and Strobe levels (photosensitivity warning applies). |
+| Ctrl+Alt+G | Hidden GHOST // OF ME easter egg. Asks for confirmation first. During playback it loads the GHOST preset and switches to its MISSING LINK track. Before playback it reveals the MISSING LINK card, and GHOST loads when that track starts. Other sources never get GHOST. The confirmation also turns on automatic Flash & Strobe movement (capped at 20% / 35%; photosensitivity warning applies). A typed or pasted MISSING LINK link loads GHOST too, but without the confirmation its lights stay still. |
 
 Keyboard media keys, headset buttons and other apps can't control playback, because the player doesn't register with Windows media controls. Use the app's own controls.
 

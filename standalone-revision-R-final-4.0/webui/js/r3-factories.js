@@ -57,8 +57,8 @@
     /* R3's Data Bomb and ASCII factory block expects the original glyph atlas.
        This self-contained atlas is host plumbing; the R3 factory source below
        remains byte-for-byte unchanged. */
-    function buildR3Atlas() {
-        const chars = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+-=[]{}<>?/|░▒▓█▄▀■□△▲▽▼◆◇○●アイウエオカキクケコサシスセソ');
+    const R3_ATLAS_CHARS = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+-=[]{}<>?/|░▒▓█▄▀■□△▲▽▼◆◇○●アイウエオカキクケコサシスセソ');
+    function buildR3Atlas(chars) {
         const tile = 32, cols = 16, rows = Math.ceil(chars.length / cols);
         if (!root.document || typeof root.document.createElement !== 'function') {
             return { chars, count: chars.length, tile, canvas: null };
@@ -77,7 +77,47 @@
         }
         return { chars, count: chars.length, tile, canvas };
     }
-    const atlas = buildR3Atlas();
+    const R3_ATLAS = buildR3Atlas(R3_ATLAS_CHARS);
+    /* Glyph-bank routing (host plumbing): while an R3 voice is created or
+       painted, glyphVoice names it. R3 ASCII captures its rotated 'R3 ASCII'
+       array when it is created; makeR3Runner refills that same array before
+       each paint so it follows later table changes. R3 Data Bomb draws a
+       256-slot atlas of its rotated table. The ASCII sheet's luminance ramp
+       keeps R3's own glyphs, and 'Engine realms (Revision 3)' keeps all of R3
+       on its original glyphs. */
+    let glyphVoice = null;
+    let creatingVoice = false;
+    const capturedGlyphVoices = new Set();
+    const R3_VOICE_ATLAS_SLOTS = 256;
+    const r3VoiceAtlases = Object.create(null);
+    function glyphApi() {
+        const G = root.SignalGlyphs;
+        return G && typeof G.setFor === 'function' ? G : null;
+    }
+    function dataBombAtlas() {
+        const G = glyphApi();
+        if (glyphVoice !== 'Data Bomb' || !G || G.current === 'Engine realms (Revision 3)') return R3_ATLAS;
+        const set = G.setFor('R3 Data Bomb', R3_ATLAS_CHARS);
+        let entry = r3VoiceAtlases['R3 Data Bomb'];
+        if (!entry || entry.glyphVersion !== set.glyphVersion) {
+            const slots = [];
+            for (let i = 0; i < R3_VOICE_ATLAS_SLOTS; i++) slots.push(set[Math.floor(i * set.length / R3_VOICE_ATLAS_SLOTS)]);
+            entry = r3VoiceAtlases['R3 Data Bomb'] = buildR3Atlas(slots);
+            entry.glyphVersion = set.glyphVersion;
+        }
+        return entry;
+    }
+    const atlas = {
+        get chars() {
+            const G = glyphApi();
+            if (!creatingVoice || !glyphVoice || !G) return R3_ATLAS_CHARS;
+            capturedGlyphVoices.add(glyphVoice);
+            return G.setFor('R3 ' + glyphVoice, R3_ATLAS_CHARS);
+        },
+        get count() { return dataBombAtlas().count; },
+        get tile() { return dataBombAtlas().tile; },
+        get canvas() { return dataBombAtlas().canvas; }
+    };
     let tintAtlas = null;
 
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, +v || 0));
@@ -2646,7 +2686,22 @@
     }
 
     function makeR3Runner(engine, baseName, factory) {
-        const render = factory(() => clamp01(engine.liveAlpha(baseName + GC3_SUFFIX)), true);
+        let render;
+        glyphVoice = baseName;
+        creatingVoice = true;
+        try {
+            render = factory(() => clamp01(engine.liveAlpha(baseName + GC3_SUFFIX)), true);
+        } finally {
+            creatingVoice = false;
+            glyphVoice = null;
+        }
+        const glyphs = glyphApi();
+        const refreshCaptured = !!glyphs && capturedGlyphVoices.has(baseName);
+        const paint = glyphs && typeof glyphs.withVoice === 'function'
+            ? () => {
+                if (refreshCaptured) glyphs.setFor('R3 ' + baseName, R3_ATLAS_CHARS);
+                return glyphs.withVoice('R3 ' + baseName, render);
+            } : render;
         return function renderGC3Voice(context, now) {
             bindR3Context(engine, context, now || performance.now());
             const size = clamp(engine.sizeFor(baseName + GC3_SUFFIX), 0.2, 3);
@@ -2660,9 +2715,11 @@
             }
             try {
                 paintingVoice = baseName;
-                render();
+                glyphVoice = baseName;
+                paint();
             } finally {
                 paintingVoice = null;
+                glyphVoice = null;
                 context.restore();
             }
         };

@@ -7,18 +7,55 @@ const originalEngineGlyphBank=window.GlitchEngine&&window.GlitchEngine.glyphBank
 const deepFreeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.freeze(value);Object.keys(value).forEach(key=>deepFreeze(value[key]));}return value;};
 window.GlitchMachinePresets=Object.freeze(MACHINE_PRESET_DATA.map(deepFreeze));
 const SignalGlyphs = (()=>{
+ const ENGINE='Engine realms (Revision 3)', ALL='All scripts';
  const names=Object.keys(GLYPH_BANK_DATA), banks=Object.create(null);
  names.forEach(name=>{banks[name]=Array.from(GLYPH_BANK_DATA[name]);});
- let current='Engine realms (Revision 3)';
+ /* The main ASCII voice always takes the selected table. Every other glyph
+    voice takes its own table, rotated forward from the selection by a fixed
+    offset, so the sub-voices mix and match instead of all repeating one table. */
+ const VOICE_OFFSETS=Object.freeze({'ASCII':0,'Cyber Rain':1,'R3 ASCII':2,'Matrix ASCII':3,'Matrix Chord':4,'R3 Matrix ASCII':5,'R3 Matrix Chord':6,'Data Bomb':7,'R3 Data Bomb':8});
+ const voices=Object.freeze(Object.keys(VOICE_OFFSETS));
+ const ALL_SAMPLE=8;
+ let current=ENGINE, version=0, stamp=0, voice=null;
+ const voiceSets=Object.create(null);
  const safeRandom=rng=>Math.min(.999999999,Math.max(0,Number((rng||Math.random)())||0));
  const pickBank=(name,rng)=>{const chars=banks[name];if(!chars||!chars.length)return '#';const ch=chars[Math.floor(safeRandom(rng)*chars.length)];return ch===' '?'·':ch;};
- return {names, banks, get current(){return current},set(name){current=(name==='All scripts'||name==='Engine realms (Revision 3)'||banks[name])?name:'Engine realms (Revision 3)';const select=document.getElementById('glyph-bank');if(select)select.value=current;},pick(rng,realm,toneIndex){if(current==='Engine realms (Revision 3)'&&typeof originalEnginePickGlyph==='function'){const glyph=originalEnginePickGlyph(realm,rng,toneIndex);if(typeof glyph==='string'&&Array.from(glyph).length)return glyph;}if(current==='All scripts'){const name=names[Math.floor(safeRandom(rng)*names.length)];return pickBank(name,rng);}return pickBank(current,rng);},get count(){return current==='All scripts'?names.reduce((n,k)=>n+banks[k].length,0):current==='Engine realms (Revision 3)'?0:banks[current].length;}};
+ const offsetOf=v=>Object.prototype.hasOwnProperty.call(VOICE_OFFSETS,v)?VOICE_OFFSETS[v]:0;
+ const tableFor=v=>{if(current===ENGINE||current===ALL)return current;return names[(names.indexOf(current)+offsetOf(v))%names.length];};
+ const sourceFor=(v,fallback)=>{
+  if(current===ENGINE)return Array.isArray(fallback)&&fallback.length?fallback:(typeof originalEngineGlyphBank==='function'?originalEngineGlyphBank():[]);
+  if(current===ALL){const out=[];names.forEach(name=>{const chars=banks[name];for(let k=0;k<ALL_SAMPLE&&chars.length;k++)out.push(chars[Math.floor(Math.random()*chars.length)]);});return out;}
+  return banks[tableFor(v)]||[];
+ };
+ // Fills in place, so a voice that captured its array follows the selection
+ // as long as it calls setFor again before painting.
+ const fill=(target,source)=>{let n=0;for(let i=0;i<source.length;i++){const ch=source[i];if(typeof ch==='string'&&ch&&!/^\s+$/u.test(ch))target[n++]=ch;}target.length=n;if(!n){target[0]='0';target[1]='1';}target.glyphVersion=++stamp;};
+ return {names, banks, voices,
+  get current(){return current},
+  get version(){return version},
+  get voice(){return voice},
+  set(name){const next=(name===ALL||name===ENGINE||banks[name])?name:ENGINE;if(next!==current){current=next;version++;}const select=document.getElementById('glyph-bank');if(select)select.value=current;updateGlyphCount();},
+  tableFor,
+  rotation(){return voices.map(v=>({voice:v,table:tableFor(v)}));},
+  setFor(v,fallback){const key=String(v||'ASCII');const fb=Array.isArray(fallback)?fallback:null;let entry=voiceSets[key];if(!entry)entry=voiceSets[key]={glyphs:[],version:-1,fallback:null};if(entry.version!==version||entry.fallback!==fb){fill(entry.glyphs,sourceFor(key,fb));entry.version=version;entry.fallback=fb;}return entry.glyphs;},
+  pickFor(v,rng,realm,toneIndex){if(current===ENGINE&&typeof originalEnginePickGlyph==='function'){const glyph=originalEnginePickGlyph(realm,rng,toneIndex);if(typeof glyph==='string'&&Array.from(glyph).length)return glyph;}if(current===ALL){const name=names[Math.floor(safeRandom(rng)*names.length)];return pickBank(name,rng);}return pickBank(tableFor(v),rng);},
+  pick(rng,realm,toneIndex){return this.pickFor(voice||'ASCII',rng,realm,toneIndex);},
+  withVoice(v,fn){const previous=voice;voice=v?String(v):null;try{return fn();}finally{voice=previous;}},
+  get count(){return current===ALL?names.reduce((n,k)=>n+banks[k].length,0):current===ENGINE?0:banks[current].length;}};
 })();
 window.SignalGlyphs=SignalGlyphs;
 // Revision 3 Matrix ASCII and Matrix Chord ask the engine for glyphs. This
-// explicit host-level hook keeps the upstream factory bank itself unchanged.
-if(window.GlitchEngine){window.GlitchEngine.pickGlyph=(realm,rng,toneIndex)=>SignalGlyphs.pick(rng,realm,toneIndex);window.GlitchEngine.glyphBank=()=>SignalGlyphs.current==='Engine realms (Revision 3)'?(typeof originalEngineGlyphBank==='function'?originalEngineGlyphBank():[]):SignalGlyphs.current==='All scripts'?SignalGlyphs.names.flatMap(n=>SignalGlyphs.banks[n]):SignalGlyphs.banks[SignalGlyphs.current].slice();}
+// explicit host-level hook keeps the upstream factory bank itself unchanged;
+// the voice painting at the time (SignalGlyphs.withVoice) picks its rotated table.
+if(window.GlitchEngine){window.GlitchEngine.pickGlyph=(realm,rng,toneIndex)=>SignalGlyphs.pick(rng,realm,toneIndex);window.GlitchEngine.glyphBank=(realm)=>SignalGlyphs.current==='Engine realms (Revision 3)'?(typeof originalEngineGlyphBank==='function'?originalEngineGlyphBank(realm):[]):SignalGlyphs.current==='All scripts'?SignalGlyphs.names.flatMap(n=>SignalGlyphs.banks[n]):SignalGlyphs.banks[SignalGlyphs.tableFor(SignalGlyphs.voice||'ASCII')].slice();}
 const glyphSelect=document.getElementById('glyph-bank');
 if(glyphSelect){const engineOption=document.createElement('option');engineOption.value='Engine realms (Revision 3)';engineOption.textContent=engineOption.value;glyphSelect.appendChild(engineOption);const allOption=document.createElement('option');allOption.value='All scripts';allOption.textContent='All scripts';glyphSelect.appendChild(allOption);SignalGlyphs.names.forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name+' ('+SignalGlyphs.banks[name].length+')';glyphSelect.appendChild(opt)});glyphSelect.value=SignalGlyphs.current;}
-function updateGlyphCount(){const info=document.getElementById('glyph-info');if(info)info.textContent=SignalGlyphs.current==='Engine realms (Revision 3)'?'Using Revision 3 engine glyphs':SignalGlyphs.count.toLocaleString()+' Unicode code points · '+SignalGlyphs.names.length+' tables';}
-if(glyphSelect)glyphSelect.addEventListener('change',()=>{SignalGlyphs.set(glyphSelect.value);updateGlyphCount()});updateGlyphCount();
+function updateGlyphCount(){
+ const info=document.getElementById('glyph-info');if(!info)return;
+ const G=SignalGlyphs;
+ if(G.current==='Engine realms (Revision 3)'){info.textContent='Using Revision 3 engine glyphs';info.title='Every glyph voice uses the Revision 3 engine typesets.';return;}
+ if(G.current==='All scripts'){info.textContent=G.count.toLocaleString()+' code points · every voice mixes '+G.names.length+' tables';info.title='Every glyph voice mixes all '+G.names.length+' tables.';return;}
+ info.textContent=G.count.toLocaleString()+' code points · main ASCII · sub-voices rotate';
+ info.title=G.rotation().map(r=>(r.voice==='ASCII'?'Main ASCII':r.voice)+': '+r.table).join('\n');
+}
+if(glyphSelect)glyphSelect.addEventListener('change',()=>SignalGlyphs.set(glyphSelect.value));updateGlyphCount();

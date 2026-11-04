@@ -131,25 +131,34 @@
         var names = typesetNamesFor(realm);
         return names[(rng() * names.length) | 0];
     }
+    /* Typesets hold astral glyphs (𝕲 𝛴 🛰 …), so they are indexed by Unicode
+       code point; UTF-16 indexing would hand out lone surrogate halves. */
+    var TYPESET_GLYPHS = {};
+    function typesetGlyphs(name) {
+        var cached = TYPESET_GLYPHS[name];
+        if (!cached) {
+            var set = TYPESETS[name] || TYPESETS.latin;
+            cached = TYPESET_GLYPHS[name] = Array.from((set && set.chars) || '01');
+        }
+        return cached;
+    }
     function pickGlyph(realm, rng, toneIndex) {
         rng = rng || Math.random;
         var name = pickTypeset(realm, rng);
         if (toneIndex === 1 && realm === 'virtual' && rng() < 0.25) name = 'mathoperator';
         if (toneIndex === 2 && realm === 'reality' && rng() < 0.20) name = 'hanzi';
-        var set = TYPESETS[name] || TYPESETS.latin;
-        var chars = set.chars || '01';
+        var chars = typesetGlyphs(name);
         var ch = chars[(rng() * chars.length) | 0];
         if (ch === ' ' || !ch) ch = chars[(rng() * chars.length) | 0] || '0';
         return ch;
     }
     function glyphBank(realm) {
         var names = typesetNamesFor(realm).concat(['ghostkey']);
-        var out = '';
+        var out = [];
         for (var i = 0; i < names.length; i++) {
-            var set = TYPESETS[names[i]];
-            if (set) out += set.chars;
+            if (TYPESETS[names[i]]) out = out.concat(typesetGlyphs(names[i]));
         }
-        return out.split('');
+        return out;
     }
     function pickMatrixChord(realm, rng) {
         rng = rng || Math.random;
@@ -162,7 +171,7 @@
         var out = {};
         TYPESET_NAMES.forEach(function (n) {
             var s = TYPESETS[n];
-            out[n] = { script: s.script, source: s.source, realm: s.realm, count: s.chars.length };
+            out[n] = { script: s.script, source: s.source, realm: s.realm, count: typesetGlyphs(n).length };
         });
         return out;
     }

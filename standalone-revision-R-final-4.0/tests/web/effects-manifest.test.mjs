@@ -144,5 +144,9 @@ test('the GHOST // OF ME easter egg is chord-only, confirmed first, and lights o
     assert.match(egg, /const GHOST_TRACK_URL = 'https:\/\/www\.youtube\.com\/watch\?v=DmStNF35o1w';/);
     assert.match(egg, /prefers-reduced-motion: reduce/);
     const ui = player.slice(player.indexOf('function activatePlaybackUi('), player.indexOf('function hidePlaybackPrompts('));
-    assert.match(ui, /if \(ghostEggArm\) \{\s*const arm = ghostEggArm;\s*ghostEggArm = null;/);
+    assert.match(ui, /document\.documentElement\.classList\.remove\('ghost-egg-armed'\);/, 'any source start ends the armed highlight');
+    assert.doesNotMatch(player, /ghostEggArm/, 'GHOST no longer loads on whatever source starts next');
+    assert.match(egg, /ghostStartHook = applyGhostSafely;/, 'GHOST loads only through the MISSING LINK start hook');
+    assert.match(egg, /const automate = ghostConsent \|\| lightAutomationOn;\s*if \(automate\) setLightAutomation\(true\);/,
+        'the automatic switch turns ON only behind the GHOST warning');
 });

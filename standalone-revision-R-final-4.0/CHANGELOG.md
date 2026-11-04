@@ -13,6 +13,27 @@ First published build of Revision R Final 4.0, a newly coded, hardened Windows p
 
 > **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. In the original 4.0.0 build, Flash and Strobe started at zero and were manual-only; the silent update below adds an optional, confirmation-gated automatic mode. This is not a photosensitivity-safe mode.
 
+## Silent update 2 — 2026-11-04 (version remains 4.0.0)
+
+Replacement build for the existing `RELEASE_4.0` installer and checksum assets; the version and release tag remain unchanged.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.0.0-x64-setup.exe`, 44,666,857 bytes |
+| SHA-256 | `8c5ba4cc8b98732f5caadff27b1677ff80fffd399b3874643dda30a1b4b51b0b` |
+| CAB payload | 44,098,846 bytes |
+| CAB SHA-256 | `9f09ebe4114497d94c4815252410fc5e67da638d474930da0f6f17cd80c5e5ba` |
+
+- **Glyph tables:** checked against the Glitch Canvas Projector: the same 125 printable ASCII and Unicode tables with 127,648 code points, so nothing was rebuilt. Glyphs are now picked by Unicode code point everywhere, so astral characters (for example Egyptian hieroglyphs) are no longer split into broken halves.
+- **Selected table drives the voices:** the selected table now goes to the main ASCII voice. Cyber Rain, R3 ASCII, Matrix ASCII, Matrix Chord, R3 Matrix ASCII, R3 Matrix Chord, Data Bomb and R3 Data Bomb each take their own table, rotated forward from the selection, so the voices mix scripts instead of repeating one. **Engine realms (Revision 3)** keeps the original glyphs and **All scripts** mixes every table. The count next to the menu shows the rotation when hovered. Changing the table during playback takes effect immediately, including for main ASCII and R3 ASCII voices that are already running. Ink Glyphs, Font Burn, the R3 shimmer veil and the R3 ASCII brightness ramp keep their own glyphs.
+- **GHOST // OF ME fixed:**
+  - The preset now loads only when its MISSING LINK track (`DmStNF35o1w`) starts, and it loads before the track plays.
+  - Previously, Ctrl+Alt+G before playback gave GHOST to whichever source started next. Now it only reveals and highlights the MISSING LINK card; starting any other source clears the highlight and never loads GHOST.
+  - During playback, Ctrl+Alt+G loads GHOST and switches to the track. If YouTube can't start, GHOST applies over the current source.
+  - A typed or pasted MISSING LINK link also loads GHOST. Automatic Flash & Strobe movement is enabled only after the Ctrl+Alt+G confirmation in the same session (or if the switch is already on).
+  - If GHOST can't be applied, the track doesn't start.
+- Tests: 15 new web tests run the real GHOST code and glyph routing, including the real Revision 3 runners across table changes and a check that the verbatim Revision 3 code is unchanged. `build.cmd` passed 96 host tests, 113 web tests and 1 CAB integration test.
+
 ## Silent update — 2026-11-04 (version remains 4.0.0)
 
 Replacement build for the existing `RELEASE_4.0` installer and checksum assets; the version and release tag remain unchanged.
