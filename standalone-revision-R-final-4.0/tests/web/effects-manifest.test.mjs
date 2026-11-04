@@ -81,6 +81,25 @@ test('automatic peaks never select Flash or Strobe', () => {
     for (const name of peakPool) assert.ok(profileNames.includes(name), name);
 });
 
+test('HSL Rainbow is more saturated and B&W inversion eases through the mid-levels', () => {
+    const window = {};
+    runInSandbox('js/glitch-engine.js', { window });
+    const engine = window.GlitchEngine;
+    const bwMid = engine.bwInvertMap(0.625);
+    assert.equal(bwMid.invert, 0.1875);
+    assert.equal(bwMid.sat, 0.97);
+    assert.equal(engine.bwInvertMap(0.75).invert, 0.75);
+    assert.equal(engine.bwInvertMap(1).invert, 0.75);
+    assert.ok(Math.abs(engine.hueCycleMap(0.5).sat - 1.09) < 1e-12);
+    assert.ok(Math.abs(engine.hueCycleMap(1).sat - 1.02) < 1e-12);
+    const rainbowMid = engine.hslRainbowMap(0.5);
+    assert.equal(rainbowMid.satPct, 90);
+    assert.ok(Math.abs(rainbowMid.satFilter - 1.11) < 1e-12);
+    const rainbowPeak = engine.hslRainbowMap(0.75);
+    assert.equal(rainbowPeak.satPct, 100);
+    assert.ok(Math.abs(rainbowPeak.satFilter - 1.28) < 1e-12);
+});
+
 test('the 250 LAB snapshots are unique, deep-frozen, flash-free and map onto registered voices', () => {
     const window = {};
     runInSandbox('js/glyph-library.js', { window, document: { getElementById: () => null } });
@@ -100,15 +119,30 @@ test('the 250 LAB snapshots are unique, deep-frozen, flash-free and map onto reg
     }
 });
 
-test('the GHOST / OF ME easter egg stays behind confirmation without automatically enabling Flash/Strobe', () => {
+test('the GHOST // OF ME easter egg is chord-only, confirmed first, and lights only through the capped path', () => {
     const literal = /const GHOST_OF_ME = Object\.freeze\((\{.*\})\);/.exec(player);
     assert.ok(literal, 'GHOST_OF_ME literal not found');
     const preset = JSON.parse(literal[1]);
-    assert.equal(preset.name, 'GHOST / OF ME');
+    assert.equal(preset.name, 'GHOST // OF ME');
     for (const name of Object.keys(preset.settings.effects)) assert.ok(profileNames.includes(name), name);
     for (const name of Object.keys(preset.settings.sliderLocks)) {
         assert.ok(name === 'global' || profileNames.includes(name), name);
     }
-    assert.match(player, /window\.confirm\('GHOST \/ OF ME enables intense effects and continual randomization\. Flash and Strobe keep your manual levels\./);
-    assert.doesNotMatch(player, /const flashText =|const reveal =/);
+    assert.ok(preset.settings.effects.Flash > 0 && preset.settings.effects.Strobe > 0, 'saved GHOST light levels');
+    const start = player.indexOf('(function installEasterEgg() {');
+    assert.ok(start > 0, 'egg block not found');
+    const egg = player.slice(start, player.indexOf('})();', start));
+    assert.match(egg, /if \(!e\.ctrlKey \|\| !e\.altKey \|\| e\.shiftKey \|\| e\.metaKey \|\| e\.repeat\) return;/);
+    assert.match(egg, /if \(!window\.confirm\('GHOST \/\/ OF ME - photosensitivity warning: [^']*Flash is capped at 20% and Strobe at 35%[^']*Continue\?'\)\) return;/);
+    assert.ok(egg.indexOf('window.confirm(') < egg.indexOf('applyGhostSafely();'), 'confirm precedes apply');
+    assert.ok(egg.indexOf('window.confirm(') < egg.indexOf('playGhostShow(() =>'), 'confirm precedes the show');
+    assert.doesNotMatch(egg, /if \(!document\.body\.classList\.contains\('playback-on'\)\) return;/, 'the chord also works before playback');
+    assert.doesNotMatch(egg, /innerHTML|cssText|navigator\.clipboard|execCommand|requestIdleCallback|setTimeout\(runEasterEgg/);
+    assert.ok(egg.indexOf('applySettings(ghostSettings);') < egg.indexOf('setLightAutomation(true);'), 'lights go through applySettings, then the switch turns on');
+    assert.doesNotMatch(egg, /effectAlphas\[[^\]]+\]\s*=[^=]/, 'the egg writes no light level itself');
+    assert.match(egg, /if \(presetTravel\.active\) stepPresetTravel\(presetTravel\.start \+ presetTravel\.dur \+ 1\);/);
+    assert.match(egg, /const GHOST_TRACK_URL = 'https:\/\/www\.youtube\.com\/watch\?v=DmStNF35o1w';/);
+    assert.match(egg, /prefers-reduced-motion: reduce/);
+    const ui = player.slice(player.indexOf('function activatePlaybackUi('), player.indexOf('function hidePlaybackPrompts('));
+    assert.match(ui, /if \(ghostEggArm\) \{\s*const arm = ghostEggArm;\s*ghostEggArm = null;/);
 });

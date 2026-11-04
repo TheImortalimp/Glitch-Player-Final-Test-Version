@@ -2,13 +2,13 @@
 
 Revision R Final 4.0 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
 
-> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are manual-only: presets, randomize and automation neither enable them nor change your chosen slider levels. Their Trigger buttons require a nonzero manual level and use that level, not a random peak. This is not a photosensitivity-safe mode.
+> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are capped at 20% and 35%. Presets can set their saved values within those caps; Randomize does not change them. Optional automatic movement is off by default, session-only and requires confirmation. When enabled it applies on any media, fades in, and eases to zero while local media is paused or ended. The confirmed GHOST // OF ME easter egg (Ctrl+Alt+G) can apply its saved levels and enable automatic movement. This is not a photosensitivity-safe mode.
 
 The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, [SECURITY.md](SECURITY.md) for the hardening and [CHANGELOG.md](CHANGELOG.md) for the changes in this release.
 
 ## Starting and controlling the window
 
-The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the local file picker and the YouTube link tree, not the effects HUD. The link tree is a grid of named buttons (for example TERMINAL 1987, REVISIONS, MOONLIGHT, DEFCON 1), each with an artist/channel line and the full title as a tooltip. WHITE 2 BLACK 2 WHITE, the 3.0 fade link, plays its looping fade and switches on Continual Randomization; Flash and Strobe stay manual. Its card carries the same slow gleam as the logo. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
+The sequence is **logo landing -> source selection -> playback and effects HUD**. The logo screen lists every offered audio/video extension and its codec caveat. Choose Media opens the local file picker and the YouTube link tree, not the effects HUD. The link tree is a grid of named buttons (for example TERMINAL 1987, REVISIONS, MOONLIGHT, DEFCON 1), each with an artist/channel line and the full title as a tooltip. WHITE 2 BLACK 2 WHITE, the 3.0 fade link, plays its looping fade and switches on Continual Randomization; it does not enable Flash or Strobe automation. Its card carries the same slow gleam as the logo. Controls appear only when YouTube reports playback or local media starts playing; failed media leaves the picker available.
 
 Effects automation and whole-app filters wait until playback. The logo screen keeps the 3.0 gold look, a slow full-screen gold scan line and a soft sheen across the panel, plus the 4.0 gleam: every 10 s a soft shine sweeps across the [R], and its tint drifts slowly round the colour wheel (a full turn every 24 s). Reduced-motion stops all of them. Rapid decorative UI flicker is disabled.
 
@@ -33,7 +33,9 @@ The AI WARP MASTERS panel adds:
 - **DROP THE MILK?**: AI WARP's dependency-free, Milkdrop-inspired feedback automation with 80 auto presets and its own opacity slider and lock.
 - **B&W Strength** and **Hue Offset**: masters that drive each core voice and its R3 twin together.
 
-AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included. Saved Flash/Strobe values in immutable snapshots remain intact, but are not applied: these two controls always keep the user's current manual levels.
+HSL Rainbow and Hue/Color Cycle use a more saturated color response. B&W inversion eases more gently through the 50-75% slider range and keeps more color in its inverted output.
+
+AI WARP's warp modes, its Three.js renderer and the R3 Flash/Strobe twins are deliberately not included. Saved Flash/Strobe values in immutable presets remain intact and are applied when loaded, capped at 20% and 35%. Automatic movement remains off unless you confirm the session-only switch; the confirmed GHOST // OF ME easter egg (Ctrl+Alt+G) also enables it.
 
 The printable ASCII and Unicode glyph banks from the projector are included, with their original AI Warp / Revision 3 bank credits.
 
@@ -83,7 +85,7 @@ YouTube links you enter play through the privacy-enhanced embed (`youtube-nocook
 | Esc | Leave fullscreen; close the preset browser |
 | D | Toggle DROP THE MILK? (ignored while typing) |
 | S | Freeze Frame (ignored while typing and on the welcome screen) |
-| Ctrl+Alt+G | Hidden GHOST / OF ME preset (asks for confirmation; Flash/Strobe retain their manual levels) |
+| Ctrl+Alt+G | Hidden GHOST // OF ME easter egg. Asks for confirmation first. The next source you start then gets the GHOST preset, including its capped Flash and Strobe levels (photosensitivity warning applies). |
 
 Keyboard media keys, headset buttons and other apps can't control playback, because the player doesn't register with Windows media controls. Use the app's own controls.
 

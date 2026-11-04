@@ -150,8 +150,8 @@
 
 /* Shared with the WHITE 2 BLACK 2 WHITE link card in r4.css. */
 @keyframes gleam-hue {
-  from { filter: hue-rotate(0deg); }
-  to { filter: hue-rotate(360deg); }
+  from { filter: hue-rotate(0deg) saturate(1.35); }
+  to { filter: hue-rotate(360deg) saturate(1.35); }
 }
 
 @media (max-width: 560px) {

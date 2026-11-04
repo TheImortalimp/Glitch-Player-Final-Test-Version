@@ -7,23 +7,23 @@ This file records what was actually built and tested, and what hasn't been teste
 | Item | Value |
 | --- | --- |
 | Installer | `out\Glitch-Player-R4-4.0.0-x64-setup.exe` (built by `build.cmd`, not committed) |
-| Size | 44,726,047 bytes |
-| SHA-256 | `dd211d5105ab3552f53f3426bebcea5b536d9538cc94ce930cfe379618bfa6ad` |
-| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `3fefbe54246534d1a18c9c97f6a14d697776aea000c60cf86f483d4bfb70932b`) plus `payload.cab` (44,132,728 bytes) and SHA-256 files; no ZIP |
-| CAB SHA-256 | `ebb83358b1d4ab8ac24b410eb46c9f3dee325b71af0df1857a89042348c111c4` |
-| Runtime | 244 files, 144,694,403 bytes, extracted to the per-user cache named by the CAB hash |
-| Published | GitHub release `RELEASE_4.0` (installer and its `.sha256`) |
+| Size | 44,675,313 bytes |
+| SHA-256 | `133e132475679b38b08cff44da6bd04a24d1bd1a635d7d27dc0b5661d23dc9d5` |
+| Working package | `out\app\GlitchPlayerR4.exe` (457,216 bytes, SHA-256 `a61a8579f3abf871a4b371795b85fae2b078d264a849bcb99a657345db6e6771`) plus `payload.cab` (44,092,932 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `df1896684b3992c09d2f06fe36528643a2fa24b6b5eadaeec32344de68af5332` |
+| Runtime | 244 files, 144,726,419 bytes, extracted to the per-user cache named by the CAB hash |
+| Asset target | Existing GitHub release `RELEASE_4.0` (installer and checksum filenames unchanged) |
 | Signed | No |
-| Built | 2026-11-03 |
+| Built | 2026-11-04 |
 
 Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 1.0.4314.35, WebView2 Runtime 155.0.4283.62, Node.js 24.19.0, NSIS 3.13, NVIDIA RTX 5060. Two monitors: the primary at 1920x1080, 24 Hz and 150% scale, and a second at 60 Hz and 100% scale.
 
 ## Automated tests
 
-`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **171 tests total**.
+`build.cmd` runs all three suites and stops on a failure. All passed for the build above: **195 tests total**.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
-- **74 Node web tests** (`tests\web`), covering:
+- **98 Node web tests** (`tests\web`), covering:
   - The merge manifest (43 voices, presets).
   - Input and preset validation, ID3 artwork parsing, and the host bridge, including its refresh-rate and Freeze Frame replies.
   - The exact CSP and forbidden script sinks, and the YouTube embed.
@@ -32,7 +32,8 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
   - User locks against presets, the preset glide and Auto Glitch.
   - Logo -> source picker -> playback-only HUD, all offered media extensions, local playback readiness and stale YouTube callbacks.
   - The YouTube link tree: every link is a named button with an artist/channel line and no raw URL text, including the restored 3.0 WHITE 2 BLACK 2 WHITE fade link, which waits for YouTube playback like the others and arms Continual Randomization only once loading starts. Also the REVISION 4 // HARD LIGHT // MOONLIGHT mark, the native window bar that moves the HUD's top row below the floating window controls, and the logo/source screens' scrollbars starting below that bar.
-  - Manual-only Flash/Strobe across presets and automation, suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the restored 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
+  - Confirmation-gated Flash/Strobe automation and 20%/35% caps, live manual/preset levels while automation is off, local-media pause/end hold, GHOST // OF ME consent, more saturated HSL Rainbow and Hue/Color Cycle, and a softer B&W mid-level ramp.
+  - Suspended startup effects, the restored 3.0 logo-screen gold scan and panel sheen, the 4.0 [R] gleam and the WHITE 2 BLACK 2 WHITE card gleam with their shared hue drift (all off with reduced motion, and the gleam on that one card only), native-window message validation, default-browser handoff and focused WebView2 fullscreen-key wiring.
   - The frame governor: refresh-rate scaling, choosing the display that actually paces frames, overload detection, stepping back up after sustained headroom, and the longer wait after a relapse. Also: a 60 Hz board held to 30 fps is still treated as overloaded when a 30 Hz display is attached, and a board held back by its GPU stops retrying the faster tier but retries promptly once the load is lighter.
 
 - **1 Windows CAB integration test** (`tests\packaging`) runs the real launcher: fresh extraction, cached launch verification, all 244 hashes/sizes, and rejection of changed HTML, an extra DLL, a redirected cache entry and a changed CAB. Test changes are restored and final verification passes.
@@ -41,9 +42,15 @@ The Release host also built with zero warnings and errors. The CAB launcher is c
 
 The cursor guard host-guard tests were checked against deliberately broken copies of the code in the earlier release work. Removing the cursor guard wiring, or the `cssText` filter, makes them fail. The same was done for the last three governor tests: each fails with its fix removed.
 
-## Verified on this machine
+## Checks on the 2026-11-04 build
 
-**Current installer above (4.0 [R] gleam and WHITE 2 BLACK 2 WHITE card gleam, both with a hue drift)**
+- `build.cmd` passed 96 host tests, 98 web tests and 1 CAB integration test. The CAB contains 244 runtime files. The package and installer are unsigned.
+- In the VS Code integrated-browser static preview, the initialization screen listed accepted media types and showed the photosensitivity warning. A generated silent WAV opened the playback HUD; the Flash and Strobe slider maxima were 0.2 and 0.35. The switch asked for confirmation, stayed OFF when canceled, turned ON after confirmation while the local file was ended, and switched OFF again.
+- The browser reported no console errors or page errors. This preview serves the web UI directly; it is not a native WinForms host or installer test. The installer was not installed.
+
+## Historical checks on earlier installers
+
+**Previous installer (`c850b357…`; 4.0 [R] gleam and WHITE 2 BLACK 2 WHITE card gleam, both with a hue drift)**
 
 This build changes only `webui\css\welcome-screen.css`, `webui\css\r4.css` and a web test from the previous installer (`c850b357…`); the host, launcher and scripts are unchanged.
 
@@ -162,6 +169,8 @@ WebView2 paced `requestAnimationFrame` to the primary display's 24 Hz even with 
 - One pass, run right after a build, showed single 625-833 ms hitches. A repeat pass didn't reproduce them (worst frame 83 ms).
 
 ## Not verified yet
+
+The 2026-11-04 build was not installed or tested in the native WinForms host. Checks listed below may refer to earlier installers.
 
 - Code signing (not done), and SmartScreen behaviour on another machine.
 - The interactive (non-silent) installer and uninstaller pages, and the uninstaller's "delete data" path.

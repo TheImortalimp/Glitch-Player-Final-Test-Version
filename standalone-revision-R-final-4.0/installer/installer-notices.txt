@@ -51,11 +51,15 @@ Installer notices - please read before continuing.
 
 6. PHOTOSENSITIVITY WARNING
    The app can produce rapid flashing, strobing and high-contrast flicker.
-   Flash and Strobe start at zero and require their own manual controls.
-   Presets and automation leave their chosen levels alone. Other effects
-   and source videos can still flash; this is not a photosensitivity-safe
-   mode. Do not use these effects if you or anyone watching may be
-   sensitive to flashing light.
+   Flash and Strobe are capped at 20% and 35%. Presets can set their
+   saved levels within those limits. Optional automatic movement is off
+   by default, session-only and requires confirmation; when enabled it
+   applies on any media and eases to zero while local media is paused or
+   ended. The GHOST // OF ME easter egg also asks before applying its
+   capped levels and enabling movement. Other effects and source videos
+   can still flash; this is not a photosensitivity-safe mode. Do not use
+   these effects if you or anyone watching may be sensitive to flashing
+   light.
 
 7. LICENSES
    Glitch Player is dedicated to the public domain under CC0 1.0 by

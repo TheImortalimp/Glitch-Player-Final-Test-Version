@@ -11,7 +11,23 @@ First published build of Revision R Final 4.0, a newly coded, hardened Windows p
 | CAB payload SHA-256 | `ebb83358b1d4ab8ac24b410eb46c9f3dee325b71af0df1857a89042348c111c4` |
 | Signed | No. Windows SmartScreen may warn. |
 
-> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are manual-only. This is not a photosensitivity-safe mode.
+> **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. In the original 4.0.0 build, Flash and Strobe started at zero and were manual-only; the silent update below adds an optional, confirmation-gated automatic mode. This is not a photosensitivity-safe mode.
+
+## Silent update — 2026-11-04 (version remains 4.0.0)
+
+Replacement build for the existing `RELEASE_4.0` installer and checksum assets; the version and release tag remain unchanged.
+
+| Download | Value |
+| --- | --- |
+| Installer | `Glitch-Player-R4-4.0.0-x64-setup.exe`, 44,675,313 bytes |
+| SHA-256 | `133e132475679b38b08cff44da6bd04a24d1bd1a635d7d27dc0b5661d23dc9d5` |
+| CAB payload | 44,092,932 bytes |
+| CAB SHA-256 | `df1896684b3992c09d2f06fe36528643a2fa24b6b5eadaeec32344de68af5332` |
+
+- Flash and Strobe have a confirmation-gated, session-only automatic mode, capped at 20% and 35%. The switch defaults off; manual and preset levels remain active within those caps while it is off. Local paused/ended media holds automated output at zero.
+- Presets now apply their saved Flash and Strobe levels through the same caps. The GHOST // OF ME egg remains separately confirmed and enables the automated mode only after applying its saved levels.
+- HSL Rainbow and Hue/Color Cycle are more saturated. B&W inversion eases more gently from 50% to 75% and retains more color in the inverted range.
+- `build.cmd`: 96 host tests, 98 web tests and 1 CAB integration test passed. The integrated-browser preview loaded a generated silent WAV, verified the local-playback HUD, the 20%/35% slider maxima and the confirm-gated switch, and reported no console or page errors. This was not a native installer run; Ctrl+Alt+G was not verified natively.
 
 ### Merged effects engine
 
@@ -27,7 +43,7 @@ First published build of Revision R Final 4.0, a newly coded, hardened Windows p
   - USER presets are kept in the `glitchCanvasPresets_v2` format, up to 500, with validated JSON import/export.
   - The 80-preset MACHINE bank and the 250 LAB snapshots are frozen. Saving never changes a built-in preset.
 - Hard user locks hold a slider through presets, the preset glide, Auto Glitch, Continual Randomization and the AUTO cycler. A lock saved in a USER preset comes back as a preset lock, which the next preset releases.
-- Flash and Strobe are manual-only. Presets, Randomize and automation neither enable them nor change your levels, and their Trigger buttons use your manual level.
+- Flash and Strobe start at zero. Optional automatic movement is session-only, confirmation-gated and capped at 20% and 35%; manual and preset levels remain active within those caps while it is off. Paused or ended local media holds automated output at zero. The separately confirmed GHOST // OF ME easter egg applies its saved levels and can enable automatic movement.
 - Freeze Frame (button or **S**) saves a PNG of the picture with its effects, without the app's controls. The host captures it with the HUD hidden, and the Save dialog starts in Pictures and refuses the app's own folders.
 
 ### Smooth playback

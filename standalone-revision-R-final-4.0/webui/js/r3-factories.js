@@ -39,6 +39,12 @@
     let currentEngine = null;
     let currentDepth = 1;
     let activeEffects = []; // only used by R3's one-shot helper; GC#(3) runs persistent factories.
+    /* Bridge-only state: the voice currently painting, the raw R3 Hue/Color
+       Cycle level and a hysteresis latch for dark sources (Font Burn polarity). */
+    let paintingVoice = null;
+    let hueCycleRaw = 0;
+    let darkSource = false;
+    let resOffSeated = false;
     const renderBudget = { asciiCells: 21000 };
     /* The host's shared glyph-scatter painter (see the ASCII 006 face); null keeps
        the original per-cell loop. */
@@ -109,10 +115,18 @@
     function bwInvertMap(level) {
         if (root.GlitchEngine && typeof root.GlitchEngine.bwInvertMap === 'function') return root.GlitchEngine.bwInvertMap(level);
         const t = clamp01(level);
-        return { hueDeg: t * 360, invert: t > 0.5 ? ((t - 0.5) / 0.5) * 0.75 : 0, sat: 1, contrast: 1, live: t > 0.008 };
+        const u = clamp01((t - 0.50) / 0.25);
+        const invert = t <= 0.50 ? 0 : t <= 0.75 ? u * u * 0.75 : 0.75;
+        const kNeg = invert / 0.75;
+        return {
+            hueDeg: t * 360, invert,
+            sat: t <= 0.50 ? 1 + t * 0.08 : Math.max(0.82, 1 - kNeg * 0.12),
+            contrast: 1 + kNeg * 0.14,
+            live: t > 0.008
+        };
     }
     function fxConfluenceHue(wobble) {
-        const h = videoPalette.hue + (effectAlphas['Hue/Color Cycle'] || 0) * customTime * 0.018 + (wobble || 0);
+        const h = videoPalette.hue + hueCycleRaw * customTime * 0.018 + (wobble || 0);
         return ((h % 360) + 360) % 360;
     }
     function fxConfluenceHsl() { return { h: fxConfluenceHue(0), s: clamp(videoPalette.sat, 20, 100), l: clamp(videoPalette.light, 20, 80) }; }
@@ -2574,8 +2588,19 @@
         SOFT.k = clamp01((engine.softEyeK == null ? 1 : engine.softEyeK || 1) * blend.softEye);
         SOFT.beat = clamp01(((engine.audioDrive || {}).beat || 0) * blend.ear);
         beat = SOFT.beat;
+        hueCycleRaw = clamp01(engine.effectAlphas['Hue/Color Cycle' + GC3_SUFFIX] || 0);
+        if (videoPalette.darkness > 0.56) darkSource = true;
+        else if (videoPalette.darkness < 0.44) darkSource = false;
         effectAlphas = new Proxy(Object.create(null), {
-            get: (_, key) => typeof key === 'string' ? clamp01(engine.effectAlphas[key + GC3_SUFFIX] || 0) : 0,
+            get: (_, key) => {
+                if (typeof key !== 'string') return 0;
+                const v = clamp01(engine.effectAlphas[key + GC3_SUFFIX] || 0);
+                /* Font Burn's low Hue/Color Cycle face is black 'multiply' text,
+                   which vanishes on dark video; there it takes R3's own white
+                   rail instead so the burn stays readable. */
+                if (key === 'Hue/Color Cycle' && paintingVoice === 'Font Burn' && darkSource && v < 0.05) return 0.96;
+                return v;
+            },
             has: (_, key) => typeof key === 'string' && (key + GC3_SUFFIX) in engine.effectAlphas
         });
         if (lastFrameAt !== now) {
@@ -2584,6 +2609,39 @@
             lastFrameTime = now;
             try { stepFxKey(now, dt); } catch (e) {}
             try { stepFxEnsemble(now, dt); } catch (e) {}
+            shareHostEnsemble(engine.ensemble);
+        }
+    }
+
+    /* The host passes its breath, resonance, stage and chord; R3 keeps its own
+       presence/duck bookkeeping but plays in the same key and on the same pulse. */
+    function shareHostEnsemble(ens) {
+        if (!ens) return;
+        if (ens.resOff && typeof ens.resOff === 'object' && !Array.isArray(ens.resOff) && !resOffSeated) {
+            let copied = false;
+            for (const name in ens.resOff) {
+                if (Object.prototype.hasOwnProperty.call(FX_RESOFF, name) && Number.isFinite(ens.resOff[name])) {
+                    FX_RESOFF[name] = ens.resOff[name];
+                    copied = true;
+                }
+            }
+            if (copied) resOffSeated = true;
+        }
+        if (Number.isFinite(ens.breath)) FX_ENS.breath = ens.breath;
+        if (Number.isFinite(ens.breathPhase)) FX_ENS.breathPhase = ens.breathPhase;
+        if (Number.isFinite(ens.resPhase)) FX_ENS.resPhase = ens.resPhase;
+        if (ens.stage && Number.isFinite(ens.stage.x) && Number.isFinite(ens.stage.y) && Number.isFinite(ens.stage.r)) {
+            FX_ENS.stage.x = ens.stage.x;
+            FX_ENS.stage.y = ens.stage.y;
+            FX_ENS.stage.r = ens.stage.r;
+        }
+        if (Number.isFinite(ens.root)) FX_KEY.root = ens.root;
+        if (Array.isArray(ens.tones) && ens.tones.length >= 3 &&
+            Number.isFinite(ens.tones[0]) && Number.isFinite(ens.tones[1]) && Number.isFinite(ens.tones[2])) {
+            for (let i = 0; i < 3; i++) FX_KEY.tones[i] = ens.tones[i];
+        }
+        if (Number.isFinite(ens.idx) && FX_CHORDS.length) {
+            FX_KEY.idx = ((ens.idx % FX_CHORDS.length) + FX_CHORDS.length) % FX_CHORDS.length;
         }
     }
 
@@ -2600,7 +2658,13 @@
                 context.scale(size, size);
                 context.translate(-engine.canvas.width * 0.5, -engine.canvas.height * 0.5);
             }
-            try { render(); } finally { context.restore(); }
+            try {
+                paintingVoice = baseName;
+                render();
+            } finally {
+                paintingVoice = null;
+                context.restore();
+            }
         };
     }
 
@@ -2621,4 +2685,3 @@
         }
     };
 })(typeof window !== 'undefined' ? window : this);
-

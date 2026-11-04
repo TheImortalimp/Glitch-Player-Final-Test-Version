@@ -177,7 +177,8 @@
             invert = 0;
             rail = 'hue';
         } else if (t <= 0.75) {
-            invert = ((t - 0.50) / 0.25) * 0.75;
+            var u = (t - 0.50) / 0.25;
+            invert = u * u * 0.75;
             rail = 'emission';
         } else {
             invert = 0.75;
@@ -189,7 +190,7 @@
             hueDeg: t * 360,
             invert: invert,
             contrast: 1 + kNeg * 0.14,
-            sat: t <= 0.50 ? (1 + t * 0.08) : Math.max(0.72, 1 - kNeg * 0.18),
+            sat: t <= 0.50 ? (1 + t * 0.08) : Math.max(0.82, 1 - kNeg * 0.12),
             rail: rail,
             live: t > 0.008,
             negative: invert,
@@ -330,7 +331,7 @@
 
     function hueCycleMap(level, ctx) {
         var t = clamp01(level);
-        var sat = t <= 0.50 ? (1 + t * 0.10) : Math.max(0.92, 1.06 - (t - 0.50) * 0.16);
+        var sat = t <= 0.50 ? (1 + t * 0.18) : Math.max(1.02, 1.09 - (t - 0.50) * 0.14);
         var contrast = t <= 0.50 ? 1 : (1 + ((t - 0.50) / 0.50) * 0.07);
         return {
             t: t,
@@ -349,29 +350,29 @@
         var hueDeg = t * 360;
         var satPct, lightPct, satFilter, brightFilter, satSwing, lightSwing, hueStops;
         if (t <= 0.50) {
-            satPct = 38 + t * 84;
+            satPct = 42 + t * 96;
             lightPct = 54 + t * 12;
-            satFilter = 1 + t * 0.16;
+            satFilter = 1 + t * 0.22;
             brightFilter = 1 + t * 0.04;
-            satSwing = 14 + t * 12;
+            satSwing = 18 + t * 14;
             lightSwing = 8 + t * 8;
             hueStops = 3;
         } else if (t <= 0.75) {
             var u = (t - 0.50) / 0.25;
-            satPct = 80 + u * 18;
+            satPct = 90 + u * 10;
             lightPct = 60 + u * 18;
-            satFilter = 1.08 + u * 0.14;
+            satFilter = 1.11 + u * 0.17;
             brightFilter = 1.02 + u * 0.08;
-            satSwing = 20 + u * 18;
+            satSwing = 25 + u * 20;
             lightSwing = 12 + u * 14;
             hueStops = 5;
         } else {
             var v = (t - 0.75) / 0.25;
-            satPct = 98 - v * 6;
+            satPct = 100 - v * 6;
             lightPct = 50 + 28 * Math.sin(v * Math.PI);
-            satFilter = 1.22 - v * 0.04;
+            satFilter = 1.28 - v * 0.08;
             brightFilter = 1.10 - v * 0.05;
-            satSwing = 38 + v * 10;
+            satSwing = 45 + v * 12;
             lightSwing = 26 + v * 12;
             hueStops = 7;
         }
@@ -1069,4 +1070,3 @@
         version: 'engine-2.0-softeye'
     };
 })(typeof window !== 'undefined' ? window : this);
-

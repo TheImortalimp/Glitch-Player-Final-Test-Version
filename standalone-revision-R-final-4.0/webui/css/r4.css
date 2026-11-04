@@ -218,6 +218,70 @@ body.ui-hidden #windowControls { visibility: hidden; }
     overflow-wrap: anywhere;
 }
 
+/* MISSING LINK: the 3.0 hidden track, revealed by the GHOST // OF ME egg. */
+#ytLinkTree > #ghostLink {
+    --link-accent: #dc143c;
+    animation: gleam-hue 12s linear infinite;
+}
+#ytLinkTree > #ghostLink .ytLinkName { color: #ff4d6d; text-shadow: 0 0 10px rgba(220, 20, 60, 0.6); }
+
+/* GHOST // OF ME show (Ctrl+Alt+G, only after its photosensitivity confirm):
+   one 3.2 s whole-app hue sweep with three black-and-white inversion snaps
+   (under 3 per second). No fill mode, so the master filter returns after. */
+html.ghost-egg-show { animation: ghost-egg-wash 3.2s linear 1; }
+@keyframes ghost-egg-wash {
+    0%     { filter: hue-rotate(0deg) grayscale(0) invert(0) saturate(1.7) contrast(1.2); }
+    17.9%  { filter: hue-rotate(130deg) grayscale(0) invert(0) saturate(1.9) contrast(1.25); }
+    18%    { filter: hue-rotate(130deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    30%    { filter: hue-rotate(216deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    30.1%  { filter: hue-rotate(216deg) grayscale(0) invert(0) saturate(1.9) contrast(1.25); }
+    49.9%  { filter: hue-rotate(360deg) grayscale(0) invert(0) saturate(1.9) contrast(1.25); }
+    50%    { filter: hue-rotate(360deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    62%    { filter: hue-rotate(446deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    62.1%  { filter: hue-rotate(446deg) grayscale(0) invert(0) saturate(1.9) contrast(1.25); }
+    77.9%  { filter: hue-rotate(560deg) grayscale(0) invert(0) saturate(1.9) contrast(1.25); }
+    78%    { filter: hue-rotate(560deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    88%    { filter: hue-rotate(634deg) grayscale(1) invert(1) saturate(1) contrast(1.4); }
+    88.1%  { filter: hue-rotate(634deg) grayscale(0) invert(0) saturate(1.7) contrast(1.2); }
+    100%   { filter: hue-rotate(720deg) grayscale(0) invert(0) saturate(1) contrast(1); }
+}
+html.ghost-egg-still { filter: grayscale(1) contrast(1.2) !important; }
+.ghost-egg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 24000;
+    overflow: hidden;
+    pointer-events: none;
+}
+.ghost-egg-data {
+    position: fixed;
+    margin: 0;
+    color: #dc143c;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 0 20px #ff0000;
+    transition: opacity 0.1s linear;
+}
+.ghost-egg-bang {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #00ff00;
+    font: 700 30vw/1 Impact, 'Arial Black', sans-serif;
+    text-shadow: 0 0 40px #00ff00;
+    transition: opacity 0.5s linear;
+}
+/* Armed and waiting for a source: a slow, non-flashing hue and gray drift. */
+html.ghost-egg-armed #sourceScreen { animation: ghost-egg-armed 24s linear infinite; }
+@keyframes ghost-egg-armed {
+    0%, 100% { filter: hue-rotate(0deg) grayscale(0); }
+    25%      { filter: hue-rotate(90deg) grayscale(0.85); }
+    50%      { filter: hue-rotate(180deg) grayscale(0); }
+    75%      { filter: hue-rotate(270deg) grayscale(0.85); }
+}
+
 /* UI chrome stays steady; only explicitly chosen media/effects may flash. */
 .wired-button, #ghostProtocolBtn, #vsyncScanBtn, #preset-toggle-btn,
 #preset-dropdown-container, #preset-dropdown-container::after,
@@ -357,6 +421,35 @@ html.freeze-frame-capture body > :not(#effects-wrapper):not(#moon-veil):not(#col
 html.freeze-frame-capture body > :not(#effects-wrapper):not(#moon-veil):not(#color-shift-overlay):not(.svg-defs) * {
     visibility: hidden !important;
     transition: none !important;
+}
+
+/* Flash & Strobe (automatic) switch: session only, sits under the global slider.
+   Pressed state uses the same inverted look as a locked control. */
+.light-switch-row {
+    margin: 6px 0;
+}
+.light-switch-button {
+    display: block;
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(7px, .95vw, 9px);
+    color: #fff;
+    background: #000;
+    border: 1px solid #fff;
+    cursor: pointer;
+    padding: 3px 4px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.light-switch-button[aria-pressed="true"] {
+    color: #000;
+    background: #fff;
+}
+.light-switch-button:focus-visible {
+    outline: 2px solid #4de1ff;
+    outline-offset: 2px;
 }
 
 /* LAB 250 list skin (USER = purple-violet, MACHINE = orange-yellow). */

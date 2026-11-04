@@ -97,7 +97,7 @@ test('effects work and whole-app filters wait until media starts, while display 
     assert.doesNotMatch(welcome, /\.welcomeMark \{[^}]*overflow/);
     assert.match(welcome, /\.welcomeMark::after \{[^}]*hsl\(42 100% 62% \/ 0\.36\)[^}]*mask-image: radial-gradient\(farthest-side, #000 62%, transparent\);[^}]*animation: logo-gleam 10s ease-in-out infinite, gleam-hue 24s linear infinite;[^}]*pointer-events: none;/);
     assert.match(welcome, /@keyframes logo-gleam \{\s*0%, 70% \{ background-position-x: 135%; opacity: 0; \}/);
-    assert.match(welcome, /@keyframes gleam-hue \{\s*from \{ filter: hue-rotate\(0deg\); \}\s*to \{ filter: hue-rotate\(360deg\); \}/);
+    assert.match(welcome, /@keyframes gleam-hue \{\s*from \{ filter: hue-rotate\(0deg\) saturate\(1\.35\); \}\s*to \{ filter: hue-rotate\(360deg\) saturate\(1\.35\); \}/);
 });
 
 test('local source readiness waits for actual playback and reports decoding / play failures', async () => {
@@ -124,7 +124,7 @@ test('local source readiness waits for actual playback and reports decoding / pl
         'blob:bad', 'video'), (error) => error.mediaCode === 4);
 });
 
-test('Flash and Strobe are manual-only even without user locks and survive preset glides', () => {
+test('Flash and Strobe are held out of shared automation and preset glides even without user locks', () => {
     const context = vm.createContext({
         sliderLocks: { ASCII: true }, presetLockKeys: new Set(), profileNames: ['Flash', 'Strobe', 'ASCII', 'Scanlines'],
         effectAlphas: { Flash: 0.14, Strobe: 0.09, ASCII: 0.2, Scanlines: 0 },
@@ -179,7 +179,10 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
         assert.ok(card, id);
         assert.match(card[1], /^[A-Z0-9 .]+$/, id);
     }
-    assert.equal((tree.match(/<button /g) || []).length, ids.length);
+    const ghost = /<button type="button" id="ghostLink" class="suggested ytLink" title="[^"]+" hidden>\s*<span class="ytLinkName">MISSING LINK<\/span>\s*<span class="ytLinkMeta">[^<]+<\/span>\s*<\/button>/.exec(tree);
+    assert.ok(ghost, 'hidden MISSING LINK card');
+    assert.match(player, /bindSuggestedStart\(ghostLink, GHOST_TRACK_URL, false\);/);
+    assert.equal((tree.match(/<button /g) || []).length, ids.length + 1);
     assert.doesNotMatch(tree, /https?:/);
     assert.match(html, /id="rev3-mark"[^>]*>REVISION 4 &nbsp;\/\/&nbsp; HARD LIGHT &nbsp;\/\/&nbsp; MOONLIGHT</);
     assert.match(css, /body:has\(> #windowControls:not\(\[hidden\]\)\) \{ --r4-bar: 36px; \}/);

@@ -365,7 +365,7 @@
            FontBurn .40 / Strobe .40 / Gemini .36 / TechArtist .20; Data Bands,
            VHS Glitch, Data Bomb still start 0). ZERO ALL still parks all.
          KEPT FROM v10:
-         • B&W Invert: 0–50% = 0 light-emission invert + hue spectrum; 50–100% = full light-emission invert (75%) + hue 180–360°
+         • B&W Invert: 0–50% = 0 light-emission invert + hue spectrum; 50–75% eases into full light-emission invert (75%), then holds through 100%
          • Local media never body-inverted; preset browser live skin
          ============================================================================ */
       (function() {
@@ -476,7 +476,9 @@
           let isAiWarpActive = false;
           let isAutomatedMasters = false;
           let randomTargets = {};
-          const sliderLocks = {};
+          /* 'global' is seeded so saved global-opacity locks survive preset
+             normalization (which keeps only known lock keys). */
+          const sliderLocks = { global: false };
           /* Locks switched on by the last applied preset. Those are released by
              the next preset; locks the user set by hand are hard and survive. */
           const presetLockKeys = new Set();
@@ -1652,7 +1654,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   invert = 0;
                   rail = 'hue';
               } else if (t <= 0.75) {
-                  invert = ((t - 0.50) / 0.25) * 0.75; /* 50→75% slider ramps 0→0.75 invert */
+                  const u = (t - 0.50) / 0.25;
+                  invert = u * u * 0.75;
                   rail = 'emission';
               } else {
                   invert = 0.75; /* 75→100% holds negative light emission at 75% */
@@ -1664,7 +1667,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   hueDeg: t * 360,
                   invert: invert,
                   contrast: 1 + kNeg * 0.14,
-                  sat: t <= 0.50 ? (1 + t * 0.08) : Math.max(0.72, 1 - kNeg * 0.18),
+                  sat: t <= 0.50 ? (1 + t * 0.08) : Math.max(0.82, 1 - kNeg * 0.12),
                   rail: rail,
                   live: t > 0.008,
                   negative: invert,
@@ -2133,18 +2136,19 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function chromaticEchoFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Chromatic Echo');
                   const source = getSelectedLocalVideo();
                   if (s < 0.001 || !source || !mainCanvas.width || !mainCanvas.height) return;
                   const w = mainCanvas.width, h = mainCanvas.height;
                   const offset = (5 + 24 * s) * Math.sin(customTime * 0.0007);
+                  const turn = Math.round(fxKeyShift(115, 0.5));
                   gctx.save();
                   try {
                       gctx.globalCompositeOperation = 'screen';
                       gctx.globalAlpha = 0.12 * s;
-                      gctx.filter = 'hue-rotate(115deg) saturate(1.6)';
+                      gctx.filter = 'hue-rotate(' + (115 + turn) + 'deg) saturate(1.6)';
                       drawLocalVideoContained(gctx, source, offset, 0, w, h);
-                      gctx.filter = 'hue-rotate(285deg) saturate(1.6)';
+                      gctx.filter = 'hue-rotate(' + (285 + turn) + 'deg) saturate(1.6)';
                       drawLocalVideoContained(gctx, source, -offset, 0, w, h);
                   } finally {
                       gctx.restore();
@@ -2156,7 +2160,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           function temporalSlicesFactory(getStrength, persistent) {
               let frames = null, index = 0, lastCapture = -Infinity;
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Temporal Slices');
                   const source = getSelectedLocalVideo();
                   if (s < 0.001 || !source) { lastCapture = -Infinity; return; }
                   const w = mainCanvas.width, h = mainCanvas.height;
@@ -2201,10 +2205,13 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   width: 0.08 + Math.random() * 0.5
               }));
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Signal Tear');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
                   if (!w || !h) return;
+                  const turn = fxKeyShift(328, 0.5);
+                  const tearA = fxHsla(fxTurn(328, turn), 100, 59, 1), tearB = fxHsla(fxTurn(178, turn), 88, 61, 1);
+                  const edgeA = fxHsla(fxTurn(187, turn), 100, 81, 1), edgeB = fxHsla(fxTurn(324, turn), 100, 74, 1);
                   gctx.save();
                   try {
                       gctx.globalCompositeOperation = 'screen';
@@ -2215,9 +2222,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                           const length = w * band.width * (0.55 + s * 0.8);
                           const height = 1 + (i % 4) * s * 4;
                           gctx.globalAlpha = s * (0.23 + 0.18 * Math.sin(t * 2 + band.seed * 8) ** 2);
-                          gctx.fillStyle = i % 2 ? '#ff2e99' : '#45f3ed';
+                          gctx.fillStyle = i % 2 ? tearA : tearB;
                           gctx.fillRect(x, y, length, height);
-                          gctx.fillStyle = i % 2 ? '#9ef3ff' : '#ff7bca';
+                          gctx.fillStyle = i % 2 ? edgeA : edgeB;
                           gctx.fillRect(x + 8 * s, y + height + 1, length * 0.7, 1);
                           if (i % 3 === 0) {
                               gctx.globalAlpha = 0.15 * s;
@@ -2234,10 +2241,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function cyberRainFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Cyber Rain');
                   if (s < 0.001 || !window.SignalGlyphs) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
                   const spacing = 35, cols = Math.min(70, Math.ceil(w / spacing));
+                  const turn = fxKeyShift(151, 0.45);
+                  const headHue = fxTurn(145, turn), trailHue = fxTurn(151, turn);
                   gctx.save();
                   try {
                       gctx.font = 'bold 14px monospace';
@@ -2252,8 +2261,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                               if (y < 0 || y > h) continue;
                               const glyph = SignalGlyphs.pick(Math.random);
                               gctx.fillStyle = j === 0 ?
-                                  `rgba(224,255,237,${0.7 * s})` :
-                                  `rgba(55,255,158,${s * 0.65 * (1 - j / trail)})`;
+                                  fxHsla(headHue, 100, 94, 0.7 * s) :
+                                  fxHsla(trailHue, 100, 61, s * 0.65 * (1 - j / trail));
                               gctx.fillText(glyph, i * spacing + 15, y);
                           }
                       }
@@ -2266,9 +2275,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function prismRiftFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Prism Rift');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
+                  const turn = fxKeyShift(190, 0.5);
                   gctx.save();
                   try {
                       gctx.globalCompositeOperation = 'screen';
@@ -2276,7 +2286,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                           const x = w * (0.15 + i * 0.23) + Math.sin(t * 0.35 + i * 2) * w * 0.15;
                           const spread = w * (0.08 + s * 0.13);
                           const gradient = gctx.createLinearGradient(x - spread, 0, x + spread, 0);
-                          const hue = (190 + i * 70 + t * 7) % 360;
+                          const hue = fxTurn(190 + i * 70 + t * 7, turn);
                           gradient.addColorStop(0, 'transparent');
                           gradient.addColorStop(0.48, `hsla(${hue},100%,60%,${s * 0.20})`);
                           gradient.addColorStop(0.52, `hsla(${(hue + 100) % 360},100%,75%,${s * 0.38})`);
@@ -2299,18 +2309,19 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function orbitHudFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Orbit HUD');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
                   const cx = w * 0.64, cy = h * 0.5;
                   const radius = Math.min(w, h) * (0.15 + 0.04 * Math.sin(t * 0.45));
+                  const turn = fxKeyShift(162, 0.5);
                   gctx.save();
                   try {
                       gctx.translate(cx, cy);
-                      gctx.strokeStyle = `rgba(124,255,215,${0.7 * s})`;
-                      gctx.fillStyle = `rgba(190,255,225,${0.8 * s})`;
+                      gctx.strokeStyle = fxHsla(fxTurn(162, turn), 100, 74, 0.7 * s);
+                      gctx.fillStyle = fxHsla(fxTurn(152, turn), 100, 87, 0.8 * s);
                       gctx.lineWidth = 1.2;
-                      gctx.shadowColor = '#54ffc7';
+                      gctx.shadowColor = fxHsla(fxTurn(160, turn), 100, 66, 1);
                       gctx.shadowBlur = 7 * s;
                       for (let ring = 0; ring < 3; ring++) {
                           gctx.beginPath();
@@ -2344,9 +2355,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function rollingScanFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Rolling Scan');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
+                  const scanHue = fxTurn(153, fxKeyShift(153, 0.5));
                   gctx.save();
                   try {
                       gctx.fillStyle = `rgba(0,0,0,${0.52 * s})`;
@@ -2356,7 +2368,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const y = (t * 24) % (h + 120) - 60;
                       const gradient = gctx.createLinearGradient(0, y - 35, 0, y + 35);
                       gradient.addColorStop(0, 'transparent');
-                      gradient.addColorStop(0.5, `rgba(158,255,212,${s * 0.14})`);
+                      gradient.addColorStop(0.5, fxHsla(scanHue, 100, 81, s * 0.14));
                       gradient.addColorStop(1, 'transparent');
                       gctx.fillStyle = gradient;
                       gctx.fillRect(0, y - 35, w, 70);
@@ -2369,7 +2381,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function tapeGrainFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Tape Grain');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
                   gctx.save();
@@ -2395,16 +2407,19 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function trackingTearFactory(getStrength, persistent) {
               const render = () => {
-                  const s = getStrength();
+                  const s = getStrength() * fxVoiceK('Tracking Tear');
                   if (s < 0.001) return;
                   const w = mainCanvas.width, h = mainCanvas.height, t = customTime / 1000;
+                  const turn = fxKeyShift(343, 0.5);
+                  const tearA = fxHsla(fxTurn(343, turn), 100, 59, s * 0.26);
+                  const tearB = fxHsla(fxTurn(189, turn), 100, 60, s * 0.26);
                   gctx.save();
                   try {
                       gctx.globalCompositeOperation = 'screen';
                       for (let i = 0; i < 4 + Math.floor(s * 9); i++) {
                           const y = ((i * 97 + t * (11 + i)) % h);
                           const x = (0.5 + 0.5 * Math.sin(i * 22 + t * 0.7)) * w * 0.75;
-                          gctx.fillStyle = i % 2 ? `rgba(255,45,106,${s * 0.26})` : `rgba(50,225,255,${s * 0.26})`;
+                          gctx.fillStyle = i % 2 ? tearA : tearB;
                           gctx.fillRect(x, y, w * (0.06 + 0.2 * s), 1 + i % 3);
                           gctx.fillStyle = `rgba(255,255,255,${s * 0.18})`;
                           gctx.fillRect(0, y + 3, w, 1);
@@ -2416,15 +2431,26 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               return persistent ? render : createTimedEffect(render);
           }
 
-          /* Indices follow R3_FACTORY_DEFS in r3-factories.js. R3 Flash (2) and
-             R3 Strobe (6) are deliberately not registered (photosensitivity). */
+          /* Indices follow R3_FACTORY_DEFS in r3-factories.js. Flash and Strobe are
+             not listed: the player's own Flash and Strobe factories drive them. */
           const R3_FACTORY_INDEX = Object.freeze({
               'Neon Grad': 0, 'Scanlines': 1, 'HSL Rainbow': 3, 'ASCII': 4, 'Font Burn': 5,
               'Gemini Bomb': 7, 'Tech Artist': 8, 'Data Bands': 9, 'VHS Glitch': 10,
               'Data Bomb': 11, 'Ink Glyphs': 12, 'Matrix ASCII': 13, 'Matrix Chord': 14
           });
-          let r3Engine = null, r3Runners = null, r3System = null;
+          let r3Engine = null, r3Runners = null, r3System = null, r3ResOffMap = null;
           const r3Errors = new Set();
+          /* R3 voices keep the host's resonance seats ('R3 X' offsets), so each
+             twin answers its native voice instead of firing in unison with it. */
+          function r3ResOff() {
+              if (r3ResOffMap) return r3ResOffMap;
+              const map = {};
+              for (const key in FX_RESOFF) {
+                  if (key.indexOf('R3 ') === 0) map[key.slice(3)] = FX_RESOFF[key];
+              }
+              r3ResOffMap = Object.freeze(map);
+              return r3ResOffMap;
+          }
           function getR3Engine() {
               if (r3Engine) return r3Engine;
               if (!window.GC3FactoryBank || !window.R3GhostVsync)
@@ -2449,7 +2475,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   softEyeActive: false, vsyncLocked: false, autoGlitchPower: 0.75, aiWarpHuePhase: 0,
                   liveAlpha(name) {
                       const base = name.endsWith(' GC#(3)') ? 'R3 ' + name.slice(0, -7) : name;
-                      return effectLiveStrength(base);
+                      /* R3 voices yield to the whole board's crowd, not just each other */
+                      const duck = FX_ENS.duck[base] != null ? FX_ENS.duck[base] : 1;
+                      return effectLiveStrength(base) * (0.4 + 0.6 * duck);
                   },
                   sizeFor() { return 1; }, depthFor() { return 1; }, triggerButtonEffect() {},
                   paintGlyphScatter: paintScatterField
@@ -2475,13 +2503,26 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               engine.isAutomatedMasters = isAutomatedMasters;
               engine.softEyeActive = !!SOFT.ok;
               engine.autoGlitchPower = clamp01(masterControls.autoGlitchPower);
+              const confluence = fxConfluenceHsl().h;
               engine.videoPalette = {
-                  hue: videoPalette.hue,
+                  hue: fxLerpHue(videoPalette.hue, confluence, 0.5),
                   sat: videoPalette.sat,
                   brightness: clamp01(videoPalette.light / 100),
                   energy: clamp01(videoPalette.energy),
                   motion: clamp01(videoPalette.motion),
                   darkness: clamp01(videoPalette.darkness)
+              };
+              /* One heartbeat, one stage, one chord: the R3 bank plays inside the
+                 host ensemble instead of running its own key and breath. */
+              engine.ensemble = {
+                  breath: FX_ENS.breath,
+                  breathPhase: FX_ENS.breathPhase,
+                  resPhase: FX_ENS.resPhase,
+                  stage: { x: FX_ENS.stage.x, y: FX_ENS.stage.y, r: FX_ENS.stage.r },
+                  root: FX_KEY.root,
+                  tones: FX_KEY.tones.slice(),
+                  idx: FX_KEY.idx,
+                  resOff: r3ResOff()
               };
               engine.ghostModeIndex = effectLiveStrength('R3 Ghost Spectrum') > 0.001 ? 2 : 0;
               engine.ghostLevel = clamp01(effectLiveStrength('R3 Ghost Spectrum'));
@@ -2657,6 +2698,27 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                  keeps at least a glow while it waits its turn */
               const lo = 0.30 + 0.14 * srcEnergyK();
               return lo + (1 - lo) * (0.5 + 0.5 * Math.sin(Math.PI * 2 * (FX_ENS.resPhase + off)));
+          }
+          /* Projector / AI-warp voices paint their raw slider strength; this folds
+             them into the same ensemble (resonance turn, crowd duck, source pulse,
+             soft-eye calm) that the native voices already follow. */
+          function fxVoiceK(name) {
+              const gate = fxGate(name);
+              const duck = FX_ENS.duck[name] != null ? FX_ENS.duck[name] : 1;
+              const srcK = 0.9 + 0.25 * srcEnergyK();
+              const softP = (window.GlitchEngine && GlitchEngine.softPaintK) ? GlitchEngine.softPaintK(name, softK()) : 1;
+              return clamp((0.6 + 0.4 * gate) * duck * srcK * softP, 0, 1.2);
+          }
+          /* Degrees to add to a voice's home hue so it leans toward the shared
+             confluence key; every colour in a voice gets the same turn, so its
+             internal colour pairs keep their relationship. */
+          function fxKeyShift(homeHue, amt) {
+              const key = fxConfluenceHsl().h;
+              const d = ((key - homeHue) % 360 + 540) % 360 - 180;
+              return d * clamp01(amt);
+          }
+          function fxTurn(h, shift) {
+              return (((h + (shift || 0)) % 360) + 360) % 360;
           }
           /* soft bell envelope for timed bursts */
           const envArc = (p) => Math.sin(clamp01(p) * Math.PI);
@@ -3954,7 +4016,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
              fully opaque by design. */
           function glitchInkGlyphsFactory(getStrength, isPersistent) {
               const glyphs = [];
-              const MAX_INK = 30; // concurrent stamp cap
+              const MAX_INK = 40; // concurrent stamp cap
               /* R1.6: the ink's alphabet is split — letterforms vs sigils —
                  so the source's DARKNESS can choose the mix (see spawnGlyph):
                  dark video strikes dense code/sigil glyphs, bright video
@@ -4010,8 +4072,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (flow <= 0.004) return;
                   const timed = (progress !== undefined);
                   /* spawn pressure: a steady scatter when persistent; a
-                     swelling flurry across a timed burst */
-                  let rate = (0.8 + 5.4 * s) * (0.45 + 0.55 * FX_ENS.breath) *
+                     swelling flurry across a timed burst (flow already carries
+                     the masters, so the base rate must be generous to read) */
+                  let rate = (2.4 + 16 * s) * (0.45 + 0.55 * FX_ENS.breath) *
                       (0.55 + 0.45 * fxGate('Ink Glyphs')) *
                       (0.85 + 0.30 * srcEnergyK()); /* R1.5: source energy feeds the ink flow */
                   if (timed) {
@@ -4621,11 +4684,155 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               { name: 'R3 Hue/Color Cycle', defaultAlpha: 0 }
           ];
           const effectAlphas = {};
+          /* 0..1 gate on Flash/Strobe output; eases to 0 while local media is held. */
+          let lightHold = 1;
           function isManualLight(name) {
               return name === 'Flash' || name === 'Strobe';
           }
           function automationHeld(name) {
               return isManualLight(name) || !!sliderLocks[name];
+          }
+          function paintLightLock(name) {
+              const group = sliderElements[name] && sliderElements[name].closest('.slider-group');
+              const btn = group && group.querySelector('.lock-button');
+              if (!btn) return;
+              btn.classList.toggle('locked', !!sliderLocks[name]);
+              btn.textContent = sliderLocks[name] ? '[LOCKED!]' : '<LOCK!>';
+          }
+          /* Flash and Strobe are always capped; the session switch only
+             controls their automatic movement (off by default). */
+          const LIGHT_CEILING = { Flash: 0.20, Strobe: 0.35 };
+          const LIGHT_STOP_EPSILON = 0.005;
+          const LIGHT_WANDER_RATE = 1.1;
+          const LIGHT_HOLD_RATE = 3;
+          const LIGHT_ARM_RATE = 3;
+          const LIGHT_SWITCH_PROMPT = 'Flash & Strobe (automatic)\n\n' +
+              'When on, Flash and Strobe move on their own on any media, never above 20% (Flash) or 35% (Strobe). They fade in over about a second. While local media is paused or ended, their movement stops and their output eases to 0. They resume on play. YouTube is never held. The same caps apply to manual slider and preset levels.\n\n' +
+              'When off, automatic movement stops and the capped slider or preset levels remain active. Their levels and locks are kept.\n\n' +
+              'Flashing lights can trigger seizures in people with photosensitive epilepsy. The caps limit the level only. This is not a photosensitivity-safe mode.\n\n' +
+              'Turn it on?';
+          let lightAutomationOn = false;
+          let lightSwitchEl = null;
+          /* The level the user set for each light. While the switch is ON,
+             effectAlphas holds the moving wander position instead. */
+          const lightStored = {};
+          /* 0..1 fade-in of the output after the switch turns ON; 0 while OFF. */
+          let lightArm = 0;
+          const lightStoppedByUser = {};
+          const lightWanderAt = {};
+          const lightWanderTarget = {};
+          function lightCap(name) {
+              return Object.prototype.hasOwnProperty.call(LIGHT_CEILING, name) ? LIGHT_CEILING[name] : Infinity;
+          }
+          function clampLight(name, v) {
+              return Math.min(lightCap(name), clamp01(+v || 0));
+          }
+          function paintLightSwitch() {
+              if (!lightSwitchEl) return;
+              lightSwitchEl.textContent = 'Flash & Strobe (automatic): ' + (lightAutomationOn ? 'ON' : 'OFF');
+              lightSwitchEl.setAttribute('aria-pressed', lightAutomationOn ? 'true' : 'false');
+          }
+          function setLightAutomation(on) {
+              const next = !!on;
+              if (next !== lightAutomationOn) {
+                  lightAutomationOn = next;
+                  lightArm = 0;
+                  /* ON: the slider levels become the stored levels. OFF restores
+                     stored levels, except a hand-locked light keeps its current level. */
+                  ['Flash', 'Strobe'].forEach((name) => {
+                      const level = next ? (effectAlphas[name] || 0) :
+                          (sliderLocks[name] ? (effectAlphas[name] || 0) : (lightStored[name] || 0));
+                      setLightLevelNow(name, level);
+                  });
+              }
+              /* Every ON call restarts the wander, including a repeat call while
+                 already ON (for example from the Ghost egg). */
+              if (lightAutomationOn) {
+                  ['Flash', 'Strobe'].forEach((name) => {
+                      lightStoppedByUser[name] = false;
+                      lightWanderAt[name] = 0;
+                      crParked[name] = (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON;
+                  });
+              }
+              paintLightSwitch();
+          }
+          function setLightLevelNow(name, v) {
+              const level = clampLight(name, v);
+              effectAlphas[name] = level;
+              lightStored[name] = level;
+              randomTargets[name] = level;
+              sliderWritten[name] = level;
+              lightStoppedByUser[name] = false;
+              lightWanderTarget[name] = level;
+              crParked[name] = level < PARKED_EFFECT_EPSILON;
+              /* Drop the eased copy so the next frame starts from the new level. */
+              delete smoothedStrength[name];
+              if (sliderElements[name]) sliderElements[name].value = level.toFixed(3);
+              updateContinuousEffectsCache(name);
+          }
+          function stepLightWander(now, dt) {
+              if (!lightAutomationOn) return;
+              const eng = window.GlitchEngine;
+              ['Flash', 'Strobe'].forEach((name) => {
+                  if (sliderLocks[name]) return;
+                  if (lightStoppedByUser[name]) {
+                      lightWanderTarget[name] = 0;
+                  } else if (now >= (lightWanderAt[name] || 0)) {
+                      lightWanderAt[name] = now + 1400 + Math.random() * 1600;
+                      let t = Math.random() * lightCap(name);
+                      if (eng && eng.softCap) t = eng.softCap(name, t, softK());
+                      if (eng && eng.confineTarget) {
+                          t = eng.confineTarget(name, t, {
+                              ghost: getGhostMode(), vsync: getVsyncMode(),
+                              warp: isAiWarpActive, bw: bwMasterLevel()
+                          });
+                      }
+                      lightWanderTarget[name] = clampLight(name, t);
+                  }
+                  const cur = effectAlphas[name] || 0;
+                  const goal = clampLight(name, lightWanderTarget[name] || 0);
+                  let next = clampLight(name, easeExp(cur, goal, dt, LIGHT_WANDER_RATE));
+                  /* Snap the last sliver so a stopped light lands on exactly 0. */
+                  if (Math.abs(goal - next) < 0.0005) next = goal;
+                  if (next === cur) return;
+                  effectAlphas[name] = next;
+                  crParked[name] = next < PARKED_EFFECT_EPSILON;
+                  updateContinuousEffectsCache(name);
+                  const el = sliderElements[name];
+                  if (el && (next === goal || sliderWritten[name] === undefined || Math.abs(next - sliderWritten[name]) > 0.006)) {
+                      sliderWritten[name] = next;
+                      el.value = next.toFixed(3);
+                  }
+              });
+          }
+          /* Eases the output in after the switch turns ON, so a light never
+             jumps straight to its level. */
+          function stepLightArm(dt) {
+              if (!lightAutomationOn) { lightArm = 0; return; }
+              lightArm = easeExp(lightArm, 1, dt, LIGHT_ARM_RATE);
+              if (1 - lightArm < 0.001) lightArm = 1;
+          }
+          /* Local-media hold and fade-in apply only during automatic movement.
+             Manual and preset levels remain live while the switch is OFF. */
+          function lightOutputGate() {
+              return lightAutomationOn ? lightArm * lightHold : 1;
+          }
+          /* YouTube and the canvas never hold: neither sets a local body class. */
+          function localMediaHeld() {
+              const body = document.body.classList;
+              if (body.contains('local-video')) return !!video && (video.paused || video.ended);
+              if (body.contains('local-audio')) return !!localAudio && (localAudio.paused || localAudio.ended);
+              return false;
+          }
+          function stepLightHold(dt) {
+              const target = localMediaHeld() ? 0 : 1;
+              lightHold = easeExp(lightHold, target, dt, LIGHT_HOLD_RATE);
+              if (Math.abs(target - lightHold) < 0.001) lightHold = target;
+          }
+          /* The level as the output reads it, including automation fades. */
+          function heldLevel(name) {
+              const v = +(effectAlphas[name] || 0);
+              return isManualLight(name) ? v * lightOutputGate() : v;
           }
           const smoothedStrength = {};
           const continuousEffectCache = {};
@@ -4758,7 +4965,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let lit = 0,
                   sum = 0;
               for (let i = 0; i < profileNames.length; i++) {
-                  const a = effectAlphas[profileNames[i]] || 0;
+                  const a = heldLevel(profileNames[i]);
                   if (a > 0.03) { lit++;
                       sum += a; }
               }
@@ -4795,7 +5002,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let lit = 0,
                   energy = 0;
               for (let i = 0; i < profileNames.length; i++) {
-                  const a = effectAlphas[profileNames[i]] || 0;
+                  const a = heldLevel(profileNames[i]);
                   if (a > 0.04) { lit++;
                       energy += a; }
               }
@@ -4805,7 +5012,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const intensity = clamp01(masterControls.effectIntensity);
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  const raw = clamp01((effectAlphas[name] || 0) * masterOpacity * (automationHeld(name) ? 1 : glitchBoost) * intensity);
+                  const raw = Math.min(lightCap(name), clamp01((effectAlphas[name] || 0) * masterOpacity * (automationHeld(name) ? 1 : glitchBoost) * intensity));
                   const rate = (blendProfiles[name].rate || 0.2) * 5.0 * blendTempo * harmony * ((SOFT.enabled && SOFT.k < 0.45) ? 0.62 : 1) * (document.body.classList.contains('hard-light') ? 1.12 : 1);
                   const prev = smoothedStrength[name] === undefined ? raw : smoothedStrength[name];
                   const rateUse = raw < 0.01 ? rate * 1.28 : rate;
@@ -4825,7 +5032,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               const intensity = masterControls ? Math.max(0.05, +masterControls.effectIntensity || 1) : 1;
               const live = a * Math.max(0, +masterOpacity || 0) * intensity;
               const sm = smoothedStrength[name];
-              return (sm === undefined) ? live : Math.max(+sm || 0, live);
+              const level = Math.min(lightCap(name), (sm === undefined) ? live : Math.max(+sm || 0, live));
+              return isManualLight(name) ? level * lightOutputGate() : level;
           }
 
           function updateContinuousEffectsCache(specificName) {
@@ -4872,8 +5080,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   for (let i = 0; i < profileNames.length; i++) {
                       const n = profileNames[i];
                       const a = effectAlphas[n] || 0;
-                      if (a > 0) smoothedStrength[n] = a * masterOpacity * (masterControls ? Math.max(
-                          0.05, +masterControls.effectIntensity || 1) : 1);
+                      if (a > 0) {
+                          const intensity = masterControls ? Math.max(0.05, +masterControls.effectIntensity || 1) : 1;
+                          smoothedStrength[n] = Math.min(lightCap(n), a * masterOpacity * intensity);
+                      }
                   }
                   updateContinuousEffectsCache();
                   if (typeof restartAutomatedLevels === 'function') restartAutomatedLevels('global');
@@ -4894,10 +5104,30 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               sliderContainer.appendChild(row);
               globalSliderEl = globalSlider;
 
+              /* Not a slider-group: the lock-sync code keys off that class. */
+              const lightSwitchRow = document.createElement('div');
+              lightSwitchRow.className = 'light-switch-row';
+              const lightSwitch = document.createElement('button');
+              lightSwitch.type = 'button';
+              lightSwitch.className = 'light-switch-button';
+              lightSwitch.title = 'Off by default; session only and not saved in presets. While ON, Flash and Strobe move on their own on any media, never above 20% or 35%, fading in over about a second. While local media is paused or ended, their movement stops and output eases to 0. The same caps apply to manual slider and preset levels. While OFF, automatic movement stops but capped manual and preset levels remain active; levels and locks are kept.';
+              lightSwitch.addEventListener('click', () => {
+                  if (lightAutomationOn) {
+                      setLightAutomation(false);
+                  } else if (window.confirm(LIGHT_SWITCH_PROMPT)) {
+                      setLightAutomation(true);
+                  }
+              });
+              lightSwitchRow.appendChild(lightSwitch);
+              sliderContainer.appendChild(lightSwitchRow);
+              lightSwitchEl = lightSwitch;
+              paintLightSwitch();
+
               const allDefs = [...timedEffectsDefs, ...masterEffectsDefs].sort((a, b) => (a.name < b.name ? -1 :
               1));
               allDefs.forEach((def) => {
-                  effectAlphas[def.name] = def.defaultAlpha;
+                  const startLevel = isManualLight(def.name) ? clampLight(def.name, def.defaultAlpha) : def.defaultAlpha;
+                  effectAlphas[def.name] = startLevel;
                   sliderLocks[def.name] = false;
                   const group = document.createElement('div');
                   group.className = 'slider-group';
@@ -4908,21 +5138,29 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   slider.min = 0;
                   slider.max = 1;
                   slider.step = 0.01;
-                  slider.value = def.defaultAlpha;
+                  slider.value = startLevel;
                   slider.setAttribute('aria-label', def.name);
                   if (isManualLight(def.name)) {
-                      label.textContent = def.name + ' (manual only):';
-                      slider.title = 'Only this slider changes the level. Presets and automation leave it alone.';
+                      const cap = lightCap(def.name);
+                      const capText = Math.round(cap * 100) + '%';
+                      slider.max = cap;
+                      label.textContent = def.name + ' (max ' + capText + '):';
+                      slider.title = 'Manual level, capped at ' + capText + '. Output remains active while automatic movement is OFF.';
                   }
                   sliderElements[def.name] = slider;
                   slider.addEventListener('input', () => {
-                      const v = parseFloat(slider.value) || 0;
+                      const v = clampLight(def.name, parseFloat(slider.value) || 0);
                       effectAlphas[def.name] = v;
                       randomTargets[def.name] = v;
                       sliderWritten[def.name] = v;
                       /* R1 (006 final): a manual set is park/unpark intent —
                          dragging to 0 parks it for CR, dragging up re-arms it */
                       crParked[def.name] = v < PARKED_EFFECT_EPSILON;
+                      if (isManualLight(def.name)) {
+                          lightStoppedByUser[def.name] = v < LIGHT_STOP_EPSILON;
+                          lightStored[def.name] = v;
+                          lightWanderTarget[def.name] = v;
+                      }
                       /* v11: touching a slider after ZERO ALL EFFECTS restarts the
                          levels — a parked (0) global opacity is revived so the touch
                          is actually visible, and the automation systems wake up. */
@@ -4934,8 +5172,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       }
                       const intensity = masterControls ? Math.max(0.05, +masterControls
                           .effectIntensity || 1) : 1;
-                      smoothedStrength[def.name] = v * Math.max(0.05, +masterOpacity || 1) *
-                          intensity;
+                      smoothedStrength[def.name] = Math.min(lightCap(def.name),
+                          v * Math.max(0.05, +masterOpacity || 1) * intensity);
                       updateContinuousEffectsCache(def.name);
                       if (typeof restartAutomatedLevels === 'function') restartAutomatedLevels('slider');
                   });
@@ -5106,7 +5344,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let weight = 0, chroma = 0, rhythm = 0, texture = 0, geometry = 0;
               for (let i = 0; i < profileNames.length; i++) {
                   const name = profileNames[i];
-                  const level = clamp01((effectAlphas[name] || 0) * masterOpacity);
+                  const level = clamp01(heldLevel(name) * masterOpacity);
                   if (level <= 0.005) continue;
                   const c = milkVoiceClass(name);
                   weight += level;
@@ -5513,6 +5751,10 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
 
           function triggerTimedEffect(def) {
               if (isManualLight(def.name)) {
+                  if (!lightAutomationOn) {
+                      showNotificationMessage(def.name + ' outputs only while Flash & Strobe (automatic) is ON. Turn that switch on first.', 3800);
+                      return;
+                  }
                   if (!(effectAlphas[def.name] > 0)) {
                       showNotificationMessage('Raise the ' + def.name + ' slider explicitly before triggering it.', 3500);
                       return;
@@ -7858,6 +8100,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               isContinuallyRandomizing = false;
               isAutoGlitching = false;
               isAutomatedMasters = false;
+              setLightAutomation(false); /* ZERO ALL also switches Flash & Strobe automation OFF */
               setMilkActive(false); /* AI WARP parity: ZERO ALL drops the milk too */
               bwSweep.active = false;
               bwSweepActive = false;
@@ -7985,6 +8228,9 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           /* ------------------------------------------------------------------ *
            *  18. Playback UI + init screen                                      *
            * ------------------------------------------------------------------ */
+          /* Set by the GHOST // OF ME egg when it is confirmed before playback;
+             the next confirmed source start applies the snapshot once. */
+          let ghostEggArm = null;
           function activatePlaybackUi(mode) {
               if (!document.body.classList.contains('welcome-dismissed')) return;
               sourceScreen.hidden = true;
@@ -8005,11 +8251,18 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (fileInput) fileInput.style.display = 'none';
               }
               applyMasterFilters();
+              if (ghostEggArm) {
+                  const arm = ghostEggArm;
+                  ghostEggArm = null;
+                  document.documentElement.classList.remove('ghost-egg-armed');
+                  arm();
+              }
           }
 
           function hidePlaybackPrompts() {
               ['ytInput', 'startBtn', 'suggestedVideo', 'suggestedVideo3', 'suggestedVideo2', 'suggestedYoutube',
-                  'suggestedPlaylist', 'suggestedMoonlight', 'suggestedFractals', 'suggestedNightCity', 'suggestedDarksynth', 'testCanvas', 'Defcon1Video'
+                  'suggestedPlaylist', 'suggestedMoonlight', 'suggestedFractals', 'suggestedNightCity', 'suggestedDarksynth', 'testCanvas', 'Defcon1Video',
+                  'ghostLink'
               ].forEach((id) => {
                   const el = $(id);
                   if (el) el.style.display = 'none';
@@ -8262,6 +8515,29 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   .replace(/A/g, '4').replace(/E/g, '3').replace(/I/g, '1')
                   .replace(/O/g, '0').replace(/S/g, '5');
           }
+          /* Frozen 4.0 baseline: live DOM ids and the title are not read, so new
+             markup (such as ghostLink) cannot reshuffle the 80 MACHINE names. */
+          const MACHINE_NAME_DOM_IDS = [
+              'windowDrag', 'windowControls', 'windowShield', 'windowResize', 'welcomeScreen', 'welcomeAudioTypes',
+              'welcomeVideoTypes', 'welcomeEnterBtn', 'moon-veil', 'rev3-mark', 'effects-wrapper', 'localArt',
+              'video', 'localAudio', 'ytWarpShell', 'ytFrame', 'ytPlayerMount', 'glitchCanvas',
+              'wired-btn', 'nowPlayingHud', 'npHudToggle', 'npHudPanel', 'npThumb', 'npTitle',
+              'npAuthor', 'npProvider', 'npTime', 'npFlags', 'npLink', 'earHud',
+              'earHudMode', 'earHudPhase', 'earMeterLevel', 'earMeterBass', 'earMeterMid', 'earMeterTreb',
+              'earMeterBuild', 'earHudSrc', 'rightRack', 'autoGlitchBtn', 'randomizeBtn', 'continualRandomizeBtn',
+              'aiWarpBtn', 'automatedMastersBtn', 'zeroAllBtn', 'ghostBtnRack', 'ghostProtocolBtn', 'vsyncScanBtn',
+              'softEyeBtn', 'hardLightBtn', 'earBtn', 'freezeFrameBtn', 'sliderContainer', 'ghostProtocolSlider',
+              'vsyncScanLabel', 'vsyncScanSlider', 'vsyncLockBtn', 'randomSeedSlider', 'sourceScreen', 'sourceHeading',
+              'sourceHint', 'ytInput', 'startBtn', 'ytLinkTreeHeading', 'ytLinkTree', 'suggestedVideo',
+              'suggestedVideo3', 'suggestedVideo2', 'suggestedYoutube', 'suggestedPlaylist', 'suggestedMoonlight', 'suggestedFractals',
+              'suggestedNightCity', 'testCanvas', 'suggestedDarksynth', 'Defcon1Video', 'openFileWrap', 'openFileBtn',
+              'fileInput', 'preset-toggle-btn', 'preset-dropdown-container', 'presetCloseZone', 'glyph-bank', 'glyph-info',
+              'current-preset-display', 'presetSelect', 'presetListToggleBtn', 'presetLabBtn', 'presetAutoBtn', 'presetNameInput',
+              'presetSaveBtn', 'presetDeleteBtn', 'presetDeleteAllBtn', 'presetImportBtn', 'presetExportBtn', 'presetImportInput',
+              'presetPrevBtn', 'presetNextBtn', 'ui-toggle-tab', 'toggle-ui-btn', 'ai-warp-filter', 'ai-turbulence',
+              'ai-displacement', 'ai-color-matrix', 'vsync-hue-ghost-filter', 'vsync-ghost-hue', 'vsync-ghost-saturate', 'vsync-ghost-sharpen'
+          ];
+          const MACHINE_NAME_TITLE = 'Standalone Revision R Final 4.0 \u2014 Glitch Canvas';
           function harvestNameCodex() {
               const bag = [];
               const add = (s) => {
@@ -8281,10 +8557,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   'NEON', 'PHOSPHOR', 'PRISM', 'VOID', 'SIGNAL', 'TAPE', 'AURORA',
                   'MATRIX', 'CHORD', 'TYPESET', 'KATAKANA', 'CYRILLIC', 'HANZI', 'RAIN'
               ].forEach(add);
-              try {
-                  document.querySelectorAll('[id]').forEach((el) => add(el.id));
-                  add(document.title);
-              } catch (e) {}
+              MACHINE_NAME_DOM_IDS.forEach(add);
+              add(MACHINE_NAME_TITLE);
               const seen = Object.create(null);
               const out = [];
               for (let i = 0; i < bag.length; i++) {
@@ -8567,7 +8841,11 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           function captureSettings() {
               const effects = {};
               for (let i = 0; i < profileNames.length; i++) {
-                  effects[profileNames[i]] = effectAlphas[profileNames[i]] || 0;
+                  const name = profileNames[i];
+                  /* While the switch is ON a light's slider moves with its wander;
+                     save the level the user set instead. */
+                  effects[name] = (isManualLight(name) && lightAutomationOn) ?
+                      (lightStored[name] || 0) : (effectAlphas[name] || 0);
               }
               const vsyncLevels = {};
               ['ON', 'GHOST_OFF', 'FULL'].forEach((m) => {
@@ -8744,6 +9022,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       saveVoiceFxControls();
                   }
               }
+              /* Presets set capped Flash and Strobe levels before their own locks apply,
+                 so only a hand lock keeps a light where it is. */
+              ['Flash', 'Strobe'].forEach((name) => {
+                  if (sliderLocks[name]) return;
+                  setLightLevelNow(name, s.alphas && s.alphas[name] !== undefined ? s.alphas[name] : 0);
+              });
               if (s.locks) {
                   for (const key in s.locks) {
                       if (s.locks.hasOwnProperty(key) && s.locks[key] && !sliderLocks[key]) {
@@ -8773,20 +9057,6 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                       const btn = $('continualRandomizeBtn');
                       if (btn) btn.textContent = 'Continual Randomization: ' + (isContinuallyRandomizing ? 'ON' : 'OFF');
                       if (isContinuallyRandomizing) {
-                          for (let i = 0; i < profileNames.length; i++) {
-                              const name = profileNames[i];
-                              if (automationHeld(name)) continue;
-                              if ((effectAlphas[name] || 0) < PARKED_EPSILON) {
-                                  const profile = blendProfiles[name];
-                                  const v = profile ? randRange(profile.ambient) : 0.05 + Math.random() * 0.12;
-                                  effectAlphas[name] = v;
-                                  if (sliderElements[name]) sliderElements[name].value = v.toFixed(3);
-                              }
-                          }
-                          if (!sliderLocks.global && masterOpacity < PARKED_EPSILON) {
-                              masterOpacity = 0.55 + Math.random() * 0.40;
-                              if (globalSliderEl) globalSliderEl.value = masterOpacity.toFixed(3);
-                          }
                           retargetRandomization(performance.now());
                       } else {
                           /* v11: CR OFF freezes targets — never parks, never zeroes */
@@ -9006,7 +9276,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           }
 
           /* v11: " -ʁ%AUTO%ʁ- " — auto-cycler. While ON, a random preset is
-             picked from EITHER memory list every 2.5–5.7 seconds; if the pick
+             picked from EITHER memory list every 9.5–19.5 seconds (3.8–6.6 inside a crescendo); if the pick
              comes from the other list, the User/Machine toggle state swaps
              with it so the browser always shows the list that was used. */
           let presetAutoActive = false;
@@ -9018,12 +9288,12 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               if (presetAutoBtn) {
                   presetAutoBtn.classList.toggle('auto-on', presetAutoActive);
                   presetAutoBtn.title = presetAutoActive ?
-                      'AUTO-cycling ON — random preset from either list every 2.5–5.7s (click to stop)' :
-                      'Auto-cycle: applies a random preset from EITHER list every 2.5–5.7s';
+                      'AUTO-cycling ON — random preset from either list every 9.5–19.5s (3.8–6.6s in a crescendo; click to stop)' :
+                      'Auto-cycle: applies a random preset from EITHER list every 9.5–19.5s (3.8–6.6s in a crescendo)';
               }
               if (presetAutoActive) {
                   presetAutoNextAt = performance.now() + 500; // first pick almost immediately
-                  showNotificationMessage('PRESET AUTO-CYCLER ENGAGED — random preset every 2.5–5.7s', 2600);
+                  showNotificationMessage('PRESET AUTO-CYCLER ENGAGED — random preset every 9.5–19.5s', 2600);
               } else {
                   showNotificationMessage('PRESET AUTO-CYCLER STOPPED', 1800);
               }
@@ -9202,8 +9472,11 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
                   if (!settings) return false;
                   applySettings(settings);
                   const listTag = src === labPresets ? ' [LAB]' : (src === machinePresets ? ' [MACHINE]' : ' [USER]');
-                  setCurrentPresetDisplay('LOADED: ' + name +
-                      ((preset && preset.tag) ? ' · ' + preset.tag : '') + listTag);
+                  /* LAB entries are keyed by id; show their real name, and only
+                     show a tag the list badge doesn't already say */
+                  const label = (typeof preset.name === 'string' && preset.name) ? preset.name : name;
+                  const tag = (preset.tag && preset.tag !== 'LAB') ? ' · ' + preset.tag : '';
+                  setCurrentPresetDisplay('LOADED: ' + label + tag + listTag);
                   return true;
               }
               return false;
@@ -9950,6 +10223,8 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               frameCount++;
 
               updateSmoothedStrengths(dt);
+              stepLightHold(dt);
+              stepLightArm(dt);
               updateComboProfile(performance.now());
               stepComboProfile(dt);
               stepPalette(now, dt);
@@ -9960,11 +10235,14 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               try { stepFxKey(now, dt); } catch (e) {}
               try { stepFxEnsemble(now, dt); } catch (e) {}
               try { softStep(now, dt); } catch (e) {}   /* R2 SOFT-EYE: ear → crescendo → burst gate */
-              presetAutoStep(now); // v11: " -ʁ%AUTO%ʁ- " preset cycler (2.5–5.7s cadence)
+              presetAutoStep(now); // v11: " -ʁ%AUTO%ʁ- " preset cycler (9.5–19.5s cadence, 3.8–6.6s in a crescendo)
               autoGlitchStep(now, dt);
               vsyncStepScript(now, dt);
               try { stepPresetTravel(now); } catch (e) {}
               if (isContinuallyRandomizing && !presetTravel.active) stepContinualRandomization(now, dt);
+              /* Flash and Strobe follow their own switch, not Continual Randomization.
+                 Paused or ended local media freezes their movement. */
+              if (lightAutomationOn && !localMediaHeld()) stepLightWander(now, dt);
               // Aesthetic burst runs independently of CR — fires even if CR is off,
               // so long as at least one automation is active or effects are running.
               if (isContinuallyRandomizing || isAutoGlitching || isAutomatedMasters)
@@ -9979,7 +10257,7 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
               let energy = 0,
                   count = 0;
               for (let i = 0; i < profileNames.length; i++) {
-                  const a = effectAlphas[profileNames[i]] || 0;
+                  const a = heldLevel(profileNames[i]);
                   if (a > 0.01) { energy += a;
                       count++; }
               }
@@ -10021,36 +10299,147 @@ const chars = (latin + cyrillic + greek + katakana + hebrew + arabic + devanagar
           })();
 
           /* ------------------------------------------------------------------ *
-           *  Easter egg - GHOST / OF ME + the 3.0 hidden track                 *
-           *  Deliberate chord only (Ctrl+Alt+G) behind a flashing-content       *
+           *  Easter egg: GHOST // OF ME + the 3.0 hidden track                 *
+           *  Deliberate chord only (Ctrl+Alt+G) behind a photosensitivity       *
            *  confirmation. Never idle-triggered, never touches the clipboard.   *
+           *  Confirmed during playback, GHOST lands at once; confirmed before   *
+           *  playback it reveals the MISSING LINK card (the 3.0 hidden track)   *
+           *  and lands on the next source start. Its Flash and Strobe go        *
+           *  through the same capped light path as presets, and the switch      *
+           *  turns ON with the track; hand locks hold.                          *
            * ------------------------------------------------------------------ */
           (function installEasterEgg() {
               /* Hidden user snapshot from the projector app, restored as saved
                  (including automation) through the LAB effect-name mapping. */
-              const GHOST_OF_ME = Object.freeze({"name":"GHOST / OF ME","settings":{"version":3,"masterOpacity":0.33,"effects":{"ASCII":0.26,"B&W Invert":1,"Cyber Rain":1,"Data Bands":0.7514000000357629,"Data Bomb":0.4104499999880806,"Flash":0.2410999997705262,"Font Burn":0.4958999998420481,"Gemini Bomb":0.6959500000625881,"HSL Rainbow":0.6052500001639146,"Hue/Color Cycle":1,"Neon Grad":0.3301500000804669,"Orbit HUD":0.17034999988973326,"Prism Rift":0.572949999988082,"R3 Data Bomb":0.39250000002980406,"R3 Gemini Bomb":0.49835000003874536,"R3 Ghost Spectrum":0.4439999999403973,"R3 Ink Glyphs":0.47480000010132933,"R3 Matrix ASCII":0.660549999877812,"R3 Matrix Chord":0.22625000002980267,"R3 Neon Grad":0.3669499999284767,"R3 Scanlines":0.4869000000804658,"R3 Tech Artist":0.9487999999821211,"R3 V-Sync":0.6183499998152283,"Scanlines":0.46410000000894275,"Signal Tear":1,"Strobe":0.4390000001043095,"VHS Glitch":0.15880000004172684},"isAutoGlitching":true,"isContinuallyRandomizing":true,"isAiWarpActive":true,"sliderLocks":{"global":true,"ASCII":true,"B&W Invert":true,"Cyber Rain":true,"Data Bands":false,"Data Bomb":false,"Flash":false,"Font Burn":false,"Gemini Bomb":false,"HSL Rainbow":false,"Hue/Color Cycle":true,"Neon Grad":false,"Orbit HUD":false,"Prism Rift":false,"R3 Data Bomb":false,"R3 Gemini Bomb":false,"R3 Ghost Spectrum":false,"R3 Ink Glyphs":false,"R3 Matrix ASCII":false,"R3 Matrix Chord":false,"R3 Neon Grad":false,"R3 Scanlines":false,"R3 Tech Artist":false,"R3 V-Sync":false,"Scanlines":false,"Signal Tear":true,"Strobe":false,"VHS Glitch":false},"glyphBank":"All scripts","randomSeed":0.494,"customTime":21312531.21593429}});
+              const GHOST_OF_ME = Object.freeze({"name":"GHOST // OF ME","settings":{"version":3,"masterOpacity":0.33,"effects":{"ASCII":0.26,"B&W Invert":1,"Cyber Rain":1,"Data Bands":0.7514000000357629,"Data Bomb":0.4104499999880806,"Flash":0.2410999997705262,"Font Burn":0.4958999998420481,"Gemini Bomb":0.6959500000625881,"HSL Rainbow":0.6052500001639146,"Hue/Color Cycle":1,"Neon Grad":0.3301500000804669,"Orbit HUD":0.17034999988973326,"Prism Rift":0.572949999988082,"R3 Data Bomb":0.39250000002980406,"R3 Gemini Bomb":0.49835000003874536,"R3 Ghost Spectrum":0.4439999999403973,"R3 Ink Glyphs":0.47480000010132933,"R3 Matrix ASCII":0.660549999877812,"R3 Matrix Chord":0.22625000002980267,"R3 Neon Grad":0.3669499999284767,"R3 Scanlines":0.4869000000804658,"R3 Tech Artist":0.9487999999821211,"R3 V-Sync":0.6183499998152283,"Scanlines":0.46410000000894275,"Signal Tear":1,"Strobe":0.4390000001043095,"VHS Glitch":0.15880000004172684},"isAutoGlitching":true,"isContinuallyRandomizing":true,"isAiWarpActive":true,"sliderLocks":{"global":true,"ASCII":true,"B&W Invert":true,"Cyber Rain":true,"Data Bands":false,"Data Bomb":false,"Flash":false,"Font Burn":false,"Gemini Bomb":false,"HSL Rainbow":false,"Hue/Color Cycle":true,"Neon Grad":false,"Orbit HUD":false,"Prism Rift":false,"R3 Data Bomb":false,"R3 Gemini Bomb":false,"R3 Ghost Spectrum":false,"R3 Ink Glyphs":false,"R3 Matrix ASCII":false,"R3 Matrix Chord":false,"R3 Neon Grad":false,"R3 Scanlines":false,"R3 Tech Artist":false,"R3 V-Sync":false,"Scanlines":false,"Signal Tear":true,"Strobe":false,"VHS Glitch":false},"glyphBank":"All scripts","randomSeed":0.494,"customTime":21312531.21593429}});
+              const GHOST_TRACK_URL = 'https://www.youtube.com/watch?v=DmStNF35o1w';
+              const GHOST_FONTS = ['"Courier New", monospace', 'monospace', '"Arial Black", sans-serif',
+                  'Impact, sans-serif', 'Georgia, serif', '"Times New Roman", serif', 'Verdana, sans-serif'];
+              const ghostLink = $('ghostLink');
               let ghostSettings = null;
               let running = false;
+              bindSuggestedStart(ghostLink, GHOST_TRACK_URL, false);
+
+              function applyGhostNow() {
+                  if (!ghostSettings) ghostSettings = mapLabSnapshot(GHOST_OF_ME.settings);
+                  /* Flash and Strobe land through the capped light path in
+                     applySettings; a hand lock on either keeps its level. */
+                  applySettings(ghostSettings);
+                  /* GHOST lands at once instead of gliding like other presets
+                     (+1 ms so float rounding cannot leave the glide active) */
+                  if (presetTravel.active) stepPresetTravel(presetTravel.start + presetTravel.dur + 1);
+                  /* the switch turns ON with the track; motion still needs continual randomization */
+                  setLightAutomation(true);
+                  updateContinuousEffectsCache();
+                  /* show the saved seed without re-rolling the board */
+                  if (randomSeedSlider) randomSeedSlider.value = String(GHOST_OF_ME.settings.randomSeed);
+                  const lights = ['Flash', 'Strobe'].map((name) => name + ' ' + Math.round((effectAlphas[name] || 0) * 100) + '%');
+                  setCurrentPresetDisplay('LOADED: ' + GHOST_OF_ME.name + ' [HIDDEN]');
+                  showNotificationMessage(GHOST_OF_ME.name + ' loaded \u00b7 ' + lights.join(' \u00b7 ') + '.', 4200);
+              }
+              function applyGhostSafely() {
+                  try {
+                      applyGhostNow();
+                  } catch (err) {
+                      showNotificationMessage('GHOST // OF ME could not be loaded: ' + err.message, 5000);
+                  }
+              }
+
+              /* The 3.0 reveal: crimson DATA.. scatter in switching fonts, a lime
+                 "!", DATA.. again, then the "!" fades (about 3.2 s), over a whole-app
+                 hue sweep with three black-and-white inversion snaps (CSS). Reduced
+                 motion gets one still grayscale frame instead. */
+              function playGhostShow(onDone) {
+                  const rootEl = document.documentElement;
+                  const still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+                  const layer = document.createElement('div');
+                  layer.className = 'ghost-egg-layer';
+                  layer.setAttribute('aria-hidden', 'true');
+                  const bang = document.createElement('div');
+                  bang.className = 'ghost-egg-bang';
+                  bang.textContent = '!';
+                  const words = [];
+                  const timers = [];
+                  let fontTimer = 0;
+                  const later = (ms, fn) => { timers.push(setTimeout(fn, ms)); };
+                  const randomFont = () => GHOST_FONTS[(Math.random() * GHOST_FONTS.length) | 0];
+                  const scatter = (count) => {
+                      words.forEach((el) => el.remove());
+                      words.length = 0;
+                      for (let i = 0; i < count; i++) {
+                          const el = document.createElement('div');
+                          el.className = 'ghost-egg-data';
+                          el.textContent = 'DATA..';
+                          el.style.top = (Math.random() * 90).toFixed(1) + 'vh';
+                          el.style.left = (Math.random() * 90).toFixed(1) + 'vw';
+                          el.style.fontSize = (5 + Math.random() * 10).toFixed(1) + 'vw';
+                          el.style.fontFamily = randomFont();
+                          layer.appendChild(el);
+                          words.push(el);
+                      }
+                  };
+                  const flicker = (on) => {
+                      clearInterval(fontTimer);
+                      fontTimer = 0;
+                      if (on) fontTimer = setInterval(() => {
+                          words.forEach((el) => { el.style.fontFamily = randomFont(); });
+                      }, 50);
+                  };
+                  const fadeWords = () => {
+                      flicker(false);
+                      words.forEach((el) => { el.style.opacity = '0'; });
+                  };
+                  const finish = () => {
+                      timers.forEach(clearTimeout);
+                      flicker(false);
+                      layer.remove();
+                      rootEl.classList.remove('ghost-egg-show', 'ghost-egg-still');
+                      onDone();
+                  };
+                  document.body.appendChild(layer);
+                  if (still) {
+                      rootEl.classList.add('ghost-egg-still');
+                      scatter(1);
+                      words[0].style.top = '10vh';
+                      words[0].style.left = '6vw';
+                      words[0].style.fontSize = '9vw';
+                      layer.appendChild(bang);
+                      later(2400, finish);
+                      return;
+                  }
+                  rootEl.classList.add('ghost-egg-show');
+                  scatter(10);
+                  flicker(true);
+                  later(400, fadeWords);
+                  later(500, () => { scatter(0); layer.appendChild(bang); });
+                  later(2000, () => { scatter(10); flicker(true); });
+                  later(2400, () => { fadeWords(); bang.style.opacity = '0'; });
+                  later(3200, finish);
+              }
 
               document.addEventListener('keydown', (e) => {
                   if (!e.ctrlKey || !e.altKey || e.shiftKey || e.metaKey || e.repeat) return;
                   if (String(e.key).toLowerCase() !== 'g') return;
-                  if (!document.body.classList.contains('playback-on')) return;
                   e.preventDefault();
                   if (running) return;
-                  if (!window.confirm('GHOST / OF ME enables intense effects and continual randomization. Flash and Strobe keep your manual levels. Load it?')) return;
+                  if (!window.confirm('GHOST // OF ME - photosensitivity warning: flashing DATA text, strobe, whole-app hue and black-and-white inversion, and continual randomization. When GHOST loads it also turns the Flash & Strobe (automatic) switch ON: Flash is capped at 20% and Strobe at 35%, and both move on their own while the switch is ON. This is not a photosensitivity-safe mode. Continue?')) return;
                   running = true;
-                  try {
-                      if (!ghostSettings) ghostSettings = mapLabSnapshot(GHOST_OF_ME.settings);
-                      applySettings(ghostSettings);
-                      setCurrentPresetDisplay('LOADED: ' + GHOST_OF_ME.name + ' [HIDDEN]');
-                      showNotificationMessage('GHOST / OF ME loaded \u00b7 Flash and Strobe keep your manual levels.', 4200);
-                  } catch (err) {
-                      running = false;
-                      showNotificationMessage('GHOST / OF ME could not be loaded: ' + err.message, 5000);
-                      return;
+                  const playing = document.body.classList.contains('playback-on');
+                  if (playing) {
+                      applyGhostSafely();
+                  } else {
+                      ghostEggArm = applyGhostSafely;
+                      if (ghostLink) ghostLink.hidden = false;
+                      if (ytInput) ytInput.value = GHOST_TRACK_URL;
                   }
-                  running = false;
+                  playGhostShow(() => {
+                      running = false;
+                      if (playing || document.body.classList.contains('playback-on')) return;
+                      if (!document.body.classList.contains('welcome-dismissed') && welcomeEnterBtn) welcomeEnterBtn.click();
+                      document.documentElement.classList.add('ghost-egg-armed');
+                      if (ghostLink) ghostLink.focus();
+                      showNotificationMessage('GHOST // OF ME armed \u00b7 start the MISSING LINK (or any source) to load it.', 5200);
+                  });
               });
           })();
 
