@@ -1,4 +1,4 @@
-/* Landing backdrop (Standalone Revision R Final 4.0).
+/* Landing backdrop (Standalone Revision R Final 4.1).
    A calm GHOST PROTOCOL field behind the welcome card and the YouTube link
    tree: glyph rain from the guarded glyph tables (every glyph voice takes its
    own column), the engine's five GHOST profiles cycling their hue, an RGB

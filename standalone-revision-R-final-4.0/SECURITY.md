@@ -1,6 +1,6 @@
-# Security - Glitch Player Standalone Revision R Final 4.0
+# Security - Glitch Player Standalone Revision R Final 4.1
 
-This document describes how Revision R Final 4.0 is hardened and what it deliberately doesn't do. It describes the code in this folder; the hardening hasn't been independently audited. The installer and app are **not code-signed**. For what has actually been tested, see [BUILD_STATUS.md](BUILD_STATUS.md).
+This document describes how Revision R Final 4.1 is hardened and what it deliberately doesn't do. It describes the code in this folder; the hardening hasn't been independently audited. The installer and app are **not code-signed**. For what has actually been tested, see [BUILD_STATUS.md](BUILD_STATUS.md).
 
 ## Reporting a problem
 

@@ -1,4 +1,15 @@
-# Changelog - Standalone Revision R Final 4.0
+# Changelog - Standalone Revision R Final 4.1
+
+## 4.1.0 - 2026-11-04 (GitHub release `RELEASE_4.1`) - Definition & Confluence
+
+- Added machine-checked definitions: `effects.manifest.json`, `presets.schema.json`, `surfaces.manifest.json` and their generators (`tools/build-effects-manifest.mjs`, `tools/build-surfaces-manifest.mjs`, both with `--check`).
+- MACHINE presets are unfrozen and regenerated from a fresh random seed on every start and Refresh. LAB presets remain frozen.
+- Automatic Flash/Strobe retargeting: calmer targets, one light yields while the other is high, and per-retarget random sharpness, ease speed and rest chance within fixed bounds. Caps (20% / 35%) and the sub-3 Hz rate are unchanged; the lights never hard-cut.
+- Automations: randomized AI WARP B&W and hue steps, DROP THE MILK? colour base and flowing deck order, per-voice glide/cut transition characters with per-session and in-session re-rolls, and a minimum gap between hard cuts.
+- Loosened non-light aesthetic limits in the SOFT-EYE engine (ASCII, Matrix, bombs).
+- Landing card and link tree styling polish.
+- Tests: 148 web tests pass (new: effects, presets schema, surfaces, MACHINE presets).
+- Build: a cross-built, untested, unsigned self-contained win-x64 publish is attached to the release. The NSIS installer must be built on Windows with `build.cmd`; see BUILD_STATUS.md.
 
 ## 4.0.0 - 2026-11-03 (GitHub release `RELEASE_4.0`)
 

@@ -1,0 +1,388 @@
+{
+  "format": "glitch-player-surfaces-manifest",
+  "version": 1,
+  "flow": [
+    "landing",
+    "source",
+    "playback"
+  ],
+  "playbackControls": [
+    "rightRack",
+    "ghostBtnRack",
+    "sliderContainer",
+    "preset-toggle-btn",
+    "preset-dropdown-container",
+    "ui-toggle-tab",
+    "earHud",
+    "nowPlayingHud"
+  ],
+  "linkTree": [
+    {
+      "id": "suggestedVideo",
+      "name": "TERMINAL 1987",
+      "title": "Terminal 1987 Never Closed — 24/7 Synthwave Dev Stream"
+    },
+    {
+      "id": "suggestedVideo3",
+      "name": "REVISIONS",
+      "title": "The Glitch Mob - Revisions (Full Album Visual)"
+    },
+    {
+      "id": "suggestedVideo2",
+      "name": "GHOSTNET.EXE",
+      "title": "Cyberpunk Coding Mix - Utopia98 GhostNet.exe [v0]"
+    },
+    {
+      "id": "suggestedYoutube",
+      "name": "GLITCH SET",
+      "title": "ABROXIS - GLITCH SET @ Hypnotized Popup"
+    },
+    {
+      "id": "suggestedPlaylist",
+      "name": "SEWERSLVT RADIO",
+      "title": "Sewerslvt artist radio playlist (loops)"
+    },
+    {
+      "id": "suggestedMoonlight",
+      "name": "MOONLIGHT",
+      "title": "Apelislin - Moonlight Glass radio playlist (loops)"
+    },
+    {
+      "id": "suggestedFractals",
+      "name": "TRIPPY FRACTALS",
+      "title": "Trippy Everything - Trippy Fractal Artwork, 4K VJ loop, no audio"
+    },
+    {
+      "id": "suggestedNightCity",
+      "name": "NIGHT CITY WALK",
+      "title": "Night City Walk ✧ Cyberpunk Neon Rain Ambience | Dreamy Synthwave Vibes"
+    },
+    {
+      "id": "testCanvas",
+      "name": "WHITE 2 BLACK 2 WHITE",
+      "title": "WHITE TO BLACK TO WHITE (fade) — loops with Continual Randomization"
+    },
+    {
+      "id": "suggestedDarksynth",
+      "name": "DARKSYNTH RADIO",
+      "title": "Harpazz - Checkmate [extreme slowed] radio playlist (loops)"
+    },
+    {
+      "id": "Defcon1Video",
+      "name": "DEFCON 1",
+      "title": "Titan Slayer - Defcon One"
+    },
+    {
+      "id": "ghostLink",
+      "name": "MISSING LINK",
+      "title": "neuronist - underrated breakcore/jungle dnb tracks with under 1000 total plays | MEGAMIX VOL.7 (the 3.0 hidden track, revealed by Ctrl+Alt+G; starting it loads GHOST // OF ME)"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "window-chrome",
+      "phase": "always",
+      "elements": [
+        {
+          "id": "windowDrag",
+          "present": true
+        },
+        {
+          "id": "windowControls",
+          "present": true
+        },
+        {
+          "id": "windowResize",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": null,
+      "keyframes": [
+        "ghost-egg-armed",
+        "ghost-egg-wash",
+        "link-gleam"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "landing-backdrop",
+      "phase": "landing",
+      "elements": [
+        {
+          "id": "landingBackdrop",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": "js/landing-backdrop.js",
+      "keyframes": [
+        "card-tint",
+        "gleam-hue",
+        "glint",
+        "gold-scan",
+        "logo-gleam",
+        "panel-sheen",
+        "panel-silver",
+        "prism-drift",
+        "rim-turn"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "landing-card",
+      "phase": "landing",
+      "elements": [
+        {
+          "id": "welcomeScreen",
+          "present": true
+        },
+        {
+          "id": "welcomeEnterBtn",
+          "present": true
+        },
+        {
+          "id": "welcomeGhostLink",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": null,
+      "keyframes": [
+        "card-tint",
+        "gleam-hue",
+        "glint",
+        "gold-scan",
+        "logo-gleam",
+        "panel-sheen",
+        "panel-silver",
+        "prism-drift",
+        "rim-turn"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "source-screen",
+      "phase": "source",
+      "elements": [
+        {
+          "id": "sourceScreen",
+          "present": true
+        },
+        {
+          "id": "sourceHeading",
+          "present": true
+        },
+        {
+          "id": "ytInput",
+          "present": true
+        },
+        {
+          "id": "startBtn",
+          "present": true
+        },
+        {
+          "id": "openFileWrap",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": null,
+      "keyframes": [
+        "ghost-egg-armed",
+        "ghost-egg-wash",
+        "link-gleam"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "link-tree",
+      "phase": "source",
+      "elements": [
+        {
+          "id": "ytLinkTree",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": null,
+      "keyframes": [
+        "ghost-egg-armed",
+        "ghost-egg-wash",
+        "link-gleam"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "canvas-stack",
+      "phase": "playback",
+      "elements": [
+        {
+          "id": "effects-wrapper",
+          "present": true
+        },
+        {
+          "id": "video",
+          "present": true
+        },
+        {
+          "id": "localAudio",
+          "present": true
+        },
+        {
+          "id": "ytWarpShell",
+          "present": true
+        },
+        {
+          "id": "glitchCanvas",
+          "present": true
+        },
+        {
+          "id": "moon-veil",
+          "present": true
+        },
+        {
+          "id": "rev3-mark",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [],
+      "script": null,
+      "keyframes": [
+        "crt-flicker",
+        "nightCityShine",
+        "presetAutoPulse",
+        "presetGhostBar",
+        "presetScanMove",
+        "scanline-move",
+        "vsync-sync-pulse",
+        "vsyncGhostColorPulse"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "hud-now-playing",
+      "phase": "playback",
+      "elements": [
+        {
+          "id": "nowPlayingHud",
+          "present": true
+        },
+        {
+          "id": "npHudPanel",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [
+        "nowPlayingHud"
+      ],
+      "script": null,
+      "keyframes": [
+        "crt-flicker",
+        "nightCityShine",
+        "presetAutoPulse",
+        "presetGhostBar",
+        "presetScanMove",
+        "scanline-move",
+        "vsync-sync-pulse",
+        "vsyncGhostColorPulse"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "hud-ear",
+      "phase": "playback",
+      "elements": [
+        {
+          "id": "earHud",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [
+        "earHud"
+      ],
+      "script": null,
+      "keyframes": [
+        "crt-flicker",
+        "nightCityShine",
+        "presetAutoPulse",
+        "presetGhostBar",
+        "presetScanMove",
+        "scanline-move",
+        "vsync-sync-pulse",
+        "vsyncGhostColorPulse"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "hud-effects-rack",
+      "phase": "playback",
+      "elements": [
+        {
+          "id": "rightRack",
+          "present": true
+        },
+        {
+          "id": "ghostBtnRack",
+          "present": true
+        },
+        {
+          "id": "sliderContainer",
+          "present": true
+        },
+        {
+          "id": "ui-toggle-tab",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [
+        "rightRack",
+        "ghostBtnRack",
+        "sliderContainer",
+        "ui-toggle-tab"
+      ],
+      "script": null,
+      "keyframes": [
+        "crt-flicker",
+        "nightCityShine",
+        "presetAutoPulse",
+        "presetGhostBar",
+        "presetScanMove",
+        "scanline-move",
+        "vsync-sync-pulse",
+        "vsyncGhostColorPulse"
+      ],
+      "reducedMotionRule": true
+    },
+    {
+      "id": "preset-browser",
+      "phase": "playback",
+      "elements": [
+        {
+          "id": "preset-toggle-btn",
+          "present": true
+        },
+        {
+          "id": "preset-dropdown-container",
+          "present": true
+        }
+      ],
+      "gatedUntilPlayback": [
+        "preset-toggle-btn",
+        "preset-dropdown-container"
+      ],
+      "script": null,
+      "keyframes": [
+        "crt-flicker",
+        "nightCityShine",
+        "presetAutoPulse",
+        "presetGhostBar",
+        "presetScanMove",
+        "scanline-move",
+        "vsync-sync-pulse",
+        "vsyncGhostColorPulse"
+      ],
+      "reducedMotionRule": true
+    }
+  ]
+}

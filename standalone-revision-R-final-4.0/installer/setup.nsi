@@ -29,7 +29,7 @@ RequestExecutionLevel user
 !define WEBVIEW2_CLIENT "Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
 !define MIN_BUILD 19041
 
-Name "Glitch Player - Standalone Revision R Final 4.0"
+Name "Glitch Player - Standalone Revision R Final 4.1"
 OutFile "${OUTDIR}\${APPID}-${VERSION}-x64-setup.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APPID}"
 ShowInstDetails show
@@ -37,7 +37,7 @@ ShowUninstDetails show
 BrandingText "Glitch Player R4 - River Lyle Reuveni - imortalimp.nl"
 
 VIProductVersion "${VERSION}.0"
-VIAddVersionKey "ProductName" "Glitch Player - Standalone Revision R Final 4.0"
+VIAddVersionKey "ProductName" "Glitch Player - Standalone Revision R Final 4.1"
 VIAddVersionKey "ProductVersion" "${VERSION}"
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "FileDescription" "Glitch Player R4 per-user installer"

@@ -1,12 +1,25 @@
-# Glitch Player - Standalone Revision R Final 4.0
+# Glitch Player - Standalone Revision R Final 4.1
 
-Revision R Final 4.0 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
+Revision R Final 4.1 is a newly coded, hardened Windows desktop player. It is a .NET 10 WinForms host with a locked-down Microsoft Edge WebView2 view, installed per user by an NSIS setup. It merges every effect voice from Glitch Player Revision 3.0, the Glitch Canvas Projector and AI WARP ENGINE into one effects engine and one preset system.
 
-This is the **final revised release** of 4.0, published as the GitHub release [`RELEASE_4.0`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0). Its installer replaces the earlier 4.0.0 builds; the version number stays 4.0.0.
+This is release **4.1.0 "Definition & Confluence"**, published as the GitHub release [`RELEASE_4.1`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1). It builds on the 4.0 line ([`RELEASE_4.0`](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0)). See [What's new in 4.1](#whats-new-in-41).
 
 > **Photosensitivity warning:** source videos and effects can produce flashing and high-contrast flicker. Flash and Strobe start at zero and are capped at 20% and 35%. Presets can set their saved values within those caps; Randomize does not change them. Optional automatic movement is off by default, session-only and requires confirmation. When enabled it applies on any media, fades in, and eases to zero while local media is paused or ended. The GHOST // OF ME easter egg applies its saved, capped levels when its MISSING LINK track starts (including a typed or pasted link); it enables automatic movement only after its Ctrl+Alt+G confirmation. This is not a photosensitivity-safe mode.
 
 The installer and app are **not code-signed**. See [BUILD_STATUS.md](BUILD_STATUS.md) for what has been verified, [SECURITY.md](SECURITY.md) for the hardening and [CHANGELOG.md](CHANGELOG.md) for the changes in this release.
+
+## About
+
+Glitch Player R Final is a hardened Windows glitch-video player by River Lyle Reuveni (Imortalimp). Load your own audio and video, then layer 43 effect voices over the picture and steer them by hand, by presets or by automation. Everything runs locally in a locked-down WebView2 window with no network access beyond the link-tree and embed rules in [SECURITY.md](SECURITY.md). Licence: CC0 1.0. The binaries are not code-signed.
+
+## What's new in 4.1
+
+- **Defined once, checked by tests.** `webui/data/effects.manifest.json` (43 voices, with caps, photosensitivity flags and transition character), `presets.schema.json` and `surfaces.manifest.json` (10 surfaces, 12 link-tree cards) describe the effects, presets and screens. `node tools/build-effects-manifest.mjs --check` and `node tools/build-surfaces-manifest.mjs --check` fail when they drift from the code.
+- **Fresh MACHINE presets.** The 80 generated MACHINE presets are no longer frozen and are re-rolled on every start and Refresh. LAB presets stay fixed.
+- **Calmer, non-coincident lights.** Flash (20%) and Strobe (35%) caps are unchanged. Automatic light targets are gentler, the lights rarely peak together, and each light re-rolls its sharpness, ease speed and rest chance (bounded) at every retarget. Lights never hard-cut.
+- **Varied automations.** AI WARP masters, DROP THE MILK? colour and deck order, and the continual randomizer vary per session. Each voice has a glide or cut character (some swap per session) and its own timing jitter, so soft eases and occasional hard cuts mix.
+- **Landing card and link tree.** Gradient title, framed media list and glowing accent link cards. Reduced motion still switches the motion off.
+- **Looser aesthetic limits** for the non-light voices (ASCII, Matrix, bombs) in the SOFT-EYE engine.
 
 ## Starting and controlling the window
 
@@ -34,7 +47,7 @@ A lock you set holds its slider through presets, the preset glide, Auto Glitch, 
 
 The AI WARP MASTERS panel adds:
 
-- **DROP THE MILK?**: AI WARP's dependency-free, Milkdrop-inspired feedback automation with 80 auto presets and its own opacity slider and lock.
+- **DROP THE MILK?**: AI WARP's dependency-free, Milkdrop-inspired feedback automation with 80 auto presets (a fresh colour base each session, played in a flowing order) and its own opacity slider and lock.
 - **B&W Strength** and **Hue Offset**: masters that drive each core voice and its R3 twin together.
 
 HSL Rainbow and Hue/Color Cycle use a more saturated color response. B&W inversion eases more gently through the 50-75% slider range and keeps more color in its inverted output.
@@ -58,10 +71,10 @@ Once playback has started, **FREEZE FRAME** (bottom-left buttons) or **S** saves
 | List | Contents |
 | --- | --- |
 | USER | Your own presets. Stored separately from the built-in lists, up to 500. |
-| MACHINE | The Deepseek bank of 80 built-in presets. |
+| MACHINE | 80 Deepseek presets, generated from a fresh random seed on every start and Refresh. Flash and Strobe are kept under their caps and never high together. Deepseek-1 (OLD SOUL) is fixed. |
 | LAB 250 | The 250 projector machine snapshots, M001 PHOSPHOR/01 to M250 SIGNAL RAIN/10. |
 
-- Built-in presets are frozen and are never changed by saving. Saving always creates or replaces a USER preset.
+- LAB presets are frozen. MACHINE presets are regenerated each session and are not frozen. Saving never changes either bank; it always creates or replaces a USER preset, so save a MACHINE preset you like before closing the app.
 - User presets keep the `glitchCanvasPresets_v2` storage format inside the app's WebView2 profile.
 - **Export** writes `{"format":"signal-lab-presets","version":1,"presets":[...]}` (at most 500 presets and 2 MB). The save dialog opens in Documents and refuses the app's install and data folders, because an upgrade or uninstall could delete files there.
 - **Import** validates every entry before asking for confirmation. Names are 1-80 characters, each preset may have up to 128 effects, and presets with matching names are replaced.
@@ -97,7 +110,7 @@ Keyboard media keys, headset buttons and other apps can't control playback, beca
 
 Requirements: 64-bit Windows 10 version 2004 (build 19041) or later, Windows .NET Framework 4.8 for the small launcher, and the Microsoft Edge WebView2 Runtime (Evergreen). The .NET 10 player runtime is bundled; no separate .NET 10 installation is needed.
 
-1. Download `Glitch-Player-R4-4.0.0-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.0 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.0), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
+1. Download `Glitch-Player-R4-4.1.0-x64-setup.exe` and its `.sha256` file from the [RELEASE_4.1 GitHub release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1), or build them yourself (see below). Compare the installer's SHA-256 with the `.sha256` file, then run it. Windows SmartScreen may warn because the file is unsigned.
 2. Setup installs for the current account only, into `%LOCALAPPDATA%\Programs\Glitch-Player-R4`, without administrator rights. It adds a Start Menu shortcut but no desktop shortcut.
 3. Setup and the uninstaller refuse to run while the app is open.
 
@@ -135,7 +148,7 @@ build.cmd
 3. Checks that the publish output contains the web UI and license files, and no FFmpeg files or `.pdb` symbols.
 4. Builds `out\app\payload.cab` and compiles the small launcher with pinned CAB and file hashes.
 5. Tests fresh/cached extraction and rejection of changed CABs, modified files, unexpected files and redirected cache entries.
-6. Compiles `out\Glitch-Player-R4-4.0.0-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it. No ZIP is produced.
+6. Compiles `out\Glitch-Player-R4-4.1.0-x64-setup.exe` and writes its SHA-256 to a `.sha256` file next to it. No ZIP is produced.
 
 To run the tests on their own:
 

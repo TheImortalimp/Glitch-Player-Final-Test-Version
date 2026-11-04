@@ -571,8 +571,17 @@
               } catch (e) {}
           }
           function randomizeVoiceFx() {
-              if (!voiceFxLocks.bwInvert) voiceFxSettings.bwInvert = +(0.12 + Math.random() * 0.88).toFixed(2);
-              if (!voiceFxLocks.hueOffset) voiceFxSettings.hueOffset = Math.floor(Math.random() * 360);
+              /* B&W Strength lands near the 50 / 75 / 100% landmarks; the hue moves a
+                 moderate step from where it is, so Randomize never jumps across the wheel. */
+              if (!voiceFxLocks.bwInvert) {
+                  const rails = [0.5, 0.75, 0.75, 1];
+                  const rail = rails[(Math.random() * rails.length) | 0];
+                  voiceFxSettings.bwInvert = +Math.min(1, Math.max(0.12, rail + (Math.random() - 0.5) * 0.12)).toFixed(2);
+              }
+              if (!voiceFxLocks.hueOffset) {
+                  const step = (35 + Math.random() * 110) * (Math.random() < 0.5 ? -1 : 1);
+                  voiceFxSettings.hueOffset = normalizeHueOffset(voiceFxSettings.hueOffset + step);
+              }
               syncAiWarpMastersUi();
               saveVoiceFxControls();
           }
@@ -4863,6 +4872,17 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               if (sliderElements[name]) sliderElements[name].value = level.toFixed(3);
               updateContinuousEffectsCache(name);
           }
+          /* R4.1 per-light variation, re-rolled at each target change. Bounds keep the
+             lights gentle: targets change at most about once per 1.2 s, the ease never
+             speeds up past 1.2x, and the caps are applied afterwards as before. */
+          const lightTrait = { Flash: { pow: 1.6, rate: 1, rest: 0.1 }, Strobe: { pow: 1.6, rate: 1, rest: 0.1 } };
+          function rollLightTrait(name) {
+              lightTrait[name] = {
+                  pow: 1.3 + Math.random() * 1.0,
+                  rate: 0.7 + Math.random() * 0.5,
+                  rest: Math.random() * 0.25
+              };
+          }
           function stepLightWander(now, dt) {
               if (!lightAutomationOn) return;
               const eng = window.GlitchEngine;
@@ -4871,8 +4891,14 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   if (lightStoppedByUser[name]) {
                       lightWanderTarget[name] = 0;
                   } else if (now >= (lightWanderAt[name] || 0)) {
-                      lightWanderAt[name] = now + 1400 + Math.random() * 1600;
-                      let t = Math.random() * lightCap(name);
+                      rollLightTrait(name);
+                      const lt = lightTrait[name];
+                      lightWanderAt[name] = now + 1200 + Math.random() * 2800;
+                      /* Squaring the roll makes high levels occasional, and a light skips
+                         its peak while the other one is still near its own ceiling. */
+                      let t = Math.random() < lt.rest ? 0 : Math.pow(Math.random(), lt.pow) * lightCap(name);
+                      const other = name === 'Flash' ? 'Strobe' : 'Flash';
+                      if ((effectAlphas[other] || 0) > 0.5 * lightCap(other)) t *= 0.4;
                       if (eng && eng.softCap) t = eng.softCap(name, t, softK());
                       if (eng && eng.confineTarget) {
                           t = eng.confineTarget(name, t, {
@@ -4884,7 +4910,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   }
                   const cur = effectAlphas[name] || 0;
                   const goal = clampLight(name, lightWanderTarget[name] || 0);
-                  let next = clampLight(name, easeExp(cur, goal, dt, LIGHT_WANDER_RATE));
+                  let next = clampLight(name, easeExp(cur, goal, dt, LIGHT_WANDER_RATE * lightTrait[name].rate));
                   /* Snap the last sliver so a stopped light lands on exactly 0. */
                   if (Math.abs(goal - next) < 0.0005) next = goal;
                   if (next === cur) return;
@@ -5374,10 +5400,17 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
            * ------------------------------------------------------------------ */
           /* DROP THE MILK? is AI WARP's original, dependency-free Milkdrop /
              projectM-inspired renderer: zoom/rotate feedback, audio-reactive
-             polar waveforms and soft colour blooms over 80 deterministic
-             presets (8 families x 10). It samples only the glitch canvas, never
+             polar waveforms and soft colour blooms over 80
+             presets (8 families x 10) with a fresh colour base each session. It samples only the glitch canvas, never
              the media elements, and nothing is read back from it. */
           const MILK_PRESETS = (function buildMilkdropPresetBank() {
+              /* A new colour base each session; the 80 shapes stay the same. */
+              let sessionHue = 0;
+              try {
+                  const word = new Uint32Array(1);
+                  window.crypto.getRandomValues(word);
+                  sessionHue = word[0] % 360;
+              } catch (e) { sessionHue = 0; }
               const families = [
                   { name: 'Liquid Orbits', composite: 'screen', yScale: 0.78 },
                   { name: 'Spiral Soup', composite: 'lighter', yScale: 0.92 },
@@ -5396,7 +5429,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       name: family.name + ' ' + String(variation + 1).padStart(2, '0'),
                       family: family.name,
                       composite: family.composite,
-                      hueOffset: (index * 47 + variation * 19) % 360,
+                      hueOffset: (index * 47 + variation * 19 + sessionHue) % 360,
                       zoomBias: (variation - 4.5) * 0.0013 + (familyIndex - 3.5) * 0.00065,
                       twist: 0.46 + familyIndex * 0.13 + variation * 0.095,
                       feedback: 0.27 + (variation % 6) * 0.026 + familyIndex * 0.012,
@@ -5484,6 +5517,29 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               return !!(milk.nextCtx && milk.feedbackCtx);
           }
 
+          /* Random order that never plays one family twice in a row and picks the
+             nearest-hue preset out of a few random candidates, so changes flow. */
+          function orderMilkDeck(bank) {
+              const pool = bank.slice();
+              const deck = [];
+              let prev = null;
+              while (pool.length) {
+                  let best = -1, bestScore = Infinity;
+                  for (let n = 0; n < 5; n++) {
+                      const i = (Math.random() * pool.length) | 0;
+                      const cand = pool[i];
+                      let score = Math.random() * 20;
+                      if (prev) {
+                          const dh = Math.abs(cand.hueOffset - prev.hueOffset);
+                          score += Math.min(dh, 360 - dh) + (cand.family === prev.family ? 400 : 0);
+                      }
+                      if (score < bestScore) { bestScore = score; best = i; }
+                  }
+                  prev = pool.splice(best, 1)[0];
+                  deck.push(prev);
+              }
+              return deck;
+          }
           function setMilkActive(active) {
               milk.active = !!active;
               milk.startAt = milk.active ? performance.now() : 0;
@@ -5491,11 +5547,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               milk.index = -1;
               milk.preset = null;
               if (milk.active) {
-                  milk.deck = MILK_PRESETS.slice();
-                  for (let i = milk.deck.length - 1; i > 0; i--) {
-                      const j = Math.floor(Math.random() * (i + 1));
-                      const tmp = milk.deck[i]; milk.deck[i] = milk.deck[j]; milk.deck[j] = tmp;
-                  }
+                  milk.deck = orderMilkDeck(MILK_PRESETS);
               } else if (milk.next) {
                   /* release the two full-size feedback buffers while off */
                   milk.next.width = milk.next.height = 1;
@@ -7579,6 +7631,56 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               flipBurst: 12.0,  // very fast snaps 0↔100
               zoomBurst: 9.0    // fast ramp up then back down
           };
+          /* R4.1 per-voice transition character. 'glide' voices always travel softly;
+             'cut' voices run faster and, in the hard-cut modes, occasionally jump most of
+             the way to their target (at most about once a second per voice).
+             Flash and Strobe are never listed: their automation stays on the eased path. */
+          const VOICE_TRANSITION = Object.freeze({
+              'Hue/Color Cycle': 'glide', 'HSL Rainbow': 'glide', 'Neon Grad': 'glide', 'B&W Invert': 'glide',
+              'Prism Rift': 'glide', 'Chromatic Echo': 'glide', 'Orbit HUD': 'glide', 'Cyber Rain': 'glide',
+              'Ink Glyphs': 'glide', 'Tech Artist': 'glide', 'Matrix Chord': 'glide', 'Scanlines': 'glide',
+              'R3 Ghost Spectrum': 'glide', 'R3 V-Sync': 'glide', 'Tape Grain': 'glide', 'Rolling Scan': 'glide',
+              'Data Bands': 'cut', 'VHS Glitch': 'cut', 'Signal Tear': 'cut', 'Data Bomb': 'cut',
+              'Gemini Bomb': 'cut', 'ASCII': 'cut', 'Matrix ASCII': 'cut', 'Font Burn': 'cut',
+              'Temporal Slices': 'cut', 'Tracking Tear': 'cut'
+          });
+          const HARD_CUT_MODES = new Set(['snap', 'burst', 'flipflop']);
+          const HARD_CUT_MIN_GAP_MS = 900;
+          const hardCutAt = {};
+          /* Per-session variation: each voice may swap character and gets its own
+             rate jitter and cut odds; a few voices re-roll at every behaviour change. */
+          const voiceTraits = {};
+          function rollVoiceTrait(name) {
+              const base = VOICE_TRANSITION[String(name).replace(/^R3 /, '')] || VOICE_TRANSITION[name];
+              if (!base || isManualLight(name)) return;
+              const kind = Math.random() < 0.15 ? (base === 'glide' ? 'cut' : 'glide') : base;
+              voiceTraits[name] = {
+                  kind,
+                  rate: 0.85 + Math.random() * 0.3,
+                  cutOdds: 0.012 + Math.random() * 0.02
+              };
+          }
+          function rerollSomeVoiceTraits() {
+              const names = Object.keys(VOICE_TRANSITION);
+              for (let i = 0; i < 3; i++) rollVoiceTrait(names[(Math.random() * names.length) | 0]);
+          }
+          function voiceTransition(name) {
+              if (!voiceTraits[name]) rollVoiceTrait(name);
+              return voiceTraits[name] ? voiceTraits[name].kind : 'neutral';
+          }
+          function voiceRateScale(name) {
+              const kind = voiceTransition(name);
+              const t = voiceTraits[name];
+              return (kind === 'glide' ? 0.78 : kind === 'cut' ? 1.35 : 1) * (t ? t.rate : 1);
+          }
+          /* Returns the value to jump to for a hard cut, or null to keep easing. */
+          function hardCutValue(name, cur, target, now) {
+              if (isManualLight(name) || voiceTransition(name) !== 'cut' || !HARD_CUT_MODES.has(randBehavior)) return null;
+              if (Math.abs(target - cur) < 0.2 || now - (hardCutAt[name] || 0) < HARD_CUT_MIN_GAP_MS) return null;
+              if (Math.random() > voiceTraits[name].cutOdds * (softWild() ? 2 : 1)) return null;
+              hardCutAt[name] = now;
+              return cur + (target - cur) * 0.85;
+          }
           const PARKED_EPSILON = 0.02;
           /* R1 OLD-SOUL (006 final) — Continual Randomization is a background
              presence, never a takeover:
@@ -7820,6 +7922,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
 
           function stepContinualRandomization(now, dt) {
               if (now >= nextBehaviorChange) {
+                  rerollSomeVoiceTraits();
                   randBehavior = pickTimingMode(now);
                   /* R2 SOFT-EYE: the wild modes (burst / flipBurst / zoomBurst)
                      only exist inside a crescendo — calm boards roll smooth,
@@ -7909,8 +8012,12 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   }
                   if (burstOn) rate *= (burstDir[name] > 0 ? 1.28 : 1.1);
                   if (lingerOn && randBehavior === 'linger') rate *= 0.45;
+                  rate *= voiceRateScale(name);
                   let next;
-                  if (randBehavior === 'snap' && Math.abs(target - cur) > 0.04 && Math.random() < 0.40) {
+                  const cutTo = hardCutValue(name, cur, target, now);
+                  if (cutTo !== null) {
+                      next = cutTo;
+                  } else if (randBehavior === 'snap' && Math.abs(target - cur) > 0.04 && Math.random() < 0.40) {
                       next = cur + (target - cur) * 0.22;
                   } else {
                       next = easeExp(cur, target, dt, rate);
@@ -8624,7 +8731,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               'presetPrevBtn', 'presetNextBtn', 'ui-toggle-tab', 'toggle-ui-btn', 'ai-warp-filter', 'ai-turbulence',
               'ai-displacement', 'ai-color-matrix', 'vsync-hue-ghost-filter', 'vsync-ghost-hue', 'vsync-ghost-saturate', 'vsync-ghost-sharpen'
           ];
-          const MACHINE_NAME_TITLE = 'Standalone Revision R Final 4.0 \u2014 Glitch Canvas';
+          const MACHINE_NAME_TITLE = 'Standalone Revision R Final 4.1 \u2014 Glitch Canvas';
           function harvestNameCodex() {
               const bag = [];
               const add = (s) => {
@@ -8686,6 +8793,24 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               if (roll < 0.82) return 0.75; /* negative light emission landmark */
               return 1.0;
           }
+          /* A new seed on every start and Refresh, so the MACHINE bank is different each session. */
+          function freshMachineSeed() {
+              try {
+                  const words = new Uint32Array(1);
+                  window.crypto.getRandomValues(words);
+                  if (words[0]) return words[0];
+              } catch (e) { /* fall through to the key seed */ }
+              return ((typeof GHOST_KEY_SEED === 'number' ? GHOST_KEY_SEED : 0xF34D07) >>> 0) || 1;
+          }
+          /* Keeps generated light calm and coherent: Flash/Strobe stay under their caps
+             and never peak together; one lead voice carries the colour. */
+          function balanceMachineLight(alphas, rng) {
+              alphas['Flash'] = +Math.min(alphas['Flash'] || 0, LIGHT_CEILING.Flash * (0.35 + rng() * 0.65)).toFixed(3);
+              alphas['Strobe'] = +Math.min(alphas['Strobe'] || 0, LIGHT_CEILING.Strobe * (0.35 + rng() * 0.65)).toFixed(3);
+              if (alphas['Flash'] > 0.5 * LIGHT_CEILING.Flash && alphas['Strobe'] > 0.5 * LIGHT_CEILING.Strobe) {
+                  alphas[rng() < 0.5 ? 'Flash' : 'Strobe'] = 0;
+              }
+          }
           function buildMachinePresets() {
               const FX = ['ASCII', 'B&W Invert', 'Data Bands', 'Data Bomb', 'Flash', 'Font Burn',
                   'Gemini Bomb', 'HSL Rainbow', 'Hue/Color Cycle', 'Ink Glyphs', 'Matrix ASCII', 'Matrix Chord',
@@ -8695,7 +8820,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   ? GlitchEngine.GHOST_MODES.slice()
                   : ['OFF', 'DIA', 'SPECTRUM', 'CRT', 'PLASMA', 'LED'];
               const VSYNC_MODES = ['OFF', 'ON', 'GHOST_OFF', 'FULL'];
-              const seed = ((typeof GHOST_KEY_SEED === 'number' ? GHOST_KEY_SEED : 0xF34D07) >>> 0) || 1;
+              const seed = freshMachineSeed();
               const rng = mulberry32(seed);
               const codex = harvestNameCodex();
               const usedTags = Object.create(null);
@@ -8727,6 +8852,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       if (rng() < 0.45) alphas['B&W Invert'] = randBwLevel(rng);
                   }
                   const gm = (i === 0) ? 'OFF' : GHOST_MODES[(rng() * GHOST_MODES.length) | 0];
+                  if (i !== 0) balanceMachineLight(alphas, rng);
                   if (i !== 0) {
                       const gp = (window.GlitchEngine && GlitchEngine.ghostProfile)
                           ? GlitchEngine.ghostProfile(gm) : { realm: 'mix' };
@@ -8900,9 +9026,10 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           });
           Object.freeze(labPresets);
 
-          /* MACHINE = the 3.0 Deepseek-1…80 bank, minted once per boot from the
-             fixed ghost-key seed and frozen like LAB. Snapshots keep their
-             original 3.0 Flash/Strobe values by owner decision. */
+          /* MACHINE = the Deepseek-1…80 bank, minted from a fresh random seed on every
+             start and Refresh. Entries are plain (unfrozen) objects; applying one copies
+             it, and saving always writes a USER preset. Deepseek-1 (OLD SOUL) keeps its
+             3.0 values; every light is capped when applied. */
           const machinePresets = Object.create(null);
           (function buildDeepseekBank() {
               const raw = buildMachinePresets();
@@ -8910,13 +9037,12 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   const entry = raw[name];
                   const settings = normalizePresetSettings(entry);
                   if (!settings) throw new TypeError('The Deepseek MACHINE bank produced an invalid snapshot.');
-                  machinePresets[name] = Object.freeze({
+                  machinePresets[name] = {
                       tag: entry.tag,
-                      settings: Object.freeze(settings)
-                  });
+                      settings: settings
+                  };
               });
           })();
-          Object.freeze(machinePresets);
           const PRESET_LISTS = Object.freeze(['user', 'machine', 'lab']);
           const PRESET_LIST_LABELS = Object.freeze({ user: 'USER', machine: 'MACHINE', lab: 'LAB 250' });
 
@@ -9572,7 +9698,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           if (presetDeleteBtn) {
               presetDeleteBtn.addEventListener('click', () => {
                   if (presetListMode !== 'user') {
-                      showNotificationMessage('MACHINE and LAB banks are immutable — switch to USER to delete saved presets.', 3200);
+                      showNotificationMessage('Only USER presets can be deleted — switch to USER first. MACHINE is regenerated each start; LAB is fixed.', 3200);
                       return;
                   }
                   const name = presetSelect ? presetSelect.value : '';
@@ -9587,7 +9713,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           if (presetDeleteAllBtn) {
               presetDeleteAllBtn.addEventListener('click', () => {
                   if (presetListMode !== 'user') {
-                      showNotificationMessage('MACHINE and LAB banks are immutable — switch to USER to delete saved presets.', 3200);
+                      showNotificationMessage('Only USER presets can be deleted — switch to USER first. MACHINE is regenerated each start; LAB is fixed.', 3200);
                       return;
                   }
                   presets = Object.create(null);

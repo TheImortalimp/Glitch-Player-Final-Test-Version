@@ -327,6 +327,53 @@ html.ghost-egg-armed .welcomePanel { animation: ghost-egg-armed 24s linear infin
     animation: none !important;
 }
 
+/* R4.1 polish: landing card and link tree. Static styling and short hover transitions only;
+   no new flashing, and the reduced-motion rule below still removes every transition. */
+.welcomePanel h1 {
+    background: linear-gradient(180deg, #fff9e3 0%, #f6dc98 55%, #cf9a3a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 0 14px rgba(255, 196, 74, 0.28));
+}
+.welcomeMark { filter: drop-shadow(0 0 18px rgba(255, 184, 52, 0.4)); }
+.welcomeKicker { letter-spacing: 0.3em; text-indent: 0.3em; }
+.welcomeDescription { text-wrap: balance; }
+.welcomeMedia {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 217, 117, 0.16);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.28);
+}
+#welcomeEnterBtn { padding-inline: 28px; }
+
+#sourceScreen > #sourceHeading {
+    background: linear-gradient(90deg, #7af7ff, #fff3cc 50%, #ff9bd9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+#sourceScreen > #ytLinkTreeHeading::before { content: '// '; color: #f2d27e; }
+
+#ytLinkTree > .ytLink {
+    background: linear-gradient(135deg, rgba(14, 10, 32, 0.82), rgba(5, 3, 14, 0.78)) !important;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.025), 0 6px 18px rgba(0, 0, 0, 0.35);
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+/* every card gets its own accent; the named ones above keep theirs */
+#ytLinkTree > #suggestedVideo3 { --link-accent: #7af7ff; }
+#ytLinkTree > #suggestedYoutube { --link-accent: #b69cff; }
+#ytLinkTree > .ytLink:hover,
+#ytLinkTree > .ytLink:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5), 0 0 18px color-mix(in srgb, var(--link-accent) 38%, transparent);
+}
+#ytLinkTree .ytLinkName { text-shadow: 0 0 10px color-mix(in srgb, var(--link-accent) 45%, transparent); }
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
     #ytLinkTree > #testCanvas::after { opacity: 0; }

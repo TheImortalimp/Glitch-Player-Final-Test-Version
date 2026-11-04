@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "glitch-player-presets.schema.json",
+  "title": "Glitch Player R4 preset definitions",
+  "description": "Shapes accepted by the preset system: built-in LAB snapshots, stored/normalized settings, and the signal-lab-presets export file. Flash/Strobe caps (20% / 35%) are enforced at runtime, not by this schema.",
+  "$defs": {
+    "level": { "type": "number", "minimum": 0, "maximum": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "labSnapshotSettings": {
+      "description": "Raw 3.0-style snapshot used by the LAB 250 bank before normalization.",
+      "type": "object",
+      "required": ["version", "masterOpacity", "effects", "glyphBank"],
+      "properties": {
+        "version": { "type": "integer" },
+        "masterOpacity": { "$ref": "#/$defs/level" },
+        "effects": { "type": "object", "maxProperties": 128, "additionalProperties": { "$ref": "#/$defs/level" } },
+        "isAutoGlitching": { "type": "boolean" },
+        "isContinuallyRandomizing": { "type": "boolean" },
+        "isAiWarpActive": { "type": "boolean" },
+        "sliderLocks": { "type": "object", "additionalProperties": { "type": "boolean" } },
+        "glyphBank": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "labSnapshot": {
+      "type": "object",
+      "required": ["id", "name", "settings"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^M\\d{3}$" },
+        "name": { "$ref": "#/$defs/name" },
+        "settings": { "$ref": "#/$defs/labSnapshotSettings" }
+      },
+      "additionalProperties": false
+    },
+    "settings": {
+      "description": "Normalized settings stored in USER presets and in the export file.",
+      "type": "object",
+      "properties": {
+        "alphas": { "type": "object", "maxProperties": 128, "additionalProperties": { "$ref": "#/$defs/level" } },
+        "effects": { "type": "object", "maxProperties": 128, "additionalProperties": { "$ref": "#/$defs/level" } },
+        "voiceFx": {
+          "type": "object",
+          "properties": { "bwInvert": { "$ref": "#/$defs/level" }, "hueOffset": { "type": "number" } },
+          "additionalProperties": false
+        },
+        "masterOpacity": { "$ref": "#/$defs/level" },
+        "ghostLevel": { "$ref": "#/$defs/level" },
+        "ghostMode": { "type": "string" },
+        "vsyncMode": { "type": "string" },
+        "vsyncLevels": {
+          "type": "object",
+          "properties": { "ON": { "$ref": "#/$defs/level" }, "GHOST_OFF": { "$ref": "#/$defs/level" }, "FULL": { "$ref": "#/$defs/level" } },
+          "additionalProperties": false
+        },
+        "aiWarp": { "type": "boolean" },
+        "masterControls": {
+          "type": "object",
+          "properties": {
+            "effectIntensity": { "$ref": "#/$defs/level" },
+            "motionScale": { "$ref": "#/$defs/level" },
+            "blendSoftness": { "$ref": "#/$defs/level" },
+            "continualSpeed": { "$ref": "#/$defs/level" },
+            "autoGlitchPower": { "$ref": "#/$defs/level" },
+            "boardEnergy": { "$ref": "#/$defs/level" }
+          },
+          "additionalProperties": false
+        },
+        "locks": { "type": "object", "additionalProperties": { "type": "boolean" } },
+        "glyphBank": { "type": "string" },
+        "toggles": {
+          "type": "object",
+          "properties": {
+            "autoGlitch": { "type": "boolean" },
+            "continualRandomize": { "type": "boolean" },
+            "aiWarp": { "type": "boolean" },
+            "automatedMasters": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "userPreset": {
+      "type": "object",
+      "required": ["name", "settings"],
+      "properties": { "name": { "$ref": "#/$defs/name" }, "settings": { "$ref": "#/$defs/settings" } }
+    },
+    "exportFile": {
+      "type": "object",
+      "required": ["format", "version", "presets"],
+      "properties": {
+        "format": { "const": "signal-lab-presets" },
+        "version": { "const": 1 },
+        "presets": { "type": "array", "maxItems": 500, "items": { "$ref": "#/$defs/userPreset" } }
+      }
+    }
+  }
+}

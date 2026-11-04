@@ -1,5 +1,5 @@
 'use strict';
-/* Standalone Revision R Final 4.0 - pure input policy.
+/* Standalone Revision R Final 4.1 - pure input policy.
    DOM-free validation shared by glitch-player.js and the Node tests in tests/web. */
 (function (root) {
     const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;

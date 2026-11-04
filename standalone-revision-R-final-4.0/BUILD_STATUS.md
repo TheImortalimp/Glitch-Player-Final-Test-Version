@@ -1,8 +1,12 @@
-# Build status - Standalone Revision R Final 4.0
+# Build status - Standalone Revision R Final 4.1
 
 This file records what was actually built and tested, and what hasn't been tested yet. "Verified" means the check was run and passed on the machine below. The binaries are **not code-signed**.
 
-## Current build
+## 4.1.0 build note (2026-11-04)
+
+Built on Linux with the .NET SDK 10.0.403: `dotnet publish -r win-x64 --self-contained -p:EnableWindowsTargeting=true` succeeded and produced `GlitchPlayerR4.exe`. The 148 Node web tests pass and both manifest `--check` runs are clean. **Not done:** the .NET host tests, running the app, the CAB, the verified launcher and the NSIS installer (all need Windows via `build.cmd`). The 4.1.0 release attaches the cross-built publish ZIP only; it is unsigned and unverified on Windows. The tables below describe the earlier 4.0.0 installer build.
+
+## Current build (4.0.0, previous)
 
 | Item | Value |
 | --- | --- |

@@ -299,8 +299,9 @@
         if (!band) return clamp01(value);
         var lo = band[0], hi = band[1];
         var out = clamp01(value);
-        if (out < lo) out = lerp(out, lo, 0.65);
-        if (out > hi) out = lerp(out, hi, 0.65);
+        /* R4.1: a looser pull toward the realm band gives the board more freedom. */
+        if (out < lo) out = lerp(out, lo, 0.45);
+        if (out > hi) out = lerp(out, hi, 0.45);
         if (v.landmarks || name === 'B&W Invert') {
             var marks = realm === 'reality' ? [0, 0.50] : realm === 'virtual' ? [0.75, 1.0] : LANDMARKS;
             var nearest = marks[0], dist = Math.abs(out - marks[0]);
@@ -308,7 +309,7 @@
                 var d = Math.abs(out - marks[i]);
                 if (d < dist) { dist = d; nearest = marks[i]; }
             }
-            if (dist < 0.12 || rng() < 0.35) out = nearest;
+            if (dist < 0.12 || rng() < 0.22) out = nearest;
         }
         return clamp01(out);
     }
@@ -474,9 +475,9 @@
         lightVoices: ['Flash', 'Strobe'],
         busyVoices:  ['ASCII', 'Matrix ASCII', 'Data Bomb', 'Gemini Bomb', 'Matrix Chord'],
         /* randomizer target ceilings while calm (k = 0). Lerped to 1.0 at k = 1. */
-        calmCaps:  { 'Flash': 0.16, 'Strobe': 0.10, 'Matrix ASCII': 0.40, 'ASCII': 0.46, 'Data Bomb': 0.42, 'Gemini Bomb': 0.42, 'Matrix Chord': 0.55 },
+        calmCaps:  { 'Flash': 0.16, 'Strobe': 0.10, 'Matrix ASCII': 0.52, 'ASCII': 0.58, 'Data Bomb': 0.52, 'Gemini Bomb': 0.52, 'Matrix Chord': 0.66 },
         /* paint-alpha multipliers while calm (lerped to 1.0 at k = 1) */
-        paintCalm: { 'Flash': 0.50, 'Strobe': 0.30, 'Matrix ASCII': 0.62, 'ASCII': 0.72, 'Data Bomb': 0.80, 'Gemini Bomb': 0.80 },
+        paintCalm: { 'Flash': 0.50, 'Strobe': 0.30, 'Matrix ASCII': 0.74, 'ASCII': 0.82, 'Data Bomb': 0.88, 'Gemini Bomb': 0.88 },
         /* Strobe pulse rate — kept BELOW the 3 Hz photosensitive band, always */
         strobeHz:  { calm: 1.05, wild: 2.60 },
         /* chroma spin multipliers (HSL Rainbow prism, Neon flow, Hue Cycle) */

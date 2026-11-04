@@ -9,10 +9,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>GlitchPlayerR4</AssemblyName>
     <RootNamespace>GlitchPlayerR4</RootNamespace>
-    <Version>4.0.0</Version>
+    <Version>4.1.0</Version>
     <Authors>River Lyle Reuveni</Authors>
     <Company>River Lyle Reuveni (Imortalimp)</Company>
-    <Product>Glitch Player — Standalone Revision R Final 4.0</Product>
+    <Product>Glitch Player — Standalone Revision R Final 4.1</Product>
     <Description>Hardened WebView2 glitch visual player (TOTAL CONFLUENCE effects engine)</Description>
     <Copyright>River Lyle Reuveni - imortalimp.nl - CC0 1.0</Copyright>
     <ApplicationManifest>app.manifest</ApplicationManifest>

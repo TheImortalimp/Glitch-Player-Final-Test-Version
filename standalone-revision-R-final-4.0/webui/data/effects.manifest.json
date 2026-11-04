@@ -1,0 +1,953 @@
+{
+  "format": "glitch-player-effects-manifest",
+  "version": 1,
+  "voiceCount": 43,
+  "voices": [
+    {
+      "id": "Neon Grad",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchNeonGradientOverlayFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.12
+        ],
+        "peak": [
+          0.2,
+          1
+        ],
+        "rate": 0.14
+      }
+    },
+    {
+      "id": "Scanlines",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchScanlinesFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.2,
+          1
+        ],
+        "rate": 0.14
+      }
+    },
+    {
+      "id": "Flash",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchBrightFlashFactory",
+      "defaultAlpha": 0,
+      "cap": 0.2,
+      "transition": "neutral",
+      "photosensitive": true,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.2,
+          1
+        ],
+        "rate": 0.18
+      }
+    },
+    {
+      "id": "HSL Rainbow",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchHSLRainbowFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.25,
+          1
+        ],
+        "rate": 0.16
+      }
+    },
+    {
+      "id": "ASCII",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchASCIIArtOverlayFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.25,
+          1
+        ],
+        "rate": 0.18
+      }
+    },
+    {
+      "id": "Font Burn",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchFontBurnFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.12
+        ],
+        "peak": [
+          0.18,
+          1
+        ],
+        "rate": 0.15
+      }
+    },
+    {
+      "id": "Strobe",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchStrobeFactory",
+      "defaultAlpha": 0,
+      "cap": 0.35,
+      "transition": "neutral",
+      "photosensitive": true,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.2,
+          1
+        ],
+        "rate": 0.2
+      }
+    },
+    {
+      "id": "Gemini Bomb",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchGeminiBombFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.08
+        ],
+        "peak": [
+          0.08,
+          0.85
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "Tech Artist",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": "glitchTechArtistShaderFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.12
+        ],
+        "peak": [
+          0.18,
+          1
+        ],
+        "rate": 0.14
+      }
+    },
+    {
+      "id": "Data Bands",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchVHSFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.2,
+          1
+        ],
+        "rate": 0.14
+      }
+    },
+    {
+      "id": "VHS Glitch",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "glitchVHSGlitchFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.12
+        ],
+        "peak": [
+          0.18,
+          1
+        ],
+        "rate": 0.14
+      }
+    },
+    {
+      "id": "Data Bomb",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": "glitchDataBombFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.1,
+          0.9
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "Ink Glyphs",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": "glitchInkGlyphsFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.12
+        ],
+        "peak": [
+          0.15,
+          0.85
+        ],
+        "rate": 0.15
+      }
+    },
+    {
+      "id": "Matrix ASCII",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": "glitchMatrixAsciiFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.04,
+          0.16
+        ],
+        "peak": [
+          0.22,
+          1
+        ],
+        "rate": 0.16
+      }
+    },
+    {
+      "id": "Matrix Chord",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": "glitchMatrixChordFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.18,
+          0.95
+        ],
+        "rate": 0.15
+      }
+    },
+    {
+      "id": "Chromatic Echo",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "chromaticEchoFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.09
+        ],
+        "peak": [
+          0.16,
+          0.75
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "Temporal Slices",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "temporalSlicesFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.62
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "Signal Tear",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "signalTearFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.16,
+          0.78
+        ],
+        "rate": 0.13
+      }
+    },
+    {
+      "id": "Cyber Rain",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "cyberRainFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.18,
+          0.78
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "Prism Rift",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "prismRiftFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.16,
+          0.75
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "Orbit HUD",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": null,
+      "factory": "orbitHudFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.18,
+          0.78
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "Rolling Scan",
+      "kind": "timed",
+      "origin": "ai-warp-engine",
+      "r3Twin": null,
+      "factory": "rollingScanFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.12
+        ],
+        "peak": [
+          0.18,
+          0.7
+        ],
+        "rate": 0.13
+      }
+    },
+    {
+      "id": "Tape Grain",
+      "kind": "timed",
+      "origin": "ai-warp-engine",
+      "r3Twin": null,
+      "factory": "tapeGrainFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.08
+        ],
+        "peak": [
+          0.12,
+          0.6
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "Tracking Tear",
+      "kind": "timed",
+      "origin": "ai-warp-engine",
+      "r3Twin": null,
+      "factory": "trackingTearFactory",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.16,
+          0.72
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 Neon Grad",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Neon Grad",
+      "factory": "r3Factory('Neon Grad')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 Scanlines",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Scanlines",
+      "factory": "r3Factory('Scanlines')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.08
+        ],
+        "peak": [
+          0.14,
+          0.58
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 Gemini Bomb",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Gemini Bomb",
+      "factory": "r3Factory('Gemini Bomb')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.06
+        ],
+        "peak": [
+          0.1,
+          0.5
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "R3 Tech Artist",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Tech Artist",
+      "factory": "r3Factory('Tech Artist')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.52
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 Data Bomb",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Data Bomb",
+      "factory": "r3Factory('Data Bomb')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.06
+        ],
+        "peak": [
+          0.1,
+          0.5
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "R3 Ink Glyphs",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Ink Glyphs",
+      "factory": "r3Factory('Ink Glyphs')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 Matrix ASCII",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Matrix ASCII",
+      "factory": "r3Factory('Matrix ASCII')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.08
+        ],
+        "peak": [
+          0.14,
+          0.6
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 Matrix Chord",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Matrix Chord",
+      "factory": "r3Factory('Matrix Chord')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.08
+        ],
+        "peak": [
+          0.14,
+          0.58
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 HSL Rainbow",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "HSL Rainbow",
+      "factory": "r3Factory('HSL Rainbow')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 ASCII",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "ASCII",
+      "factory": "r3Factory('ASCII')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.08
+        ],
+        "peak": [
+          0.14,
+          0.6
+        ],
+        "rate": 0.12
+      }
+    },
+    {
+      "id": "R3 Font Burn",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Font Burn",
+      "factory": "r3Factory('Font Burn')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 Data Bands",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "Data Bands",
+      "factory": "r3Factory('Data Bands')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 VHS Glitch",
+      "kind": "timed",
+      "origin": "revision-3.0",
+      "r3Twin": "VHS Glitch",
+      "factory": "r3Factory('VHS Glitch')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "cut",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.07
+        ],
+        "peak": [
+          0.12,
+          0.55
+        ],
+        "rate": 0.11
+      }
+    },
+    {
+      "id": "R3 Ghost Spectrum",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": "Ghost Spectrum",
+      "factory": "r3SystemFactory('ghost')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.06
+        ],
+        "peak": [
+          0.1,
+          0.45
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "R3 V-Sync",
+      "kind": "timed",
+      "origin": "glitch-canvas-projector",
+      "r3Twin": "V-Sync",
+      "factory": "r3SystemFactory('vsync')",
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.06
+        ],
+        "peak": [
+          0.1,
+          0.45
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "B&W Invert",
+      "kind": "master",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": null,
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.12
+        ],
+        "peak": [
+          0.15,
+          1
+        ],
+        "rate": 0.1
+      }
+    },
+    {
+      "id": "Hue/Color Cycle",
+      "kind": "master",
+      "origin": "revision-3.0",
+      "r3Twin": null,
+      "factory": null,
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.03,
+          0.14
+        ],
+        "peak": [
+          0.25,
+          1
+        ],
+        "rate": 0.18
+      }
+    },
+    {
+      "id": "R3 B&W Invert",
+      "kind": "master",
+      "origin": "ai-warp-engine",
+      "r3Twin": "B&W Invert",
+      "factory": null,
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.01,
+          0.06
+        ],
+        "peak": [
+          0.1,
+          0.7
+        ],
+        "rate": 0.08
+      }
+    },
+    {
+      "id": "R3 Hue/Color Cycle",
+      "kind": "master",
+      "origin": "ai-warp-engine",
+      "r3Twin": "Hue/Color Cycle",
+      "factory": null,
+      "defaultAlpha": 0,
+      "cap": 1,
+      "transition": "glide",
+      "photosensitive": false,
+      "blendProfile": {
+        "ambient": [
+          0.02,
+          0.1
+        ],
+        "peak": [
+          0.18,
+          0.8
+        ],
+        "rate": 0.14
+      }
+    }
+  ]
+}
