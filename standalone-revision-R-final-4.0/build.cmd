@@ -4,7 +4,7 @@ rem Release build for Glitch Player standalone-revision-R-final-4.1.
 rem Runs the tests, publishes the self-contained x64 host and compiles the per-user NSIS installer.
 rem Plain cmd on purpose: no PowerShell and no execution-policy changes.
 
-set "VERSION=4.1.2"
+set "VERSION=4.1.3"
 set "ROOT=%~dp0"
 set "ROOT=%ROOT:~0,-1%"
 set "OUT=%ROOT%\out"

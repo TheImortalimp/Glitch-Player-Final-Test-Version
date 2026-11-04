@@ -5274,8 +5274,11 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       randomTargets[def.name] = v;
                       sliderWritten[def.name] = v;
                       /* R1 (006 final): a manual set is park/unpark intent —
-                         dragging to 0 parks it for CR, dragging up re-arms it */
+                         dragging to 0 parks it for CR, dragging up re-arms it.
+                         R4.1.3: dragging to 0 also CANCELS the effect — no
+                         automation may restart it until the user wakes it. */
                       crParked[def.name] = v < PARKED_EFFECT_EPSILON;
+                      setEffectCancelled(def.name, v < PARKED_EFFECT_EPSILON);
                       if (isManualLight(def.name)) {
                           lightStoppedByUser[def.name] = v < LIGHT_STOP_EPSILON;
                           lightStored[def.name] = v;
@@ -5696,6 +5699,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   randomTargets[name] = v;
                   sliderWritten[name] = v;
                   crParked[name] = false;
+                  setEffectCancelled(name, false); /* R4.1.3: a tuned pick is user intent — it wakes the pair */
                   if (sliderElements[name]) sliderElements[name].value = v.toFixed(3);
                   updateContinuousEffectsCache(name);
                   woke = true;
@@ -7648,6 +7652,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           const HARD_CUT_MODES = new Set(['snap', 'burst', 'flipflop']);
           const HARD_CUT_MIN_GAP_MS = 900;
           const hardCutAt = {};
+          const recentHardCuts = [];   /* R4.1.3: board-wide cut confluence guard */
           /* Per-session variation: each voice may swap character and gets its own
              rate jitter and cut odds; a few voices re-roll at every behaviour change. */
           const voiceTraits = {};
@@ -7658,7 +7663,8 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               voiceTraits[name] = {
                   kind,
                   rate: 0.85 + Math.random() * 0.3,
-                  cutOdds: 0.012 + Math.random() * 0.02
+                  cutOdds: 0.012 + Math.random() * 0.02,
+                  join: 0.6 + Math.random() * 0.3   /* R4.1.3: per-voice retarget separation */
               };
           }
           function rerollSomeVoiceTraits() {
@@ -7672,7 +7678,9 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           function voiceRateScale(name) {
               const kind = voiceTransition(name);
               const t = voiceTraits[name];
-              return (kind === 'glide' ? 0.78 : kind === 'cut' ? 1.35 : 1) * (t ? t.rate : 1);
+              /* R4.1.3: glides travel slower than before (0.78 -> 0.62) so soft
+                 transitions last visibly longer against the hard cuts. */
+              return (kind === 'glide' ? 0.62 : kind === 'cut' ? 1.35 : 1) * (t ? t.rate : 1);
           }
           /* Returns the value to jump to for a hard cut, or null to keep easing. */
           function hardCutValue(name, cur, target, now) {
@@ -7681,6 +7689,11 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               /* R4.1.2: a hard-cutting track cuts more often, a soft one rarely */
               const cutFreqK = 0.6 + 0.8 * activeTrackTiming().cut;
               if (Math.random() > voiceTraits[name].cutOdds * cutFreqK * (softWild() ? 2 : 1)) return null;
+              /* R4.1.3 CONFLUENCE GUARD: at most two hard cuts may land close
+                 together — the rest of the board keeps gliding around them. */
+              while (recentHardCuts.length && now - recentHardCuts[0] > 600) recentHardCuts.shift();
+              if (recentHardCuts.length >= 2) return null;
+              recentHardCuts.push(now);
               hardCutAt[name] = now;
               /* R4.1.2 SOFT-TO-HARD CUTS: each cut lands on a spectrum — a soft
                  cut travels about half way, a hard cut nearly all the way —
@@ -7708,7 +7721,8 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               'jmEAP7aGo0o': Object.freeze({ pace: 0.75, breath: 0.65, cut: 0.85 }), // DEFCON 1 — hardest cuts
               'B1CL4PqHh9k': Object.freeze({ pace: 1.30, breath: 1.30, cut: 0.20 }), // MOONLIGHT — glassy calm
               'kCP2xZvhJk0': Object.freeze({ pace: 1.15, breath: 1.20, cut: 0.10 }), // WHITE 2 BLACK 2 WHITE — pure glide
-              'DmStNF35o1w': Object.freeze({ pace: 1.00, breath: 1.10, cut: 0.35 })  // GHOST // OF ME — spectral mid
+              'DmStNF35o1w': Object.freeze({ pace: 1.00, breath: 1.10, cut: 0.35 }), // GHOST // OF ME — spectral mid
+              'PD3RCwNseqQ': Object.freeze({ pace: 1.05, breath: 1.10, cut: 0.55 })  // BIRDCAGE — YOU MAN, 338 s measured (5:38), brooding mid-tempo
           });
           const TRACK_TIMING_DEFAULT = Object.freeze({ pace: 1, breath: 1, cut: 0.5 });
           const TRACK_TIMING_LONG = Object.freeze({ pace: 1.2, breath: 1.25, cut: 0.35 });
@@ -7764,6 +7778,20 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
           const MIRROR_FLIP_FACTOR = 0.75;
           const PARKED_EFFECT_EPSILON = PARKED_EPSILON;
           const crParked = {};
+          /* R4.1.3 EFFECT CANCELLATION — a slider dragged to zero cancels its
+             effect, and ZERO ALL cancels every effect. A cancelled voice can
+             never be started by any automation: not by CR, not by Auto Glitch's
+             unpark, not by an aesthetic burst. Only the user wakes it again —
+             raising its slider, applying a preset or Randomize All, or picking
+             a tuned voice pair. The lights are not latched here: their own
+             confirmation-gated system already owns their stopping rules. */
+          const userCancelled = {};
+          function setEffectCancelled(name, on) {
+              if (isManualLight(name)) return;
+              if (on) userCancelled[name] = true;
+              else delete userCancelled[name];
+          }
+          function isEffectCancelled(name) { return !!userCancelled[name]; }
 
           function randRange(r) { return r[0] + Math.random() * (r[1] - r[0]); }
 
@@ -7831,6 +7859,8 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   if (aestheticBurstLocked && aestheticBurstLocked.has(name)) continue;
                   /* R1 (006 final): parked sliders never join the randomization
                      — CR moves what is on; it never switches effects on. */
+                  /* R4.1.3: a cancelled voice never rejoins through automation */
+                  if (isEffectCancelled(name)) { randomTargets[name] = 0; continue; }
                   if (crParked[name] && (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) {
                       randomTargets[name] = 0;
                       continue;
@@ -7838,6 +7868,11 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   /* R4.1.1: a breathing voice sits this retarget out — its level
                      and target hold still, giving the last transition room. */
                   if (voiceBreathing(name, now, mode)) continue;
+                  /* R4.1.3 SEPARATION — each voice joins a retarget on its own
+                     odds, so the board moves as staggered strands of confluence
+                     instead of one block that turns together. */
+                  const trait = voiceTraits[name];
+                  if (trait && Math.random() > trait.join) continue;
                   const profile = blendProfiles[name];
                   // When AI warp is active, use boosted peak ranges for warp-blend effects
                   const effectiveProfile = (isAiWarpActive && WARP_BLEND_EFFECTS.has(name) && WARP_BLEND_PEAKS[name])
@@ -8141,7 +8176,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               if (isContinuallyRandomizing || !isAutoGlitching || now < nextUnparkAt) return;
               nextUnparkAt = now + 1400 + Math.random() * 3200;
               const parked = profileNames.filter((n) =>
-                  !automationHeld(n) && (effectAlphas[n] || 0) < PARKED_EPSILON);
+                  !automationHeld(n) && !isEffectCancelled(n) && (effectAlphas[n] || 0) < PARKED_EPSILON);
               if (!parked.length) return;
               const name = parked[(Math.random() * parked.length) | 0];
               const profile = blendProfiles[name];
@@ -8298,6 +8333,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       }
                       travelTo[name] = v;
                       crParked[name] = v < PARKED_EFFECT_EPSILON;
+                      setEffectCancelled(name, v < PARKED_EFFECT_EPSILON); /* R4.1.3: Randomize All is user intent */
                   }
               }
               const op = sliderLocks.global ? masterOpacity : rng();
@@ -8384,6 +8420,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   sliderWritten[name] = 0;
                   smoothedStrength[name] = 0;
                   crParked[name] = true; // R1: everything parks — CR stays quiet
+                  setEffectCancelled(name, true); // R4.1.3: and stays cancelled — nothing auto-starts after ZERO ALL
                   if (sliderElements[name]) sliderElements[name].value = '0.000';
               }
 
@@ -8524,7 +8561,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
 
           function hidePlaybackPrompts() {
               ['ytInput', 'startBtn', 'suggestedVideo', 'suggestedVideo3', 'suggestedVideo2', 'suggestedYoutube',
-                  'suggestedPlaylist', 'suggestedMoonlight', 'suggestedFractals', 'suggestedNightCity', 'suggestedDarksynth', 'testCanvas', 'Defcon1Video',
+                  'suggestedPlaylist', 'suggestedMoonlight', 'suggestedFractals', 'suggestedNightCity', 'suggestedDarksynth', 'suggestedBirdcage', 'testCanvas', 'Defcon1Video',
                   'ghostLink'
               ].forEach((id) => {
                   const el = $(id);
@@ -8547,7 +8584,8 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               ['suggestedNightCity', 'https://www.youtube.com/watch?v=KlcsGjI6Jms'],
               ['suggestedDarksynth', 'https://www.youtube.com/watch?v=NpSTV8WJATc&list=RDNpSTV8WJATc&start_radio=1'],
               ['Defcon1Video', 'https://www.youtube.com/watch?v=jmEAP7aGo0o'],
-              ['suggestedMoonlight', 'https://www.youtube.com/watch?v=B1CL4PqHh9k&list=RDB1CL4PqHh9k&start_radio=1']
+              ['suggestedMoonlight', 'https://www.youtube.com/watch?v=B1CL4PqHh9k&list=RDB1CL4PqHh9k&start_radio=1'],
+              ['suggestedBirdcage', 'https://www.youtube.com/watch?v=PD3RCwNseqQ&list=RDPD3RCwNseqQ&start_radio=1']
           ];
 
           function bindSuggestedStart(el, url, loop) {
@@ -8567,7 +8605,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
               });
           }
           SUGGESTED.forEach(([id, url]) => {
-              bindSuggestedStart($(id), url, id === 'suggestedPlaylist' || id === 'suggestedMoonlight' || id === 'suggestedDarksynth');
+              bindSuggestedStart($(id), url, id === 'suggestedPlaylist' || id === 'suggestedMoonlight' || id === 'suggestedDarksynth' || id === 'suggestedBirdcage');
           });
           (function bindHardLight() {
               const btn = document.getElementById('hardLightBtn');
@@ -8880,7 +8918,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   alphas[rng() < 0.5 ? 'Flash' : 'Strobe'] = 0;
               }
           }
-          function buildMachinePresets() {
+          function buildMachinePresets(seedOverride) {
               const FX = ['ASCII', 'B&W Invert', 'Data Bands', 'Data Bomb', 'Flash', 'Font Burn',
                   'Gemini Bomb', 'HSL Rainbow', 'Hue/Color Cycle', 'Ink Glyphs', 'Matrix ASCII', 'Matrix Chord',
                   'Neon Grad', 'Scanlines', 'Strobe', 'Tech Artist', 'VHS Glitch'
@@ -8889,7 +8927,12 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   ? GlitchEngine.GHOST_MODES.slice()
                   : ['OFF', 'DIA', 'SPECTRUM', 'CRT', 'PLASMA', 'LED'];
               const VSYNC_MODES = ['OFF', 'ON', 'GHOST_OFF', 'FULL'];
-              const seed = freshMachineSeed();
+              /* R4.1.3 PRESET DETERMINATION: the deck is fully determined by one
+                 seed — pass it back in to rebuild the exact same 80 presets.
+                 Without an override every start and Refresh rolls fresh. */
+              const seed = (seedOverride >>> 0) || freshMachineSeed();
+              buildMachinePresets.lastSeed = seed;
+              try { console.info('[MACHINE] deck seed ' + seed + ' — reproducible via buildMachinePresets(seed)'); } catch (e) {}
               const rng = mulberry32(seed);
               const codex = harvestNameCodex();
               const usedTags = Object.create(null);
@@ -9238,8 +9281,10 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   travelTo[name] = v;
                   randomTargets[name] = v;
                   /* R1: parked snapshot — CR only animates sliders the preset
-                     turned on */
+                     turned on. R4.1.3: a preset is user intent — it determines
+                     exactly which voices are awake and which stay cancelled. */
                   crParked[name] = v < PARKED_EFFECT_EPSILON;
+                  setEffectCancelled(name, v < PARKED_EFFECT_EPSILON);
               }
               /* R2 SOFT-EYE: gradual preset changes — 3.4–5.4 s glides when
                  calm, 1.3–2.0 s inside a crescendo (was a fixed 0.96 s) */
@@ -10233,7 +10278,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       const g = AESTHETIC_GROUPS[k];
                       /* R2 SOFT-EYE: groups that voice Flash / Strobe wait for a crescendo */
                       if (!GlitchEngine.softGroupAllowed(g.effects, softK())) return false;
-                      return g.effects.some((n) => !automationHeld(n) &&
+                      return g.effects.some((n) => !automationHeld(n) && !isEffectCancelled(n) &&
                           (isAutoGlitching || !crParked[n] || (effectAlphas[n] || 0) >= PARKED_EFFECT_EPSILON));
                   });
                   if (!available.length) {
@@ -10256,6 +10301,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   aestheticBurstLocked = new Set();
                   group.effects.forEach((name) => {
                       if (automationHeld(name)) return;
+                      if (isEffectCancelled(name)) return; // R4.1.3: cancelled stays off, even under AG
                       if (!isAutoGlitching && crParked[name] &&
                           (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                       const [pMin, pMax] = group.peakRange;
@@ -10275,6 +10321,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                   if (group.suppress) {
                       group.suppress.forEach((name) => {
                           if (automationHeld(name)) return;
+                          if (isEffectCancelled(name)) return; // R4.1.3: cancelled stays off
                           if (!isAutoGlitching && crParked[name] &&
                               (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                           const profile = blendProfiles[name];
@@ -10296,6 +10343,7 @@ const chars = Array.from(latin + cyrillic + greek + katakana + hebrew + arabic +
                       const group = AESTHETIC_GROUPS[aestheticBurstGroupKey];
                       group.effects.forEach((name) => {
                           if (automationHeld(name)) return;
+                          if (isEffectCancelled(name)) return; // R4.1.3: cancelled stays off
                           if (!isAutoGlitching && crParked[name] &&
                               (effectAlphas[name] || 0) < PARKED_EFFECT_EPSILON) return; // R1: parked stays off
                           const [dMin, dMax] = group.dipRange || [0.02, 0.15];

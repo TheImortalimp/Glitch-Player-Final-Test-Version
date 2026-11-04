@@ -187,7 +187,7 @@ test('the YouTube link tree is named buttons in one grid, and the native window 
     const css = readWeb('css/r4.css');
     const map = player.slice(player.indexOf('const SUGGESTED = ['), player.indexOf('];', player.indexOf('const SUGGESTED = [')));
     const ids = [...map.matchAll(/\['([A-Za-z0-9]+)', 'https:\/\/www\.youtube\.com\//g)].map((m) => m[1]);
-    assert.equal(ids.length, 10);
+    assert.equal(ids.length, 11);
     ids.push('testCanvas');
     const tree = /<div id="ytLinkTree"[^>]*>([\s\S]*?)\n\s*<\/div>/.exec(html)[1];
     for (const id of ids) {

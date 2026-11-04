@@ -16,6 +16,7 @@ function timingSandbox() {
         const HARD_CUT_MODES = new Set(['snap', 'burst', 'flipflop']);
         const HARD_CUT_MIN_GAP_MS = 900;
         const hardCutAt = {};
+        const recentHardCuts = [];
         const voiceTraits = { probe: { kind: 'cut', cutOdds: 1 } };
         const randBehavior = 'snap';
         let nowPlaying = { kind: '', videoId: '', duration: 0 };
@@ -76,20 +77,38 @@ test('cuts land on a soft-to-hard spectrum biased by the track, never a full sla
     sb.play('KlcsGjI6Jms', 0); // NIGHT CITY WALK — softest
     const soft = sb.cut(0, 1, 10000);
     sb.play('jmEAP7aGo0o', 0); // DEFCON 1 — hardest
-    const hard = sb.cut(0, 1, 10000);
+    const hard = sb.cut(0, 1, 20000);
     assert.ok(soft !== null && hard !== null, 'both tracks cut at a certain roll');
     assert.ok(soft < hard, 'the soft track cuts softer than the hard one');
     for (const v of [soft, hard]) assert.ok(v >= 0.5 && v <= 0.95, 'cut depth inside the spectrum');
     sb.setRandom(0); // lowest jitter still respects the floor
-    assert.ok(sb.cut(0, 1, 10000) >= 0.5);
+    assert.ok(sb.cut(0, 1, 30000) >= 0.5);
 });
 
 test('a soft track also cuts less often than a hard one', () => {
-    // Odds roll 0.70: NIGHT CITY (freq 0.6 + 0.8 * 0.15 = 0.72 at cutOdds 1) still cuts,
-    // but a roll above its frequency does not, while DEFCON 1 (1.28) still does.
+    // Odds roll 0.75: NIGHT CITY (freq 0.6 + 0.8 * 0.15 = 0.72 at cutOdds 1) skips,
+    // while DEFCON 1 (1.28) still cuts.
     sb.setRandom(0.75);
     sb.play('KlcsGjI6Jms', 0);
-    assert.equal(sb.cut(0, 1, 10000), null, 'the soft track skips the cut');
+    assert.equal(sb.cut(0, 1, 40000), null, 'the soft track skips the cut');
     sb.play('jmEAP7aGo0o', 0);
-    assert.ok(sb.cut(0, 1, 10000) !== null, 'the hard track still cuts');
+    assert.ok(sb.cut(0, 1, 50000) !== null, 'the hard track still cuts');
+});
+
+test('the confluence guard lets at most two hard cuts land close together', () => {
+    sb.setRandom(0.1);
+    sb.play('jmEAP7aGo0o', 0);
+    assert.ok(sb.cut(0, 1, 100000) !== null, 'first cut lands');
+    assert.ok(sb.cut(0, 1, 100100) !== null, 'second cut lands');
+    assert.equal(sb.cut(0, 1, 100200), null, 'a third simultaneous cut is refused');
+    assert.ok(sb.cut(0, 1, 101000) !== null, 'the window clears and cutting resumes');
+});
+
+test('the BIRDCAGE radio card carries its measured timing profile', () => {
+    const t = sb.table.PD3RCwNseqQ;
+    assert.ok(t, 'BIRDCAGE profile exists');
+    assert.ok(player.includes("'suggestedBirdcage', 'https://www.youtube.com/watch?v=PD3RCwNseqQ&list=RDPD3RCwNseqQ&start_radio=1'"),
+        'the link tree carries the BIRDCAGE radio playlist card');
+    assert.ok(player.includes("id === 'suggestedBirdcage'"), 'the BIRDCAGE card loops like the other radio playlists');
+    assert.ok(player.includes('338 s measured'), 'the profile records the measured first-track length');
 });

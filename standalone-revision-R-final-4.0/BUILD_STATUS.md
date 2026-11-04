@@ -2,13 +2,35 @@
 
 This file records what was actually built and tested, and what hasn't been tested yet. "Verified" means the check was run and passed on the machine below. The binaries are **not code-signed**.
 
+## 4.1.3 build note (2026-11-04)
+
+**Native Windows build, guarded end to end.** Built on Windows 11 x64 with `build.cmd`: **270 tests total** (96 xUnit
+host tests, 173 Node web tests - new: `effect-cancellation.test.mjs`, the confluence-guard and BIRDCAGE track-timing
+tests and the seeded-deck determination test - and 1 CAB integration test). The glyph tables were re-pulled from the
+online Unicode 15.1.0 / CP437 references and verified byte-identical. The build's **Defender guard** scanned the
+installer and working package: no threats.
+
+## Current build (4.1.3)
+
+| Item | Value |
+| --- | --- |
+| Installer | `out\Glitch-Player-R4-4.1.3-x64-setup.exe` (built by `build.cmd`, not committed) |
+| Size | 44,710,285 bytes |
+| SHA-256 | `4e71fc52b6d7c395bf3967675e171a1bb5087653719482212a745c987a5198a2` |
+| Working package | `out\app\GlitchPlayerR4.exe` (458,240 bytes, SHA-256 `7957832dd01c7b95d24513f4f91e0e51c4f326ce8b6b3fbc1c24d672a8fb2e9e`) plus `payload.cab` (44,076,710 bytes) and SHA-256 files; no ZIP |
+| CAB SHA-256 | `db6dc11aaf4d226ed592073a76bbcba3d20d7abca472a92020906f0f6a61bfaa` |
+| Runtime | 249 files, extracted to the per-user cache named by the CAB hash |
+| Asset target | GitHub release `RELEASE_4.1.3` |
+| Signed | No |
+| Built | 2026-11-04 |
+
 ## 4.1.2 build note (2026-11-04)
 
 **Native Windows build, guarded end to end.** Built on Windows 11 x64 with `build.cmd`: **260 tests total** (96 xUnit
 host tests, 163 Node web tests - new: `track-timing.test.mjs` - and 1 CAB integration test). The build's new
 **Defender guard** scanned the installer and working package itself: no threats.
 
-## Current build (4.1.2)
+## Previous build (4.1.2)
 
 | Item | Value |
 | --- | --- |
@@ -86,10 +108,10 @@ Build machine: Windows 11 Pro 10.0.26200 (x64), .NET SDK 10.0.403, WebView2 SDK 
 ## Automated tests
 
 `build.cmd` runs all three suites and stops on a failure, then scans the output with Microsoft Defender. All passed
-for the 4.1.2 build above: **260 tests total** (96 xUnit host tests, **163** Node web tests - new in 4.1.2: the
-track-timing tests; in 4.1.1: the breathing-room and aesthetic-palette tests; in 4.1.0: the effects-manifest,
-preset-schema, surfaces and MACHINE-preset definition tests - and 1 CAB integration test). The suite content below
-was written for the 4.0.0 build and still applies.
+for the 4.1.3 build above: **270 tests total** (96 xUnit host tests, **173** Node web tests - new in 4.1.3: the
+effect-cancellation, confluence-guard and seeded-deck tests; in 4.1.2: the track-timing tests; in 4.1.1: the
+breathing-room and aesthetic-palette tests; in 4.1.0: the definition tests - and 1 CAB integration test). The suite
+content below was written for the 4.0.0 build and still applies.
 
 - **96 xUnit host tests** (`host.Tests`): the navigation, frame, external-link, message, export, media-name and folder-containment rules in `AppPolicy`, the fixed native-window command tokens, the Freeze Frame request IDs and the display refresh-rate message.
 - **132 Node web tests** (`tests\web`), covering:

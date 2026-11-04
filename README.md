@@ -2,14 +2,14 @@
 
 ## Revision R Final 4.1
 
-Revision 4.1 is the current line of the hardened Windows player. **4.1.2 "Room & Cut"** gives every named link-tree
-video its own transition timing built from YouTube's own info, lands cuts on a soft-to-hard spectrum, and ends the
-build with a Microsoft Defender guard. It follows 4.1.1 "Breathing Room" (silence between transitions, 16 curated
-aesthetic scenes) and 4.1.0 "Definition & Confluence" (machine-checked definitions, per-start MACHINE presets,
-calmer randomized lights).
+Revision 4.1 is the current line of the hardened Windows player. **4.1.3 "Strands"** adds effect cancellation (a
+slider dragged to zero, or ZERO ALL, keeps effects off against every automation until the user wakes them), staggered
+voice separation with a two-cut confluence guard and longer glides, one-seed reproducible MACHINE decks, and the
+BIRDCAGE radio card timed from its measured first track. It follows 4.1.2 "Room & Cut", 4.1.1 "Breathing Room" and
+4.1.0 "Definition & Confluence".
 
-- [Download the Windows installer from the RELEASE_4.1.2 release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1.2) (`Glitch-Player-R4-4.1.2-x64-setup.exe`, 44,670,582 bytes). Its SHA-256 is `227d72ed712b84c47ba84fc38a6dcdfdb2b80835eddafe7d5a2a4a318238e1d9`; compare it before running setup. It is not code-signed, so Windows SmartScreen may warn.
-- The installer was built natively on Windows 11 x64 with `build.cmd`; all 260 tests passed (96 .NET host, 163 web, 1 CAB integration) and the build's own Defender guard scanned it clean.
+- [Download the Windows installer from the RELEASE_4.1.3 release](https://github.com/TheImortalimp/Glitch-Player-Final-Test-Version/releases/tag/RELEASE_4.1.3) (`Glitch-Player-R4-4.1.3-x64-setup.exe`, 44,710,285 bytes). Its SHA-256 is `4e71fc52b6d7c395bf3967675e171a1bb5087653719482212a745c987a5198a2`; compare it before running setup. It is not code-signed, so Windows SmartScreen may warn.
+- The installer was built natively on Windows 11 x64 with `build.cmd`; all 270 tests passed (96 .NET host, 173 web, 1 CAB integration) and the build's own Defender guard scanned it clean.
 - [Read the 4.1 README](standalone-revision-R-final-4.0/README.md) for the merged effects, presets, building and installing. It includes a photosensitivity warning for the flash and strobe effects.
 - [Changelog](standalone-revision-R-final-4.0/CHANGELOG.md), [security and hardening](standalone-revision-R-final-4.0/SECURITY.md), [build status](standalone-revision-R-final-4.0/BUILD_STATUS.md) and [roadmaps beyond 4.1](standalone-revision-R-final-4.0/docs/r4.2-roadmaps/README.md).
 

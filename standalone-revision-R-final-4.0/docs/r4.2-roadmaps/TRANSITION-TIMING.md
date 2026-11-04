@@ -12,6 +12,10 @@ effect's travel gets quiet space around it (lights excluded, wild modes breathe 
 - Light retargets have their own calmer system (sharpness, ease speed, rest chance within fixed bounds).
 - **Shipped in 4.1.1:** per-voice breathing rests between transitions (`BREATH_ODDS` / `BREATH_MS` in
   `glitch-player.js`), guarded by `breathing-room.test.mjs`.
+- **Shipped in 4.1.2:** per-track timing manifests in miniature (`TRACK_TIMINGS`) and the soft-to-hard cut spectrum.
+- **Shipped in 4.1.3:** voice separation (per-voice join odds stagger the retargets) and the roadmap's
+  "cap simultaneous hard cuts" risk control (a board-wide confluence guard allows at most two close hard cuts);
+  glide travel lengthened against the cuts. Guarded by `effect-cancellation.test.mjs` and `track-timing.test.mjs`.
 
 ## Phases
 | Phase | Outcome | Exit criteria |

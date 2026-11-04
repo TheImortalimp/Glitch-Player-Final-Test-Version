@@ -21,6 +21,16 @@ test('MACHINE presets are built from a fresh seed each time (start and Refresh)'
     assert.notDeepEqual(first['Deepseek-5'].alphas, second['Deepseek-5'].alphas);
 });
 
+test('a seed override rebuilds the exact same MACHINE deck (R4.1.3 determination)', () => {
+    const build = loadGenerator();
+    const a = build(123456789);
+    const b = build(123456789);
+    assert.deepEqual(a, b);
+    assert.equal(build.lastSeed, 123456789);
+    const c = build(987654321);
+    assert.notDeepEqual(a['Deepseek-5'].alphas, c['Deepseek-5'].alphas);
+});
+
 test('generated MACHINE lights stay within the Flash/Strobe caps and never peak together', () => {
     const build = loadGenerator();
     for (let run = 0; run < 5; run++) {

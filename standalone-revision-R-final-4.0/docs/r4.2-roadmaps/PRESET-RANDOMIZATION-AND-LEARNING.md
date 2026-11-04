@@ -1,7 +1,9 @@
 # Roadmap - Preset randomization & learning
 
 4.1 unfroze the 80 MACHINE presets: they re-roll from a fresh random seed on every start and Refresh, validated
-against `presets.schema.json`. LAB 250 stays fixed. This roadmap makes randomization reproducible, richer, and - 
+against `presets.schema.json`. LAB 250 stays fixed. **4.1.3 shipped the core of phase 1: the deck is fully
+determined by one recorded seed - `buildMachinePresets(seed)` rebuilds the exact same 80 presets, and the seed is
+logged at every roll** (the HUD display and paste-a-seed UI remain). This roadmap makes randomization richer and -
 strictly locally - able to learn what the operator likes.
 
 ## Phases

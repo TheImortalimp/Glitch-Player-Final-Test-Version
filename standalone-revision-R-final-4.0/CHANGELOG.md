@@ -1,5 +1,14 @@
 # Changelog - Standalone Revision R Final 4.1
 
+## 4.1.3 - 2026-11-04 (GitHub release `RELEASE_4.1.3`) - Strands
+
+- **Effect cancellation.** A slider dragged to zero now CANCELS its effect, and ZERO ALL cancels every effect: a cancelled voice can never be started by any automation - not by Continual Randomization, not by Auto Glitch's unpark, not by an aesthetic burst (in any phase). Only the user wakes it: raising its slider, applying a preset, Randomize All, or picking a tuned voice pair. The lights are not latched - their confirmation-gated system already owns their stopping rules.
+- **Separation & confluence timing** (following the transition-timing roadmap): each voice carries its own join odds, so retargets move the board as staggered strands instead of one block; a board-wide confluence guard lets at most two hard cuts land close together while everything else glides around them; and glide voices travel slower than before (0.78 -> 0.62) so soft transitions last visibly longer against the hard cuts.
+- **Proper preset determination** (following the preset-randomization roadmap): the MACHINE deck is fully determined by one seed - `buildMachinePresets(seed)` rebuilds the exact same 80 presets, the deck seed is recorded and logged at every roll, and presets now determine exactly which voices are awake and which stay cancelled.
+- **New link-tree card: BIRDCAGE** - the YOU MAN "BIRDCAGE" radio playlist (`PD3RCwNseqQ`, loops like the other radio cards). Its timing profile is based on the measured first track: 338 s (5:38), brooding mid-tempo - pace 1.05, breath 1.10, cut 0.55.
+- **Glyph tables re-pulled from the online sources:** `tools\build-glyph-tables.mjs` re-downloaded the pinned Unicode 15.1.0 and CP437 references and regenerated all 125 tables / 127,648 code points, verified byte-identical by `--check`.
+- Tests: 173 web tests pass (new: `effect-cancellation.test.mjs`, the confluence-guard and BIRDCAGE track-timing tests, and the seeded-deck determination test).
+
 ## 4.1.2 - 2026-11-04 (GitHub release `RELEASE_4.1.2`) - Room & Cut
 
 - **Per-track timing from YouTube info.** Each named link-tree video (all 12 tracks, including the WHITE 2 BLACK 2 WHITE fade link and the GHOST // OF ME MISSING LINK track) carries its own transition timing - retarget pace, breathing-room odds and cut character - built from what the embed already tells the player (video id and reported duration; no new network surface). Unknown videos class themselves by duration: long-form sits calm, short tracks run livelier. Local media keeps the defaults.
